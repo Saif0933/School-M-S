@@ -1845,6 +1845,15 @@ class TimetableSlotsNotifier extends StateNotifier<List<TimetableSlotEntity>> {
     state = state.where((s) => s.id != id).toList();
   }
 
+  void replaceBranchSlots(String branchId, List<TimetableSlotEntity> newSlots) {
+    final otherBranchSlots = state.where((s) => s.branchId != branchId).toList();
+    final remapped = newSlots.map((s) => s.copyWith(
+      id: 'TS-${DateTime.now().millisecondsSinceEpoch}-${s.id}',
+      branchId: branchId,
+    )).toList();
+    state = [...otherBranchSlots, ...remapped];
+  }
+
   void autoGenerateBranchTimetable({
     required String branchId,
     required List<ClassEntity> classes,
@@ -2691,3 +2700,449 @@ final timetableSubstitutionsProvider =
     >((ref) {
       return TimetableSubstitutionsNotifier();
     });
+
+/// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+/// Timetable Versioning & Snapshot History Model
+/// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+class TimetableVersionEntity {
+  final String id;
+  final String branchId;
+  final String versionName;
+  final String description;
+  final DateTime createdAt;
+  final String createdBy;
+  final bool isPublished;
+  final List<TimetableSlotEntity> slotsData;
+
+  const TimetableVersionEntity({
+    required this.id,
+    required this.branchId,
+    required this.versionName,
+    required this.description,
+    required this.createdAt,
+    required this.createdBy,
+    this.isPublished = false,
+    required this.slotsData,
+  });
+}
+
+class TimetableVersionsNotifier
+    extends StateNotifier<List<TimetableVersionEntity>> {
+  TimetableVersionsNotifier()
+      : super([
+          TimetableVersionEntity(
+            id: 'VER-001',
+            branchId: 'BR-001',
+            versionName: 'v1.0 - Academic Launch Baseline',
+            description: 'Original baseline schedule for Term 1',
+            createdAt: DateTime.now().subtract(const Duration(days: 10)),
+            createdBy: 'Branch Principal',
+            isPublished: true,
+            slotsData: _defaultTimetableSlots,
+          ),
+        ]);
+
+  void createSnapshot({
+    required String branchId,
+    required String versionName,
+    required String description,
+    required String createdBy,
+    required List<TimetableSlotEntity> currentSlots,
+  }) {
+    final version = TimetableVersionEntity(
+      id: 'VER-${DateTime.now().millisecondsSinceEpoch}',
+      branchId: branchId,
+      versionName: versionName,
+      description: description,
+      createdAt: DateTime.now(),
+      createdBy: createdBy,
+      isPublished: true,
+      slotsData: currentSlots,
+    );
+    state = [version, ...state];
+  }
+}
+
+final timetableVersionsProvider =
+    StateNotifierProvider<
+      TimetableVersionsNotifier,
+      List<TimetableVersionEntity>
+    >((ref) {
+      return TimetableVersionsNotifier();
+    });
+
+/// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+/// Organization Master Timetable Template Model
+/// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+class OrganizationTimetableTemplateEntity {
+  final String id;
+  final String templateName;
+  final String description;
+  final int totalPeriodsPerDay;
+  final DateTime createdAt;
+  final List<TimetableSlotEntity> templateSlots;
+  final List<String> appliedBranchIds;
+
+  const OrganizationTimetableTemplateEntity({
+    required this.id,
+    required this.templateName,
+    required this.description,
+    this.totalPeriodsPerDay = 8,
+    required this.createdAt,
+    required this.templateSlots,
+    this.appliedBranchIds = const [],
+  });
+
+  OrganizationTimetableTemplateEntity copyWith({
+    String? id,
+    String? templateName,
+    String? description,
+    int? totalPeriodsPerDay,
+    DateTime? createdAt,
+    List<TimetableSlotEntity>? templateSlots,
+    List<String>? appliedBranchIds,
+  }) {
+    return OrganizationTimetableTemplateEntity(
+      id: id ?? this.id,
+      templateName: templateName ?? this.templateName,
+      description: description ?? this.description,
+      totalPeriodsPerDay: totalPeriodsPerDay ?? this.totalPeriodsPerDay,
+      createdAt: createdAt ?? this.createdAt,
+      templateSlots: templateSlots ?? this.templateSlots,
+      appliedBranchIds: appliedBranchIds ?? this.appliedBranchIds,
+    );
+  }
+}
+
+class OrgTimetableTemplatesNotifier
+    extends StateNotifier<List<OrganizationTimetableTemplateEntity>> {
+  OrgTimetableTemplatesNotifier()
+      : super([
+          OrganizationTimetableTemplateEntity(
+            id: 'TMPL-001',
+            templateName: 'Standard CBSE High School 8-Period Model',
+            description:
+                'Recommended master template with core subjects, STEM lab blocks, and 45-min periods.',
+            totalPeriodsPerDay: 8,
+            createdAt: DateTime(2026, 1, 1),
+            templateSlots: _defaultTimetableSlots,
+            appliedBranchIds: const ['BR-001'],
+          ),
+        ]);
+
+  void createTemplate({
+    required String name,
+    required String description,
+    required List<TimetableSlotEntity> slots,
+  }) {
+    final newTemplate = OrganizationTimetableTemplateEntity(
+      id: 'TMPL-${DateTime.now().millisecondsSinceEpoch}',
+      templateName: name,
+      description: description,
+      createdAt: DateTime.now(),
+      templateSlots: slots,
+    );
+    state = [newTemplate, ...state];
+  }
+
+  void markPushedToBranch(String templateId, String branchId) {
+    state = [
+      for (final t in state)
+        if (t.id == templateId && !t.appliedBranchIds.contains(branchId))
+          t.copyWith(appliedBranchIds: [...t.appliedBranchIds, branchId])
+        else
+          t,
+    ];
+  }
+}
+
+final orgTimetableTemplatesProvider = StateNotifierProvider<
+  OrgTimetableTemplatesNotifier,
+  List<OrganizationTimetableTemplateEntity>
+>((ref) {
+  return OrgTimetableTemplatesNotifier();
+});
+
+/// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+/// AI Substitute Recommendation Model
+/// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+class SubstituteRecommendation {
+  final String teacherName;
+  final String designation;
+  final int dailyLecturesCount;
+  final bool isSubjectExpert;
+  final String matchReason;
+  final int matchScore; // Higher score = better candidate
+
+  const SubstituteRecommendation({
+    required this.teacherName,
+    required this.designation,
+    required this.dailyLecturesCount,
+    required this.isSubjectExpert,
+    required this.matchReason,
+    required this.matchScore,
+  });
+}
+
+/// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+/// Special Day Timetable Model (Exam day, event day)
+/// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+class SpecialDaySlotEntity {
+  final String id;
+  final String classId;
+  final String sectionId;
+  final String startTime;
+  final String endTime;
+  final String activityOrExamName;
+  final String supervisorOrTeacherName;
+  final String roomNumber;
+
+  const SpecialDaySlotEntity({
+    required this.id,
+    required this.classId,
+    required this.sectionId,
+    required this.startTime,
+    required this.endTime,
+    required this.activityOrExamName,
+    required this.supervisorOrTeacherName,
+    required this.roomNumber,
+  });
+}
+
+class SpecialDayTimetableEntity {
+  final String id;
+  final String branchId;
+  final DateTime date;
+  final String name;
+  final String type; // 'Exam Day', 'Event Day', 'Other'
+  final String description;
+  final List<SpecialDaySlotEntity> slots;
+
+  const SpecialDayTimetableEntity({
+    required this.id,
+    required this.branchId,
+    required this.date,
+    required this.name,
+    required this.type,
+    required this.description,
+    required this.slots,
+  });
+
+  SpecialDayTimetableEntity copyWith({
+    String? id,
+    String? branchId,
+    DateTime? date,
+    String? name,
+    String? type,
+    String? description,
+    List<SpecialDaySlotEntity>? slots,
+  }) {
+    return SpecialDayTimetableEntity(
+      id: id ?? this.id,
+      branchId: branchId ?? this.branchId,
+      date: date ?? this.date,
+      name: name ?? this.name,
+      type: type ?? this.type,
+      description: description ?? this.description,
+      slots: slots ?? this.slots,
+    );
+  }
+}
+
+class SpecialDayTimetableNotifier
+    extends StateNotifier<List<SpecialDayTimetableEntity>> {
+  SpecialDayTimetableNotifier()
+    : super([
+        SpecialDayTimetableEntity(
+          id: 'SD-001',
+          branchId: 'BR-001',
+          date: DateTime(2026, 8, 20),
+          name: 'Term 1 Mid-Term Examination (Day 1)',
+          type: 'Exam Day',
+          description:
+              'Morning session for standard mid-term exams across high school classes.',
+          slots: const [
+            SpecialDaySlotEntity(
+              id: 'SDS-001',
+              classId: 'CL-001', // Class 10
+              sectionId: 'SEC-001', // 10-A
+              startTime: '08:30 AM',
+              endTime: '11:30 AM',
+              activityOrExamName: 'Mathematics Paper 1',
+              supervisorOrTeacherName: 'Sunita Sharma',
+              roomNumber: 'Room 201',
+            ),
+            SpecialDaySlotEntity(
+              id: 'SDS-002',
+              classId: 'CL-002', // Class 11
+              sectionId: 'SEC-002', // 11-A
+              startTime: '08:30 AM',
+              endTime: '11:30 AM',
+              activityOrExamName: 'Physics Exam',
+              supervisorOrTeacherName: 'Anil Verma',
+              roomNumber: 'Physics Lab',
+            ),
+          ],
+        ),
+        SpecialDayTimetableEntity(
+          id: 'SD-002',
+          branchId: 'BR-001',
+          date: DateTime(2026, 8, 25),
+          name: 'Inter-House Sports Meet & Athletics Day',
+          type: 'Event Day',
+          description:
+              'All-day branch sports activities. Standard classes suspended.',
+          slots: const [
+            SpecialDaySlotEntity(
+              id: 'SDS-003',
+              classId: 'CL-001',
+              sectionId: 'SEC-001',
+              startTime: '09:00 AM',
+              endTime: '12:00 PM',
+              activityOrExamName: 'Track & Field Finals',
+              supervisorOrTeacherName: 'Rajesh Kumar',
+              roomNumber: 'Main Playground',
+            ),
+          ],
+        ),
+      ]);
+
+  void addSpecialDay(SpecialDayTimetableEntity specialDay) {
+    state = [...state, specialDay];
+  }
+
+  void removeSpecialDay(String id) {
+    state = state.where((s) => s.id != id).toList();
+  }
+
+  void addSlotToSpecialDay(String specialDayId, SpecialDaySlotEntity slot) {
+    state = [
+      for (final sd in state)
+        if (sd.id == specialDayId)
+          sd.copyWith(slots: [...sd.slots, slot])
+        else
+          sd,
+    ];
+  }
+
+  void removeSlotFromSpecialDay(String specialDayId, String slotId) {
+    state = [
+      for (final sd in state)
+        if (sd.id == specialDayId)
+          sd.copyWith(slots: sd.slots.where((s) => s.id != slotId).toList())
+        else
+          sd,
+    ];
+  }
+}
+
+final specialDayTimetableProvider = StateNotifierProvider<
+  SpecialDayTimetableNotifier,
+  List<SpecialDayTimetableEntity>
+>((ref) {
+  return SpecialDayTimetableNotifier();
+});
+
+/// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+/// Co-Curricular Activity Scheduling Model
+/// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+class CoCurricularActivityEntity {
+  final String id;
+  final String branchId;
+  final String activityName;
+  final String instructorName;
+  final String dayOfWeek; // e.g. 'Wednesday'
+  final String timeSlot; // e.g. '02:00 PM - 03:30 PM'
+  final String venue; // e.g. 'Auditorium', 'Robotics Lab'
+  final int maxCapacity;
+
+  const CoCurricularActivityEntity({
+    required this.id,
+    required this.branchId,
+    required this.activityName,
+    required this.instructorName,
+    required this.dayOfWeek,
+    required this.timeSlot,
+    required this.venue,
+    this.maxCapacity = 30,
+  });
+
+  CoCurricularActivityEntity copyWith({
+    String? id,
+    String? branchId,
+    String? activityName,
+    String? instructorName,
+    String? dayOfWeek,
+    String? timeSlot,
+    String? venue,
+    int? maxCapacity,
+  }) {
+    return CoCurricularActivityEntity(
+      id: id ?? this.id,
+      branchId: branchId ?? this.branchId,
+      activityName: activityName ?? this.activityName,
+      instructorName: instructorName ?? this.instructorName,
+      dayOfWeek: dayOfWeek ?? this.dayOfWeek,
+      timeSlot: timeSlot ?? this.timeSlot,
+      venue: venue ?? this.venue,
+      maxCapacity: maxCapacity ?? this.maxCapacity,
+    );
+  }
+}
+
+class CoCurricularActivitiesNotifier
+    extends StateNotifier<List<CoCurricularActivityEntity>> {
+  CoCurricularActivitiesNotifier()
+    : super([
+        const CoCurricularActivityEntity(
+          id: 'CC-001',
+          branchId: 'BR-001',
+          activityName: 'Robotics & STEM Club',
+          instructorName: 'Manish Rawat',
+          dayOfWeek: 'Wednesday',
+          timeSlot: '02:00 PM - 03:30 PM',
+          venue: 'Robotics Lab',
+          maxCapacity: 25,
+        ),
+        const CoCurricularActivityEntity(
+          id: 'CC-002',
+          branchId: 'BR-001',
+          activityName: 'Classical Fusion Music & Choir',
+          instructorName: 'Nisha Mehta',
+          dayOfWeek: 'Friday',
+          timeSlot: '01:30 PM - 03:00 PM',
+          venue: 'Music Room Block C',
+          maxCapacity: 40,
+        ),
+        const CoCurricularActivityEntity(
+          id: 'CC-003',
+          branchId: 'BR-001',
+          activityName: 'Visual Arts & Clay Modeling',
+          instructorName: 'Ramesh Sen',
+          dayOfWeek: 'Monday',
+          timeSlot: '02:00 PM - 03:30 PM',
+          venue: 'Art Studio',
+          maxCapacity: 20,
+        ),
+      ]);
+
+  void addActivity(CoCurricularActivityEntity activity) {
+    state = [...state, activity];
+  }
+
+  void removeActivity(String id) {
+    state = state.where((a) => a.id != id).toList();
+  }
+}
+
+final coCurricularActivitiesProvider = StateNotifierProvider<
+  CoCurricularActivitiesNotifier,
+  List<CoCurricularActivityEntity>
+>((ref) {
+  return CoCurricularActivitiesNotifier();
+});

@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/enums/enums.dart';
 import '../../../../shared/widgets/cards/glass_card.dart';
 import '../../../auth/providers.dart';
+import '../../../organization/providers.dart';
 import '../../../staff/providers.dart';
 import '../../providers.dart';
 
@@ -20,6 +22,9 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
 
   // Active Shift State
   String _selectedShift = 'Morning Shift';
+
+  // Cross-Branch Org Admin State
+  String? _overrideBranchId;
 
   // Tab 1 (Class & Section Grid) State
   String? _selectedClassId;
@@ -76,9 +81,13 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
 
     // Auth & Branch Context
     final user = ref.watch(currentUserProvider);
-    final activeBranchId = user?.activeBranch?.branchId;
+    final userHomeBranchId = user?.activeBranch?.branchId;
+    final isOrgAdmin = user?.role == UserRole.orgAdmin || user?.role == UserRole.superAdmin || user?.role == UserRole.platformAdmin;
+    final allBranches = ref.watch(organizationBranchesProvider);
 
-    if (activeBranchId == null) {
+    final effectiveBranchId = _overrideBranchId ?? userHomeBranchId;
+
+    if (effectiveBranchId == null) {
       return const Scaffold(
         body: Center(
           child: Text('No active branch selected. Please select a branch from the top bar.'),
@@ -86,12 +95,14 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
       );
     }
 
+    final isReadOnly = _overrideBranchId != null && _overrideBranchId != userHomeBranchId;
+
     // Branch Settings
     final allBranchSettings = ref.watch(branchTimetableSettingsProvider);
     final branchSettings = allBranchSettings.firstWhere(
-      (s) => s.branchId == activeBranchId,
+      (s) => s.branchId == effectiveBranchId,
       orElse: () => BranchTimetableSettingsEntity(
-        branchId: activeBranchId,
+        branchId: effectiveBranchId,
         workingDays: const ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
         periodDurationMinutes: 45,
         schoolStartTime: _selectedShift == 'Morning Shift' ? '08:15 AM' : '01:15 PM',
@@ -100,12 +111,12 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
     );
 
     // Classes & Sections for this branch
-    final classes = ref.watch(academicClassesProvider).where((c) => c.branchId == activeBranchId).toList();
+    final classes = ref.watch(academicClassesProvider).where((c) => c.branchId == effectiveBranchId).toList();
     final sections = ref.watch(academicSectionsProvider);
 
     // Branch Staff Teachers
     final allStaff = ref.watch(staffProvider);
-    final branchTeachers = allStaff.where((s) => s.branchId == activeBranchId && (s.role.toLowerCase() == 'teacher' || s.designation.toLowerCase().contains('teacher') || s.role.toLowerCase() == 'hod')).toList();
+    final branchTeachers = allStaff.where((s) => s.branchId == effectiveBranchId && (s.role.toLowerCase() == 'teacher' || s.designation.toLowerCase().contains('teacher') || s.role.toLowerCase() == 'hod')).toList();
 
     // Default Selection Logic
     if (_selectedClassId == null && classes.isNotEmpty) {
@@ -127,7 +138,7 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Top Multi-Shift & Header Bar
+        // Top Multi-Shift, Org Branch Switcher & Header Bar
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           color: isDark ? AppColors.darkBg : Colors.grey[100],
@@ -135,7 +146,7 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
             children: [
               const Icon(Icons.schedule_rounded, color: AppColors.primary, size: 20),
               const SizedBox(width: 8),
-              const Text('Active Timetable Shift:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+              const Text('Active Shift:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
               const SizedBox(width: 12),
 
               // Shift Selector Chips
@@ -165,28 +176,139 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
               ),
               const Spacer(),
 
-              // Weekend Policy Info Badge
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                decoration: BoxDecoration(
-                  color: isDark ? AppColors.darkSurface : Colors.white,
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.lightBorder),
+              // Org Admin Cross-Branch Selector
+              if (isOrgAdmin && allBranches.isNotEmpty) ...[
+                Container(
+                  height: 34,
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  decoration: BoxDecoration(
+                    color: isDark ? AppColors.darkSurface : Colors.white,
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: isReadOnly ? Colors.amber : (isDark ? AppColors.darkBorder : AppColors.lightBorder)),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.corporate_fare_rounded, size: 14, color: isReadOnly ? Colors.amber : AppColors.primary),
+                      const SizedBox(width: 6),
+                      DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          value: effectiveBranchId,
+                          style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 11, fontWeight: FontWeight.bold),
+                          dropdownColor: isDark ? AppColors.darkSurface : Colors.white,
+                          onChanged: (val) {
+                            if (val != null) {
+                              setState(() {
+                                _overrideBranchId = val;
+                                _selectedClassId = null;
+                                _selectedSectionId = null;
+                                _selectedTeacherName = null;
+                                _substTeacherName = null;
+                              });
+                            }
+                          },
+                          items: allBranches.map((b) {
+                            final isHome = b.id == userHomeBranchId;
+                            return DropdownMenuItem(
+                              value: b.id,
+                              child: Text('${b.name} ${isHome ? '(Home Branch)' : '(Read-Only View)'}'),
+                            );
+                          }).toList(),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.event_note_rounded, size: 14, color: AppColors.primary),
-                    const SizedBox(width: 6),
-                    Text(
-                      'Weekend Policy: ${branchSettings.weekendPolicy}',
-                      style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+                const SizedBox(width: 8),
+              ],
+
+              // Version History Action Button
+              OutlinedButton.icon(
+                onPressed: () => _showVersionHistoryDialog(context, isDark, effectiveBranchId),
+                icon: const Icon(Icons.history_rounded, size: 14, color: AppColors.primary),
+                label: const Text('Version Snapshots', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+                style: OutlinedButton.styleFrom(
+                  visualDensity: VisualDensity.compact,
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                ),
+              ),
+              const SizedBox(width: 8),
+
+              // Clash Report Button
+              Consumer(
+                builder: (context, ref, child) {
+                  final currentSlots = ref.watch(timetableSlotsProvider).where((s) => s.branchId == effectiveBranchId).toList();
+                  final clashes = _calculateClashes(currentSlots);
+                  final hasClashes = clashes.isNotEmpty;
+
+                  return OutlinedButton.icon(
+                    onPressed: () => _showClashesReportDialog(context, isDark, clashes),
+                    icon: Icon(
+                      hasClashes ? Icons.warning_amber_rounded : Icons.check_circle_outline_rounded,
+                      size: 14,
+                      color: hasClashes ? Colors.redAccent : Colors.green,
                     ),
-                  ],
+                    label: Text(
+                      hasClashes ? 'Clash Report (${clashes.length})' : 'No Clashes',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: hasClashes ? Colors.redAccent : Colors.green,
+                      ),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      visualDensity: VisualDensity.compact,
+                      side: BorderSide(color: hasClashes ? Colors.redAccent.withValues(alpha: 0.5) : Colors.green.withValues(alpha: 0.5)),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(width: 8),
+
+              // Org Master Templates Button
+              ElevatedButton.icon(
+                onPressed: () => _showOrgTemplatesDialog(context, isDark, effectiveBranchId, isReadOnly),
+                icon: const Icon(Icons.grid_view_rounded, size: 14, color: Colors.white),
+                label: const Text('Master Templates', style: TextStyle(fontSize: 10, color: Colors.white)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  visualDensity: VisualDensity.compact,
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                 ),
               ),
             ],
           ),
         ),
+
+        // Read-Only Org Admin Banner
+        if (isReadOnly)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            color: Colors.amber.withValues(alpha: 0.15),
+            child: Row(
+              children: [
+                const Icon(Icons.lock_outline_rounded, color: Colors.amber, size: 16),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Organization Admin Read-Only View — Inspecting timetable of non-home branch (${allBranches.where((b) => b.id == effectiveBranchId).firstOrNull?.name ?? "Selected Branch"}). Modifying slots is disabled.',
+                    style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.amber),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () {
+                    setState(() {
+                      _overrideBranchId = userHomeBranchId;
+                      _selectedClassId = null;
+                      _selectedSectionId = null;
+                    });
+                  },
+                  child: const Text('Reset to Home Branch', style: TextStyle(fontSize: 10, color: AppColors.primary, fontWeight: FontWeight.bold)),
+                ),
+              ],
+            ),
+          ),
 
         // Tab Headers (5 Tabs)
         Container(
@@ -237,11 +359,11 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
           child: TabBarView(
             controller: _tabController,
             children: [
-              _buildClassGridTab(isDark, activeBranchId, branchSettings, classes, filteredSections),
-              _buildTeacherViewTab(isDark, activeBranchId, branchSettings, branchTeachers, classes, sections),
-              _buildAllocationsAndAITab(isDark, activeBranchId, branchSettings, classes, sections, branchTeachers),
-              _buildSubstitutionsTab(isDark, activeBranchId, branchSettings, branchTeachers, classes, sections),
-              _buildBranchConfigTab(isDark, activeBranchId, branchSettings),
+              _buildClassGridTab(isDark, effectiveBranchId, branchSettings, classes, filteredSections),
+              _buildTeacherViewTab(isDark, effectiveBranchId, branchSettings, branchTeachers, classes, sections),
+              _buildAllocationsAndAITab(isDark, effectiveBranchId, branchSettings, classes, sections, branchTeachers),
+              _buildSubstitutionsTab(isDark, effectiveBranchId, branchSettings, branchTeachers, classes, sections),
+              _buildBranchConfigTab(isDark, effectiveBranchId, branchSettings),
             ],
           ),
         ),
@@ -626,6 +748,94 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                   child: Text(
                     'Weekly Load: ${teacherSlots.length} Periods',
                     style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: AppColors.primary),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Teacher Workload & Availability Tracker Matrix
+          GlassCard(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.analytics_rounded, color: AppColors.primary, size: 16),
+                    const SizedBox(width: 8),
+                    const Text('Branch Teacher Workload & Availability Tracker', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                    const Spacer(),
+                    OutlinedButton.icon(
+                      onPressed: () => _showTeacherWorkloadReportDialog(context, isDark, branchId, branchTeachers, branchSlots),
+                      icon: const Icon(Icons.bar_chart_rounded, size: 12, color: AppColors.primary),
+                      label: const Text('Workload Analysis', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+                      style: OutlinedButton.styleFrom(
+                        visualDensity: VisualDensity.compact,
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+
+                Container(
+                  constraints: const BoxConstraints(maxHeight: 100),
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    shrinkWrap: true,
+                    itemCount: branchTeachers.length,
+                    itemBuilder: (ctx, idx) {
+                      final t = branchTeachers[idx];
+                      final load = branchSlots.where((s) => s.teacherName.toLowerCase() == t.name.toLowerCase()).length;
+                      final maxCap = 25;
+                      final isSelected = t.name.toLowerCase() == (_selectedTeacherName ?? '').toLowerCase();
+                      final isHighLoad = load >= 20;
+
+                      return InkWell(
+                        onTap: () => setState(() => _selectedTeacherName = t.name),
+                        child: Container(
+                          width: 160,
+                          margin: const EdgeInsets.only(right: 10),
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: isSelected ? AppColors.primary.withValues(alpha: 0.1) : (isDark ? AppColors.darkBg : Colors.grey[100]),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: isSelected ? AppColors.primary : (isHighLoad ? Colors.amber.withValues(alpha: 0.5) : (isDark ? AppColors.darkBorder : AppColors.lightBorder)),
+                              width: isSelected ? 2 : 1,
+                            ),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(t.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11), maxLines: 1, overflow: TextOverflow.ellipsis),
+                              Text(t.designation, style: const TextStyle(fontSize: 9, color: Colors.grey), maxLines: 1, overflow: TextOverflow.ellipsis),
+                              const SizedBox(height: 8),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text('Load: $load/$maxCap p', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: isHighLoad ? Colors.amber : AppColors.primary)),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: (isHighLoad ? Colors.amber : Colors.green).withValues(alpha: 0.15),
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: Text(
+                                      isHighLoad ? 'High Load' : 'Available',
+                                      style: TextStyle(fontSize: 8, fontWeight: FontWeight.bold, color: isHighLoad ? Colors.amber : Colors.green),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ),
               ],
@@ -1316,6 +1526,9 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
     String branchId,
     BranchTimetableSettingsEntity settings,
   ) {
+    final classes = ref.watch(academicClassesProvider).where((c) => c.branchId == branchId).toList();
+    final sections = ref.watch(academicSectionsProvider);
+
     final startController = TextEditingController(text: settings.schoolStartTime);
     final durationController = TextEditingController(text: settings.periodDurationMinutes.toString());
     final assemblyStartCtrl = TextEditingController(text: settings.assemblyStartTime);
@@ -1790,6 +2003,229 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
               ),
             ],
           ),
+          const SizedBox(height: 24),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Special Day Timetables
+              Expanded(
+                flex: 1,
+                child: GlassCard(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text('Special Day Timetables', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                          IconButton(
+                            icon: const Icon(Icons.add_circle_outline_rounded, color: AppColors.primary, size: 18),
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                            onPressed: () => _showAddSpecialDayDialog(context, isDark, branchId, classes, sections),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      const Text('Schedule exam days, event days, and other special schedules.', style: TextStyle(fontSize: 10, color: Colors.grey)),
+                      const SizedBox(height: 12),
+
+                      Consumer(
+                        builder: (context, ref, child) {
+                          final specialDays = ref.watch(specialDayTimetableProvider).where((sd) => sd.branchId == branchId).toList();
+                          if (specialDays.isEmpty) {
+                            return const Center(
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(vertical: 20),
+                                child: Text('No special day timetables configured.', style: TextStyle(fontSize: 11, color: Colors.grey)),
+                              ),
+                            );
+                          }
+                          return ListView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: specialDays.length,
+                            itemBuilder: (context, index) {
+                              final sd = specialDays[index];
+                              return Container(
+                                margin: const EdgeInsets.symmetric(vertical: 4),
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color: isDark ? AppColors.darkBg : Colors.grey[100],
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.lightBorder),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Expanded(
+                                          child: Text(
+                                            sd.name,
+                                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                        IconButton(
+                                          icon: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent, size: 16),
+                                          padding: EdgeInsets.zero,
+                                          constraints: const BoxConstraints(),
+                                          onPressed: () {
+                                            ref.read(specialDayTimetableProvider.notifier).removeSpecialDay(sd.id);
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Row(
+                                      children: [
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                                          decoration: BoxDecoration(
+                                            color: (sd.type == 'Exam Day' ? Colors.red : Colors.blue).withValues(alpha: 0.15),
+                                            borderRadius: BorderRadius.circular(4),
+                                          ),
+                                          child: Text(
+                                            sd.type,
+                                            style: TextStyle(
+                                              fontSize: 8,
+                                              fontWeight: FontWeight.bold,
+                                              color: sd.type == 'Exam Day' ? Colors.red : Colors.blue,
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          DateFormat('yyyy-MM-dd').format(sd.date),
+                                          style: const TextStyle(fontSize: 9, color: Colors.grey),
+                                        ),
+                                      ],
+                                    ),
+                                    if (sd.slots.isNotEmpty) ...[
+                                      const Divider(height: 12),
+                                      ...sd.slots.map((s) {
+                                        final cls = classes.firstWhere((c) => c.id == s.classId, orElse: () => ClassEntity(id: '', branchId: '', departmentId: '', name: 'Class', code: '', maxStudentsCapacity: 0));
+                                        final sec = sections.firstWhere((sec) => sec.id == s.sectionId, orElse: () => SectionEntity(id: '', classId: '', name: 'A', roomNumber: '', classTeacher: '', maxStudentsCapacity: 0));
+                                        return Padding(
+                                          padding: const EdgeInsets.symmetric(vertical: 2),
+                                          child: Row(
+                                            children: [
+                                              const Icon(Icons.lens, size: 5, color: Colors.grey),
+                                              const SizedBox(width: 6),
+                                              Expanded(
+                                                child: Text(
+                                                  '${s.startTime}-${s.endTime}: ${cls.name}-${sec.name} ${s.activityOrExamName} (${s.roomNumber})',
+                                                  style: const TextStyle(fontSize: 8, color: Colors.grey),
+                                                  maxLines: 1,
+                                                  overflow: TextOverflow.ellipsis,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        );
+                                      }),
+                                    ],
+                                  ],
+                                ),
+                              );
+                            },
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+
+              // Co-Curricular Activity Scheduling
+              Expanded(
+                flex: 1,
+                child: GlassCard(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text('Co-Curricular Activities', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                          IconButton(
+                            icon: const Icon(Icons.add_circle_outline_rounded, color: AppColors.primary, size: 18),
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                            onPressed: () => _showAddCoCurricularDialog(context, isDark, branchId),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      const Text('Schedule activities such as STEM clubs, music bands, arts and crafts.', style: TextStyle(fontSize: 10, color: Colors.grey)),
+                      const SizedBox(height: 12),
+
+                      Consumer(
+                        builder: (context, ref, child) {
+                          final activities = ref.watch(coCurricularActivitiesProvider).where((cca) => cca.branchId == branchId).toList();
+                          if (activities.isEmpty) {
+                            return const Center(
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(vertical: 20),
+                                child: Text('No co-curricular activities scheduled.', style: TextStyle(fontSize: 11, color: Colors.grey)),
+                              ),
+                            );
+                          }
+                          return ListView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: activities.length,
+                            itemBuilder: (context, index) {
+                              final act = activities[index];
+                              return Container(
+                                margin: const EdgeInsets.symmetric(vertical: 4),
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color: isDark ? AppColors.darkBg : Colors.grey[100],
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.lightBorder),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(act.activityName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
+                                          const SizedBox(height: 2),
+                                          Text('Instructor: ${act.instructorName}', style: const TextStyle(fontSize: 9, color: Colors.grey)),
+                                          Text('${act.dayOfWeek} • ${act.timeSlot} • ${act.venue}', style: const TextStyle(fontSize: 9, color: Colors.grey)),
+                                        ],
+                                      ),
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent, size: 16),
+                                      padding: EdgeInsets.zero,
+                                      constraints: const BoxConstraints(),
+                                      onPressed: () {
+                                        ref.read(coCurricularActivitiesProvider.notifier).removeActivity(act.id);
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );
@@ -2177,64 +2613,180 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
     TimetableSlotEntity slot,
     List<StaffEntity> branchTeachers,
   ) {
-    final availableTeachers = branchTeachers.where((t) => t.name.toLowerCase() != slot.teacherName.toLowerCase()).toList();
-    String? selectedSubstTeacher = availableTeachers.isNotEmpty ? availableTeachers.first.name : null;
+    final allSlots = ref.read(timetableSlotsProvider);
+    final candidates = branchTeachers.where((t) => t.name.toLowerCase() != slot.teacherName.toLowerCase()).toList();
+
+    // AI Substitute Recommendation Algorithm
+    final List<SubstituteRecommendation> recommendations = [];
+    for (final teacher in candidates) {
+      // 1. Check if occupied at slot time
+      final isOccupied = allSlots.any((s) =>
+          s.branchId == branchId &&
+          s.dayOfWeek == slot.dayOfWeek &&
+          s.periodName == slot.periodName &&
+          s.teacherName.toLowerCase() == teacher.name.toLowerCase());
+
+      if (isOccupied) continue;
+
+      // 2. Subject Expertise check
+      final isExpert = teacher.specialization.toLowerCase().contains(slot.subjectName.toLowerCase()) ||
+          teacher.designation.toLowerCase().contains(slot.subjectName.toLowerCase());
+
+      // 3. Daily Load
+      final dailyCount = allSlots.where((s) =>
+          s.branchId == branchId &&
+          s.dayOfWeek == slot.dayOfWeek &&
+          s.teacherName.toLowerCase() == teacher.name.toLowerCase()).length;
+
+      int score = 50;
+      if (isExpert) score += 40;
+      score += (8 - dailyCount).clamp(0, 8) * 5;
+
+      final reason = isExpert
+          ? 'Free Period • Subject Specialist • $dailyCount lectures today'
+          : 'Free Period • Available Capacity • $dailyCount lectures today';
+
+      recommendations.add(SubstituteRecommendation(
+        teacherName: teacher.name,
+        designation: teacher.designation,
+        dailyLecturesCount: dailyCount,
+        isSubjectExpert: isExpert,
+        matchReason: reason,
+        matchScore: score,
+      ));
+    }
+
+    recommendations.sort((a, b) => b.matchScore.compareTo(a.matchScore));
+    final topMatch = recommendations.firstOrNull;
+
+    String? selectedSubstTeacher = topMatch?.teacherName ?? (candidates.isNotEmpty ? candidates.first.name : null);
     final reasonCtrl = TextEditingController(text: 'Casual Leave');
 
     showDialog(
       context: context,
       builder: (ctx) {
-        return AlertDialog(
-          backgroundColor: isDark ? AppColors.darkSurface : Colors.white,
-          title: const Text('Assign Substitution Teacher', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Original Lecture: ${slot.dayOfWeek} ${slot.periodName} (${slot.subjectName})', style: const TextStyle(fontSize: 10, color: AppColors.primary, fontWeight: FontWeight.bold)),
-              Text('Absent Teacher: ${slot.teacherName}', style: const TextStyle(fontSize: 10, color: Colors.grey)),
-              const SizedBox(height: 12),
-
-              DropdownButtonFormField<String>(
-                initialValue: selectedSubstTeacher,
-                style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 11),
-                decoration: const InputDecoration(labelText: 'Select Free Substitute Teacher', isDense: true),
-                dropdownColor: isDark ? AppColors.darkSurface : Colors.white,
-                items: availableTeachers.map((t) {
-                  return DropdownMenuItem(value: t.name, child: Text(t.name));
-                }).toList(),
-                onChanged: (val) {
-                  if (val != null) selectedSubstTeacher = val;
-                },
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              backgroundColor: isDark ? AppColors.darkSurface : Colors.white,
+              title: const Row(
+                children: [
+                  Icon(Icons.auto_awesome_rounded, color: AppColors.primary),
+                  SizedBox(width: 8),
+                  Text('Assign Substitute Teacher', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                ],
               ),
-              const SizedBox(height: 12),
-              TextField(controller: reasonCtrl, style: const TextStyle(fontSize: 11), decoration: const InputDecoration(labelText: 'Reason for Adjustment', isDense: true)),
-            ],
-          ),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel', style: TextStyle(fontSize: 11))),
-            ElevatedButton(
-              onPressed: () {
-                if (selectedSubstTeacher != null) {
-                  ref.read(timetableSubstitutionsProvider.notifier).assignSubstitution(
-                    branchId: branchId,
-                    date: _substDate,
-                    dayOfWeek: slot.dayOfWeek,
-                    periodName: slot.periodName,
-                    classId: slot.classId,
-                    sectionId: slot.sectionId,
-                    originalTeacherName: slot.teacherName,
-                    substituteTeacherName: selectedSubstTeacher!,
-                    reason: reasonCtrl.text.trim(),
-                  );
-                  Navigator.pop(ctx);
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Substitution assigned successfully.')));
-                }
-              },
-              style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
-              child: const Text('Confirm Substitution', style: TextStyle(fontSize: 11, color: Colors.white)),
-            ),
-          ],
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: isDark ? AppColors.darkBg : Colors.grey[100],
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Original Lecture: ${slot.dayOfWeek} ${slot.periodName} (${slot.subjectName})', style: const TextStyle(fontSize: 10, color: AppColors.primary, fontWeight: FontWeight.bold)),
+                          const SizedBox(height: 2),
+                          Text('Absent Teacher: ${slot.teacherName}', style: const TextStyle(fontSize: 10, color: Colors.grey)),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+
+                    // Top AI Auto-Suggestion Card
+                    if (topMatch != null) ...[
+                      const Text('AI Auto-Suggested Best Match:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10, color: AppColors.primary)),
+                      const SizedBox(height: 6),
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.stars_rounded, color: Colors.amber, size: 20),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text('${topMatch.teacherName} (${topMatch.designation})', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
+                                  Text(topMatch.matchReason, style: const TextStyle(fontSize: 9, color: Colors.grey)),
+                                ],
+                              ),
+                            ),
+                            ElevatedButton(
+                              onPressed: () {
+                                setDialogState(() => selectedSubstTeacher = topMatch.teacherName);
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.primary,
+                                visualDensity: VisualDensity.compact,
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              ),
+                              child: const Text('Use AI Match', style: TextStyle(fontSize: 9, color: Colors.white)),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                    ],
+
+                    DropdownButtonFormField<String>(
+                      initialValue: selectedSubstTeacher,
+                      style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 11),
+                      decoration: const InputDecoration(labelText: 'Select Free Substitute Teacher', isDense: true),
+                      dropdownColor: isDark ? AppColors.darkSurface : Colors.white,
+                      items: candidates.map((t) {
+                        final rec = recommendations.firstWhere((r) => r.teacherName == t.name, orElse: () => SubstituteRecommendation(teacherName: t.name, designation: '', dailyLecturesCount: 0, isSubjectExpert: false, matchReason: 'Busy / Occupied', matchScore: 0));
+                        final isFree = rec.matchScore > 0;
+                        return DropdownMenuItem(
+                          value: t.name,
+                          child: Text('${t.name} • ${isFree ? 'Free Slot' : 'Occupied'} (${rec.dailyLecturesCount} periods today)'),
+                        );
+                      }).toList(),
+                      onChanged: (val) {
+                        if (val != null) setDialogState(() => selectedSubstTeacher = val);
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(controller: reasonCtrl, style: const TextStyle(fontSize: 11), decoration: const InputDecoration(labelText: 'Reason for Adjustment', isDense: true)),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel', style: TextStyle(fontSize: 11))),
+                ElevatedButton(
+                  onPressed: () {
+                    if (selectedSubstTeacher != null) {
+                      ref.read(timetableSubstitutionsProvider.notifier).assignSubstitution(
+                        branchId: branchId,
+                        date: _substDate,
+                        dayOfWeek: slot.dayOfWeek,
+                        periodName: slot.periodName,
+                        classId: slot.classId,
+                        sectionId: slot.sectionId,
+                        originalTeacherName: slot.teacherName,
+                        substituteTeacherName: selectedSubstTeacher!,
+                        reason: reasonCtrl.text.trim(),
+                      );
+                      Navigator.pop(ctx);
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Substitution assigned successfully.')));
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+                  child: const Text('Confirm Substitution', style: TextStyle(fontSize: 11, color: Colors.white)),
+                ),
+              ],
+            );
+          },
         );
       },
     );
@@ -3213,6 +3765,643 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
     );
   }
 
+  List<Map<String, dynamic>> _calculateClashes(List<TimetableSlotEntity> slots) {
+    final List<Map<String, dynamic>> clashes = [];
+
+    for (int i = 0; i < slots.length; i++) {
+      for (int j = i + 1; j < slots.length; j++) {
+        final s1 = slots[i];
+        final s2 = slots[j];
+
+        if (s1.dayOfWeek != s2.dayOfWeek ||
+            s1.periodName != s2.periodName ||
+            s1.shiftName != s2.shiftName) {
+          continue;
+        }
+
+        // Clash 1: Teacher double booking
+        if (s1.teacherName.toLowerCase() == s2.teacherName.toLowerCase() && s1.teacherName.trim().isNotEmpty) {
+          clashes.add({
+            'type': 'Teacher Double-Booking',
+            'detail': 'Teacher "${s1.teacherName}" is scheduled for both "${s1.subjectName}" (Class ID: ${s1.classId}) and "${s2.subjectName}" (Class ID: ${s2.classId}) at the same time.',
+            'slot1': s1,
+            'slot2': s2,
+          });
+        }
+
+        // Clash 2: Room clash
+        if (s1.roomNumber.toLowerCase() == s2.roomNumber.toLowerCase() && s1.roomNumber.trim().isNotEmpty) {
+          clashes.add({
+            'type': 'Room Clash',
+            'detail': 'Room "${s1.roomNumber}" is allocated to both Class ID: ${s1.classId} and Class ID: ${s2.classId} at the same time.',
+            'slot1': s1,
+            'slot2': s2,
+          });
+        }
+
+        // Clash 3: Resource clash
+        for (final resId in s1.allocatedResourceIds) {
+          if (s2.allocatedResourceIds.contains(resId)) {
+            clashes.add({
+              'type': 'Resource Clash',
+              'detail': 'Resource ID "$resId" is allocated to both Class ID: ${s1.classId} and Class ID: ${s2.classId} at the same time.',
+              'slot1': s1,
+              'slot2': s2,
+            });
+          }
+        }
+      }
+    }
+    return clashes;
+  }
+
+  void _showClashesReportDialog(BuildContext context, bool isDark, List<Map<String, dynamic>> clashes) {
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          backgroundColor: isDark ? AppColors.darkSurface : Colors.white,
+          title: Row(
+            children: [
+              Icon(
+                clashes.isNotEmpty ? Icons.warning_amber_rounded : Icons.check_circle_outline_rounded,
+                color: clashes.isNotEmpty ? Colors.redAccent : Colors.green,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                clashes.isNotEmpty ? 'Timetable Clash Report (${clashes.length})' : 'Timetable Clash Report',
+                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          content: SizedBox(
+            width: 500,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  clashes.isNotEmpty
+                      ? 'The following conflicting allocations have been detected in the active branch timetable. Please review and resolve them.'
+                      : 'All scheduled lectures, classrooms, and shared resources are 100% conflict-free!',
+                  style: const TextStyle(fontSize: 10, color: Colors.grey),
+                ),
+                const SizedBox(height: 16),
+
+                if (clashes.isEmpty)
+                  Center(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 24),
+                      child: Column(
+                        children: [
+                          Icon(Icons.verified_rounded, size: 48, color: Colors.green.withValues(alpha: 0.2)),
+                          const SizedBox(height: 12),
+                          const Text('No double-bookings or room clashes found.', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.green)),
+                        ],
+                      ),
+                    ),
+                  )
+                else
+                  Container(
+                    constraints: const BoxConstraints(maxHeight: 300),
+                    child: ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: clashes.length,
+                      itemBuilder: (context, index) {
+                        final clash = clashes[index];
+                        return Container(
+                          margin: const EdgeInsets.symmetric(vertical: 6),
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.redAccent.withValues(alpha: 0.05),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.redAccent.withValues(alpha: 0.2)),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  const Icon(Icons.error_outline_rounded, color: Colors.redAccent, size: 14),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    clash['type'] as String,
+                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: Colors.redAccent),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                clash['detail'] as String,
+                                style: const TextStyle(fontSize: 10),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Close', style: TextStyle(fontSize: 11)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showTeacherWorkloadReportDialog(
+    BuildContext context,
+    bool isDark,
+    String branchId,
+    List<StaffEntity> branchTeachers,
+    List<TimetableSlotEntity> branchSlots,
+  ) {
+    if (branchTeachers.isEmpty) return;
+    int totalSlots = branchSlots.length;
+    double avgLoad = totalSlots / branchTeachers.length;
+
+    int overloadedCount = 0;
+    int optimalCount = 0;
+    int underallocatedCount = 0;
+
+    final List<Map<String, dynamic>> listData = [];
+
+    for (final t in branchTeachers) {
+      final count = branchSlots.where((s) => s.teacherName.toLowerCase() == t.name.toLowerCase()).length;
+      String status = 'Optimal';
+      Color color = Colors.blue;
+      if (count >= 20) {
+        status = 'Overloaded';
+        color = Colors.redAccent;
+        overloadedCount++;
+      } else if (count < 10) {
+        status = 'Underallocated';
+        color = Colors.orange;
+        underallocatedCount++;
+      } else {
+        optimalCount++;
+      }
+
+      listData.add({
+        'teacher': t,
+        'count': count,
+        'status': status,
+        'color': color,
+      });
+    }
+
+    listData.sort((a, b) => (b['count'] as int).compareTo(a['count'] as int));
+
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          backgroundColor: isDark ? AppColors.darkSurface : Colors.white,
+          title: Row(
+            children: const [
+              Icon(Icons.bar_chart_rounded, color: AppColors.primary),
+              SizedBox(width: 8),
+              Text('Teacher Workload & Periods Analysis', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+            ],
+          ),
+          content: SizedBox(
+            width: 550,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Analysis of weekly periods allocated per teacher compared against standard capacity guidelines (max 25 periods).',
+                  style: TextStyle(fontSize: 10, color: Colors.grey),
+                ),
+                const SizedBox(height: 16),
+
+                Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: isDark ? AppColors.darkBg : Colors.grey[100],
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Column(
+                          children: [
+                            Text('${avgLoad.toStringAsFixed(1)} p/w', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.primary)),
+                            const Text('Avg Workload', style: TextStyle(fontSize: 8, color: Colors.grey)),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.blue.withValues(alpha: 0.05),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Column(
+                          children: [
+                            Text('$optimalCount', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.blue)),
+                            const Text('Optimal (10-19)', style: TextStyle(fontSize: 8, color: Colors.grey)),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.redAccent.withValues(alpha: 0.05),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Column(
+                          children: [
+                            Text('$overloadedCount', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.redAccent)),
+                            const Text('Overloaded (>=20)', style: TextStyle(fontSize: 8, color: Colors.grey)),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.withValues(alpha: 0.05),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Column(
+                          children: [
+                            Text('$underallocatedCount', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.orange)),
+                            const Text('Under-allocated (<10)', style: TextStyle(fontSize: 8, color: Colors.grey)),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+
+                const Text('Teacher Workload List:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: Colors.grey)),
+                const SizedBox(height: 8),
+
+                Container(
+                  constraints: const BoxConstraints(maxHeight: 250),
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: listData.length,
+                    itemBuilder: (context, index) {
+                      final item = listData[index];
+                      final StaffEntity t = item['teacher'] as StaffEntity;
+                      final int count = item['count'] as int;
+                      final String status = item['status'] as String;
+                      final Color color = item['color'] as Color;
+                      final double percent = (count / 25.0).clamp(0.0, 1.0);
+
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 6),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text('${t.name} (${t.designation})', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 10)),
+                                Text('$count / 25 periods', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10, color: color)),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(4),
+                                    child: LinearProgressIndicator(
+                                      value: percent,
+                                      backgroundColor: isDark ? Colors.grey[800] : Colors.grey[200],
+                                      valueColor: AlwaysStoppedAnimation<Color>(color),
+                                      minHeight: 6,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: color.withValues(alpha: 0.15),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Text(status, style: TextStyle(fontSize: 7, fontWeight: FontWeight.bold, color: color)),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Close', style: TextStyle(fontSize: 11)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showAddSpecialDayDialog(
+    BuildContext context,
+    bool isDark,
+    String branchId,
+    List<ClassEntity> classes,
+    List<SectionEntity> sections,
+  ) {
+    final nameCtrl = TextEditingController();
+    final descCtrl = TextEditingController();
+    String type = 'Exam Day';
+    DateTime selectedDate = DateTime.now();
+
+    String? selectedClassId = classes.isNotEmpty ? classes.first.id : null;
+    String? selectedSectionId;
+    if (selectedClassId != null) {
+      final list = sections.where((s) => s.classId == selectedClassId).toList();
+      selectedSectionId = list.isNotEmpty ? list.first.id : null;
+    }
+    final startCtrl = TextEditingController(text: '09:00 AM');
+    final endCtrl = TextEditingController(text: '12:00 PM');
+    final examOrActivityCtrl = TextEditingController(text: 'Science Exam / Event Panel');
+    final roomCtrl = TextEditingController(text: 'Main Hall');
+    final supervisorCtrl = TextEditingController(text: 'Nisha Mehta');
+
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            final classSections = sections.where((s) => s.classId == selectedClassId).toList();
+
+            return AlertDialog(
+              backgroundColor: isDark ? AppColors.darkSurface : Colors.white,
+              title: const Row(
+                children: [
+                  Icon(Icons.event_note_rounded, color: AppColors.primary),
+                  SizedBox(width: 8),
+                  Text('Add Special Day Timetable', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                ],
+              ),
+              content: SizedBox(
+                width: 450,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      TextField(controller: nameCtrl, style: const TextStyle(fontSize: 11), decoration: const InputDecoration(labelText: 'Special Day Name (e.g. Science Fair)', isDense: true)),
+                      const SizedBox(height: 12),
+                      TextField(controller: descCtrl, style: const TextStyle(fontSize: 11), decoration: const InputDecoration(labelText: 'Description / Remarks', isDense: true)),
+                      const SizedBox(height: 12),
+                      DropdownButtonFormField<String>(
+                        initialValue: type,
+                        style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 11),
+                        decoration: const InputDecoration(labelText: 'Schedule Type', isDense: true),
+                        dropdownColor: isDark ? AppColors.darkSurface : Colors.white,
+                        items: const [
+                          DropdownMenuItem(value: 'Exam Day', child: Text('Exam Day')),
+                          DropdownMenuItem(value: 'Event Day', child: Text('Event Day')),
+                          DropdownMenuItem(value: 'Other', child: Text('Other Special Day')),
+                        ],
+                        onChanged: (val) {
+                          if (val != null) type = val;
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text('Date: ${DateFormat('yyyy-MM-dd').format(selectedDate)}', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                          TextButton(
+                            onPressed: () async {
+                              final dt = await showDatePicker(
+                                context: context,
+                                initialDate: selectedDate,
+                                firstDate: DateTime.now().subtract(const Duration(days: 30)),
+                                lastDate: DateTime.now().add(const Duration(days: 365)),
+                              );
+                              if (dt != null) {
+                                setDialogState(() => selectedDate = dt);
+                              }
+                            },
+                            child: const Text('Select Date', style: TextStyle(fontSize: 11)),
+                          ),
+                        ],
+                      ),
+                      const Divider(height: 16),
+
+                      const Text('Add Initial Slot / Exam:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10, color: Colors.grey)),
+                      const SizedBox(height: 8),
+
+                      Row(
+                        children: [
+                          Expanded(
+                            child: DropdownButtonFormField<String>(
+                              initialValue: selectedClassId,
+                              style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 10),
+                              decoration: const InputDecoration(labelText: 'Class', isDense: true),
+                              dropdownColor: isDark ? AppColors.darkSurface : Colors.white,
+                              items: classes.map((c) => DropdownMenuItem(value: c.id, child: Text(c.name))).toList(),
+                              onChanged: (val) {
+                                setDialogState(() {
+                                  selectedClassId = val;
+                                  final list = sections.where((s) => s.classId == val).toList();
+                                  selectedSectionId = list.isNotEmpty ? list.first.id : null;
+                                });
+                              },
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: DropdownButtonFormField<String>(
+                              initialValue: selectedSectionId,
+                              style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 10),
+                              decoration: const InputDecoration(labelText: 'Section', isDense: true),
+                              dropdownColor: isDark ? AppColors.darkSurface : Colors.white,
+                              items: classSections.map((s) => DropdownMenuItem(value: s.id, child: Text('Section ${s.name}'))).toList(),
+                              onChanged: (val) {
+                                setDialogState(() => selectedSectionId = val);
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+
+                      Row(
+                        children: [
+                          Expanded(child: TextField(controller: startCtrl, style: const TextStyle(fontSize: 11), decoration: const InputDecoration(labelText: 'Start Time', isDense: true))),
+                          const SizedBox(width: 8),
+                          Expanded(child: TextField(controller: endCtrl, style: const TextStyle(fontSize: 11), decoration: const InputDecoration(labelText: 'End Time', isDense: true))),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+
+                      TextField(controller: examOrActivityCtrl, style: const TextStyle(fontSize: 11), decoration: const InputDecoration(labelText: 'Exam/Activity Title', isDense: true)),
+                      const SizedBox(height: 8),
+
+                      Row(
+                        children: [
+                          Expanded(child: TextField(controller: roomCtrl, style: const TextStyle(fontSize: 11), decoration: const InputDecoration(labelText: 'Room', isDense: true))),
+                          const SizedBox(width: 8),
+                          Expanded(child: TextField(controller: supervisorCtrl, style: const TextStyle(fontSize: 11), decoration: const InputDecoration(labelText: 'Supervisor/Instructor', isDense: true))),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              actions: [
+                TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel', style: TextStyle(fontSize: 11))),
+                ElevatedButton(
+                  onPressed: () {
+                    if (nameCtrl.text.trim().isNotEmpty && selectedClassId != null && selectedSectionId != null) {
+                      final newSd = SpecialDayTimetableEntity(
+                        id: 'SD-${DateTime.now().millisecondsSinceEpoch}',
+                        branchId: branchId,
+                        date: selectedDate,
+                        name: nameCtrl.text.trim(),
+                        type: type,
+                        description: descCtrl.text.trim().isNotEmpty ? descCtrl.text.trim() : 'Special Schedule Day',
+                        slots: [
+                          SpecialDaySlotEntity(
+                            id: 'SDS-${DateTime.now().millisecondsSinceEpoch}',
+                            classId: selectedClassId!,
+                            sectionId: selectedSectionId!,
+                            startTime: startCtrl.text.trim(),
+                            endTime: endCtrl.text.trim(),
+                            activityOrExamName: examOrActivityCtrl.text.trim(),
+                            supervisorOrTeacherName: supervisorCtrl.text.trim(),
+                            roomNumber: roomCtrl.text.trim(),
+                          ),
+                        ],
+                      );
+                      ref.read(specialDayTimetableProvider.notifier).addSpecialDay(newSd);
+                      Navigator.pop(ctx);
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Special day timetable saved successfully.')));
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+                  child: const Text('Save Special Day', style: TextStyle(fontSize: 11, color: Colors.white)),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showAddCoCurricularDialog(BuildContext context, bool isDark, String branchId) {
+    final nameCtrl = TextEditingController();
+    final instCtrl = TextEditingController();
+    final timeCtrl = TextEditingController(text: '02:00 PM - 03:30 PM');
+    final venueCtrl = TextEditingController(text: 'Auditorium');
+    String day = 'Wednesday';
+    final capCtrl = TextEditingController(text: '30');
+
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              backgroundColor: isDark ? AppColors.darkSurface : Colors.white,
+              title: const Row(
+                children: [
+                  Icon(Icons.sports_basketball_rounded, color: AppColors.primary),
+                  SizedBox(width: 8),
+                  Text('Schedule Co-Curricular Activity', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                ],
+              ),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(controller: nameCtrl, style: const TextStyle(fontSize: 11), decoration: const InputDecoration(labelText: 'Activity Name (e.g. Coding Club)', isDense: true)),
+                    const SizedBox(height: 12),
+                    TextField(controller: instCtrl, style: const TextStyle(fontSize: 11), decoration: const InputDecoration(labelText: 'Instructor Name', isDense: true)),
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<String>(
+                      initialValue: day,
+                      style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 11),
+                      decoration: const InputDecoration(labelText: 'Weekly Day', isDense: true),
+                      dropdownColor: isDark ? AppColors.darkSurface : Colors.white,
+                      items: const [
+                        DropdownMenuItem(value: 'Monday', child: Text('Monday')),
+                        DropdownMenuItem(value: 'Tuesday', child: Text('Tuesday')),
+                        DropdownMenuItem(value: 'Wednesday', child: Text('Wednesday')),
+                        DropdownMenuItem(value: 'Thursday', child: Text('Thursday')),
+                        DropdownMenuItem(value: 'Friday', child: Text('Friday')),
+                        DropdownMenuItem(value: 'Saturday', child: Text('Saturday')),
+                      ],
+                      onChanged: (val) {
+                        if (val != null) day = val;
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(controller: timeCtrl, style: const TextStyle(fontSize: 11), decoration: const InputDecoration(labelText: 'Time Slot (e.g. 02:00 PM - 03:30 PM)', isDense: true)),
+                    const SizedBox(height: 12),
+                    TextField(controller: venueCtrl, style: const TextStyle(fontSize: 11), decoration: const InputDecoration(labelText: 'Venue / room', isDense: true)),
+                    const SizedBox(height: 12),
+                    TextField(controller: capCtrl, keyboardType: TextInputType.number, style: const TextStyle(fontSize: 11), decoration: const InputDecoration(labelText: 'Max Capacity', isDense: true)),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel', style: TextStyle(fontSize: 11))),
+                ElevatedButton(
+                  onPressed: () {
+                    if (nameCtrl.text.trim().isNotEmpty && instCtrl.text.trim().isNotEmpty) {
+                      final newAct = CoCurricularActivityEntity(
+                        id: 'CC-${DateTime.now().millisecondsSinceEpoch}',
+                        branchId: branchId,
+                        activityName: nameCtrl.text.trim(),
+                        instructorName: instCtrl.text.trim(),
+                        dayOfWeek: day,
+                        timeSlot: timeCtrl.text.trim(),
+                        venue: venueCtrl.text.trim(),
+                        maxCapacity: int.tryParse(capCtrl.text) ?? 30,
+                      );
+                      ref.read(coCurricularActivitiesProvider.notifier).addActivity(newAct);
+                      Navigator.pop(ctx);
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Co-curricular activity scheduled successfully.')));
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+                  child: const Text('Schedule Activity', style: TextStyle(fontSize: 11, color: Colors.white)),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
   void _showDailyAlertsDialog(BuildContext context, bool isDark, String branchId) {
     showDialog(
       context: context,
@@ -3351,6 +4540,285 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                   },
                   child: const Text('Save Settings', style: TextStyle(fontSize: 11)),
                 ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showVersionHistoryDialog(BuildContext context, bool isDark, String branchId) {
+    final versions = ref.watch(timetableVersionsProvider).where((v) => v.branchId == branchId).toList();
+    final nameCtrl = TextEditingController();
+    final descCtrl = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              backgroundColor: isDark ? AppColors.darkSurface : Colors.white,
+              title: const Row(
+                children: [
+                  Icon(Icons.history_rounded, color: AppColors.primary),
+                  SizedBox(width: 8),
+                  Text('Timetable Version History & Snapshots', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                ],
+              ),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Save complete snapshots of this branch schedule or revert to a historical version.',
+                      style: TextStyle(fontSize: 10, color: Colors.grey),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Create New Version Section
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.06),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Create New Version Snapshot:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: AppColors.primary)),
+                          const SizedBox(height: 8),
+                          TextField(controller: nameCtrl, style: const TextStyle(fontSize: 11), decoration: const InputDecoration(labelText: 'Version Tag (e.g. v1.2 - Lab Revision)', isDense: true)),
+                          const SizedBox(height: 8),
+                          TextField(controller: descCtrl, style: const TextStyle(fontSize: 11), decoration: const InputDecoration(labelText: 'Revision Summary / Notes', isDense: true)),
+                          const SizedBox(height: 10),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton.icon(
+                              onPressed: () {
+                                if (nameCtrl.text.trim().isNotEmpty) {
+                                  final currentSlots = ref.read(timetableSlotsProvider).where((s) => s.branchId == branchId).toList();
+                                  ref.read(timetableVersionsProvider.notifier).createSnapshot(
+                                    branchId: branchId,
+                                    versionName: nameCtrl.text.trim(),
+                                    description: descCtrl.text.trim().isNotEmpty ? descCtrl.text.trim() : 'Manual snapshot backup',
+                                    createdBy: 'Branch Admin',
+                                    currentSlots: currentSlots,
+                                  );
+                                  nameCtrl.clear();
+                                  descCtrl.clear();
+                                  setDialogState(() {});
+                                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Timetable snapshot created.')));
+                                }
+                              },
+                              icon: const Icon(Icons.add_a_photo_rounded, size: 14, color: Colors.white),
+                              label: const Text('Save Active Timetable Snapshot', style: TextStyle(fontSize: 11, color: Colors.white)),
+                              style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    const Text('Saved Historical Snapshots:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: Colors.grey)),
+                    const SizedBox(height: 8),
+                    if (versions.isEmpty)
+                      const Text('No saved snapshots found for this branch.', style: TextStyle(fontSize: 10, color: Colors.grey))
+                    else
+                      Container(
+                        constraints: const BoxConstraints(maxHeight: 180),
+                        child: ListView.separated(
+                          shrinkWrap: true,
+                          itemCount: versions.length,
+                          separatorBuilder: (ctx, idx) => const Divider(height: 1),
+                          itemBuilder: (ctx, idx) {
+                            final v = versions[idx];
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 8),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.bookmark_border_rounded, size: 18, color: AppColors.primary),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(v.versionName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
+                                        Text('${v.description} • ${v.slotsData.length} slots', style: const TextStyle(fontSize: 9, color: Colors.grey)),
+                                        Text('Saved: ${DateFormat('yyyy-MM-dd hh:mm a').format(v.createdAt)} by ${v.createdBy}', style: const TextStyle(fontSize: 8, color: Colors.grey)),
+                                      ],
+                                    ),
+                                  ),
+                                  ElevatedButton(
+                                    onPressed: () {
+                                      ref.read(timetableSlotsProvider.notifier).replaceBranchSlots(branchId, v.slotsData);
+                                      Navigator.pop(ctx);
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(content: Text('Restored timetable slots from version ${v.versionName}')),
+                                      );
+                                    },
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.green,
+                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                      visualDensity: VisualDensity.compact,
+                                    ),
+                                    child: const Text('Restore', style: TextStyle(fontSize: 10, color: Colors.white)),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Close', style: TextStyle(fontSize: 11))),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showOrgTemplatesDialog(BuildContext context, bool isDark, String branchId, bool isReadOnly) {
+    final templates = ref.watch(orgTimetableTemplatesProvider);
+    final nameCtrl = TextEditingController();
+    final descCtrl = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              backgroundColor: isDark ? AppColors.darkSurface : Colors.white,
+              title: const Row(
+                children: [
+                  Icon(Icons.grid_view_rounded, color: AppColors.primary),
+                  SizedBox(width: 8),
+                  Text('Organization Master Timetable Templates', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                ],
+              ),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Push master schedule layouts across branches or apply standard organization models.',
+                      style: TextStyle(fontSize: 10, color: Colors.grey),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Save Current as Master Template
+                    if (!isReadOnly) ...[
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.purple.withValues(alpha: 0.06),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.purple.withValues(alpha: 0.2)),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('Save Active Schedule as Global Template:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: Colors.purple)),
+                            const SizedBox(height: 8),
+                            TextField(controller: nameCtrl, style: const TextStyle(fontSize: 11), decoration: const InputDecoration(labelText: 'Template Title (e.g. CBSE 8-Period Model)', isDense: true)),
+                            const SizedBox(height: 8),
+                            TextField(controller: descCtrl, style: const TextStyle(fontSize: 11), decoration: const InputDecoration(labelText: 'Template Description', isDense: true)),
+                            const SizedBox(height: 10),
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton.icon(
+                                onPressed: () {
+                                  if (nameCtrl.text.trim().isNotEmpty) {
+                                    final currentSlots = ref.read(timetableSlotsProvider).where((s) => s.branchId == branchId).toList();
+                                    ref.read(orgTimetableTemplatesProvider.notifier).createTemplate(
+                                      name: nameCtrl.text.trim(),
+                                      description: descCtrl.text.trim().isNotEmpty ? descCtrl.text.trim() : 'Master Organization Template',
+                                      slots: currentSlots,
+                                    );
+                                    nameCtrl.clear();
+                                    descCtrl.clear();
+                                    setDialogState(() {});
+                                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Master organization template saved.')));
+                                  }
+                                },
+                                icon: const Icon(Icons.save_rounded, size: 14, color: Colors.white),
+                                label: const Text('Save Master Template', style: TextStyle(fontSize: 11, color: Colors.white)),
+                                style: ElevatedButton.styleFrom(backgroundColor: Colors.purple),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+
+                    const Text('Available Global Organization Templates:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: Colors.grey)),
+                    const SizedBox(height: 8),
+                    if (templates.isEmpty)
+                      const Text('No organization templates created yet.', style: TextStyle(fontSize: 10, color: Colors.grey))
+                    else
+                      Container(
+                        constraints: const BoxConstraints(maxHeight: 180),
+                        child: ListView.separated(
+                          shrinkWrap: true,
+                          itemCount: templates.length,
+                          separatorBuilder: (ctx, idx) => const Divider(height: 1),
+                          itemBuilder: (ctx, idx) {
+                            final tmpl = templates[idx];
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 8),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.dashboard_outlined, size: 18, color: Colors.purple),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(tmpl.templateName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
+                                        Text('${tmpl.description} • ${tmpl.templateSlots.length} slots', style: const TextStyle(fontSize: 9, color: Colors.grey)),
+                                        Text('Applied Branches: ${tmpl.appliedBranchIds.length}', style: const TextStyle(fontSize: 8, color: Colors.purple, fontWeight: FontWeight.bold)),
+                                      ],
+                                    ),
+                                  ),
+                                  ElevatedButton(
+                                    onPressed: () {
+                                      ref.read(timetableSlotsProvider.notifier).replaceBranchSlots(branchId, tmpl.templateSlots);
+                                      ref.read(orgTimetableTemplatesProvider.notifier).markPushedToBranch(tmpl.id, branchId);
+                                      Navigator.pop(ctx);
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(content: Text('Applied master template "${tmpl.templateName}" to branch.')),
+                                      );
+                                    },
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: AppColors.primary,
+                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                      visualDensity: VisualDensity.compact,
+                                    ),
+                                    child: const Text('Apply Template', style: TextStyle(fontSize: 10, color: Colors.white)),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Close', style: TextStyle(fontSize: 11))),
               ],
             );
           },
