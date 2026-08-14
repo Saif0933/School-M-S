@@ -1,0 +1,1156 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_spacing.dart';
+import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/enums/enums.dart';
+import '../../../../shared/widgets/cards/glass_card.dart';
+import '../../../../shared/widgets/layout/sidebar_navigation.dart';
+import '../../../../shared/widgets/layout/responsive_scaffold.dart';
+import '../../../auth/providers.dart';
+import '../../../auth/domain/entities/user_entity.dart';
+import '../../../../core/theme/app_theme.dart';
+import '../../../organization/presentation/pages/organization_management_page.dart';
+import '../../../branch/presentation/pages/branch_management_page.dart';
+import '../../../subscription/presentation/pages/subscription_management_page.dart';
+import '../../../academic/presentation/pages/department_class_section_page.dart';
+import '../../../academic/presentation/pages/timetable_management_page.dart';
+import '../../../student/presentation/pages/student_management_page.dart';
+import '../../../staff/presentation/pages/staff_management_page.dart';
+
+/// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+/// Dashboard Shell — Main app shell after login
+/// Contains sidebar navigation and routes to all modules
+/// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+class DashboardShell extends ConsumerStatefulWidget {
+  const DashboardShell({super.key});
+
+  @override
+  ConsumerState<DashboardShell> createState() => _DashboardShellState();
+}
+
+class _DashboardShellState extends ConsumerState<DashboardShell> {
+  String _selectedNavId = 'dashboard';
+
+  @override
+  Widget build(BuildContext context) {
+    final user = ref.watch(currentUserProvider);
+    final themeMode = ref.watch(themeModeProvider);
+    final isDark = themeMode == ThemeMode.dark;
+
+    if (user == null) return const SizedBox.shrink();
+
+    return ResponsiveScaffold(
+      title: _getTitle(),
+      breadcrumbs: _getBreadcrumbs(),
+      sidebarItems: _buildSidebarItems(user.role),
+      selectedItemId: _selectedNavId,
+      onItemSelected: (id) => setState(() => _selectedNavId = id),
+      user: user,
+      isDarkMode: isDark,
+      onThemeToggle: () => ref.read(themeModeProvider.notifier).toggleTheme(),
+      onBranchChanged: (branchId) {
+        ref.read(authStateProvider.notifier).switchBranch(branchId);
+      },
+      onLogout: () => ref.read(authStateProvider.notifier).logout(),
+      body: AnimatedSwitcher(
+        duration: AppSpacing.animNormal,
+        child: _buildSelectedPage(user),
+      ),
+    );
+  }
+
+  String _getTitle() {
+    final titles = {
+      'dashboard': 'Dashboard',
+      'organization': 'Organization Management',
+      'branches': 'Branch Management',
+      'departments': 'Departments & Classes',
+      'students': 'Student Management',
+      'staff': 'Staff & Teachers',
+      'timetable': 'Timetable & Scheduling',
+      'attendance': 'Attendance Management',
+      'fees': 'Fee & Finance',
+      'examinations': 'Examinations & Grading',
+      'library': 'Library Management',
+      'transport': 'Transport Management',
+      'hostel': 'Hostel Management',
+      'communication': 'Communication',
+      'admissions': 'Online Admissions',
+      'hr_payroll': 'HR & Payroll',
+      'inventory': 'Inventory & Assets',
+      'reports': 'Reports & Analytics',
+      'lms': 'Online Classes & LMS',
+      'certificates': 'Certificates & ID Cards',
+      'events': 'Events & Calendar',
+      'homework': 'Homework & Assignments',
+      'notice_board': 'Notice Board',
+      'visitor_security': 'Visitor & Security',
+      'leave': 'Leave & Gate Pass',
+      'canteen': 'Canteen Management',
+      'alumni': 'Alumni Management',
+      'health': 'Health & Medical',
+      'subscription': 'Subscription & Billing',
+      'settings': 'Settings',
+    };
+    return titles[_selectedNavId] ?? 'Dashboard';
+  }
+
+  List<String> _getBreadcrumbs() {
+    final user = ref.read(currentUserProvider);
+    return [
+      user?.organizationName ?? 'Organization',
+      user?.activeBranch?.branchCode ?? 'Branch',
+      _getTitle(),
+    ];
+  }
+
+  Widget _buildSelectedPage(UserEntity user) {
+    switch (_selectedNavId) {
+      case 'dashboard':
+        return _DashboardOverview(key: const ValueKey('dashboard'), user: user);
+      case 'organization':
+        return const OrganizationManagementPage(key: ValueKey('organization'));
+      case 'branches':
+        return const BranchManagementPage(key: ValueKey('branches'));
+      case 'departments':
+        return const DepartmentClassSectionPage(key: ValueKey('departments'));
+      case 'students':
+        return const StudentManagementPage(key: ValueKey('students'));
+      case 'staff':
+        return const StaffManagementPage(key: ValueKey('staff'));
+      case 'subscription':
+        return const SubscriptionManagementPage(key: ValueKey('subscription'));
+      case 'timetable':
+        return const TimetableManagementPage(key: ValueKey('timetable'));
+      default:
+        return _ModulePlaceholder(
+          key: ValueKey(_selectedNavId),
+          moduleId: _selectedNavId,
+          title: _getTitle(),
+        );
+    }
+  }
+
+  List<SidebarItem> _buildSidebarItems(UserRole role) {
+    final items = <SidebarItem>[
+      const SidebarItem(
+        id: 'dashboard',
+        label: 'Dashboard',
+        icon: Icons.dashboard_outlined,
+        activeIcon: Icons.dashboard_rounded,
+      ),
+    ];
+
+    // Organization-level items (Super Admin only)
+    if (role.isOrgLevel) {
+      items.addAll([
+        const SidebarItem(
+          id: 'organization',
+          label: 'Organization',
+          icon: Icons.business_outlined,
+          activeIcon: Icons.business_rounded,
+        ),
+        const SidebarItem(
+          id: 'branches',
+          label: 'Branches',
+          icon: Icons.account_tree_outlined,
+          activeIcon: Icons.account_tree_rounded,
+          badge: '3',
+        ),
+        const SidebarItem(
+          id: 'subscription',
+          label: 'Subscription',
+          icon: Icons.card_membership_outlined,
+          activeIcon: Icons.card_membership_rounded,
+        ),
+      ]);
+    }
+
+    // Academic
+    items.add(
+      SidebarItem(
+        id: 'academic_group',
+        label: 'Academics',
+        icon: Icons.school_outlined,
+        children: [
+          const SidebarItem(
+            id: 'departments',
+            label: 'Departments & Classes',
+            icon: Icons.category_outlined,
+            activeIcon: Icons.category_rounded,
+          ),
+          const SidebarItem(
+            id: 'timetable',
+            label: 'Timetable',
+            icon: Icons.calendar_view_week_outlined,
+            activeIcon: Icons.calendar_view_week_rounded,
+          ),
+          const SidebarItem(
+            id: 'examinations',
+            label: 'Examinations',
+            icon: Icons.assignment_outlined,
+            activeIcon: Icons.assignment_rounded,
+          ),
+          const SidebarItem(
+            id: 'homework',
+            label: 'Homework',
+            icon: Icons.edit_note_outlined,
+            activeIcon: Icons.edit_note_rounded,
+          ),
+          const SidebarItem(
+            id: 'lms',
+            label: 'Online Classes',
+            icon: Icons.play_circle_outline,
+            activeIcon: Icons.play_circle_rounded,
+          ),
+        ],
+      ),
+    );
+
+    // People
+    items.add(
+      SidebarItem(
+        id: 'people_group',
+        label: 'People',
+        icon: Icons.people_outline,
+        children: [
+          const SidebarItem(
+            id: 'students',
+            label: 'Students',
+            icon: Icons.person_outlined,
+            activeIcon: Icons.person_rounded,
+          ),
+          const SidebarItem(
+            id: 'staff',
+            label: 'Staff & Teachers',
+            icon: Icons.badge_outlined,
+            activeIcon: Icons.badge_rounded,
+          ),
+          if (role != UserRole.student && role != UserRole.parent)
+            const SidebarItem(
+              id: 'attendance',
+              label: 'Attendance',
+              icon: Icons.fact_check_outlined,
+              activeIcon: Icons.fact_check_rounded,
+            ),
+          const SidebarItem(
+            id: 'admissions',
+            label: 'Admissions',
+            icon: Icons.person_add_outlined,
+            activeIcon: Icons.person_add_rounded,
+          ),
+          const SidebarItem(
+            id: 'alumni',
+            label: 'Alumni',
+            icon: Icons.workspace_premium_outlined,
+            activeIcon: Icons.workspace_premium_rounded,
+          ),
+        ],
+      ),
+    );
+
+    // Finance
+    if (role != UserRole.student) {
+      items.add(
+        SidebarItem(
+          id: 'finance_group',
+          label: 'Finance',
+          icon: Icons.account_balance_wallet_outlined,
+          children: [
+            const SidebarItem(
+              id: 'fees',
+              label: 'Fees & Collection',
+              icon: Icons.payments_outlined,
+              activeIcon: Icons.payments_rounded,
+            ),
+            if (role.isOrgLevel || role == UserRole.branchAdmin)
+              const SidebarItem(
+                id: 'hr_payroll',
+                label: 'HR & Payroll',
+                icon: Icons.receipt_long_outlined,
+                activeIcon: Icons.receipt_long_rounded,
+              ),
+          ],
+        ),
+      );
+    }
+
+    // Facilities
+    items.add(
+      SidebarItem(
+        id: 'facilities_group',
+        label: 'Facilities',
+        icon: Icons.apartment_outlined,
+        children: [
+          const SidebarItem(
+            id: 'library',
+            label: 'Library',
+            icon: Icons.local_library_outlined,
+            activeIcon: Icons.local_library_rounded,
+          ),
+          const SidebarItem(
+            id: 'transport',
+            label: 'Transport',
+            icon: Icons.directions_bus_outlined,
+            activeIcon: Icons.directions_bus_rounded,
+          ),
+          const SidebarItem(
+            id: 'hostel',
+            label: 'Hostel',
+            icon: Icons.hotel_outlined,
+            activeIcon: Icons.hotel_rounded,
+          ),
+          const SidebarItem(
+            id: 'canteen',
+            label: 'Canteen',
+            icon: Icons.restaurant_outlined,
+            activeIcon: Icons.restaurant_rounded,
+          ),
+          const SidebarItem(
+            id: 'inventory',
+            label: 'Inventory',
+            icon: Icons.inventory_2_outlined,
+            activeIcon: Icons.inventory_2_rounded,
+          ),
+        ],
+      ),
+    );
+
+    // Communication
+    items.addAll([
+      const SidebarItem(
+        id: 'communication',
+        label: 'Communication',
+        icon: Icons.chat_bubble_outline,
+        activeIcon: Icons.chat_bubble_rounded,
+        badge: '5',
+      ),
+      const SidebarItem(
+        id: 'notice_board',
+        label: 'Notice Board',
+        icon: Icons.campaign_outlined,
+        activeIcon: Icons.campaign_rounded,
+      ),
+      const SidebarItem(
+        id: 'events',
+        label: 'Events & Calendar',
+        icon: Icons.event_outlined,
+        activeIcon: Icons.event_rounded,
+      ),
+    ]);
+
+    // Management
+    if (role.isBranchLevel || role.isOrgLevel) {
+      items.addAll([
+        const SidebarItem(
+          id: 'certificates',
+          label: 'Certificates',
+          icon: Icons.card_membership_outlined,
+          activeIcon: Icons.card_membership_rounded,
+        ),
+        const SidebarItem(
+          id: 'visitor_security',
+          label: 'Visitor & Security',
+          icon: Icons.security_outlined,
+          activeIcon: Icons.security_rounded,
+        ),
+        const SidebarItem(
+          id: 'leave',
+          label: 'Leave & Gate Pass',
+          icon: Icons.exit_to_app_outlined,
+          activeIcon: Icons.exit_to_app_rounded,
+        ),
+        const SidebarItem(
+          id: 'health',
+          label: 'Health Records',
+          icon: Icons.medical_services_outlined,
+          activeIcon: Icons.medical_services_rounded,
+        ),
+      ]);
+    }
+
+    // Reports & Settings
+    items.addAll([
+      const SidebarItem(
+        id: 'reports',
+        label: 'Reports & Analytics',
+        icon: Icons.bar_chart_outlined,
+        activeIcon: Icons.bar_chart_rounded,
+      ),
+      const SidebarItem(
+        id: 'settings',
+        label: 'Settings',
+        icon: Icons.settings_outlined,
+        activeIcon: Icons.settings_rounded,
+      ),
+    ]);
+
+    return items;
+  }
+}
+
+/// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+/// Dashboard Overview — The main dashboard content
+/// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+class _DashboardOverview extends StatelessWidget {
+  final UserEntity user;
+
+  const _DashboardOverview({super.key, required this.user});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = context.isDarkMode;
+    final isMobile = context.isMobile;
+
+    return SingleChildScrollView(
+      padding: EdgeInsets.all(context.pagePadding),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ─── Welcome Header ────────────────────
+          _buildWelcomeHeader(context, isDark),
+          const SizedBox(height: 24),
+
+          // ─── Stat Cards ────────────────────────
+          _buildStatCards(context, isMobile),
+          const SizedBox(height: 24),
+
+          // ─── Charts Row ────────────────────────
+          _buildChartsRow(context, isDark, isMobile),
+          const SizedBox(height: 24),
+
+          // ─── Quick Actions + Recent Activity ───
+          _buildBottomSection(context, isDark, isMobile),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWelcomeHeader(BuildContext context, bool isDark) {
+    final hour = DateTime.now().hour;
+    final greeting = hour < 12
+        ? 'Good Morning'
+        : hour < 17
+            ? 'Good Afternoon'
+            : 'Good Evening';
+
+    return Row(
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '$greeting, ${user.name.split(' ').first}! 👋',
+                style: TextStyle(
+                  fontSize: context.responsive(mobile: 20.0, desktop: 26.0),
+                  fontWeight: FontWeight.w700,
+                  color: isDark
+                      ? AppColors.darkTextPrimary
+                      : AppColors.lightTextPrimary,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Here\'s what\'s happening at ${user.activeBranch?.branchName ?? 'your school'} today.',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: isDark
+                      ? AppColors.darkTextSecondary
+                      : AppColors.lightTextSecondary,
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (!context.isMobile)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.darkCard : AppColors.lightCard,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.calendar_today_rounded,
+                  size: 16,
+                  color: AppColors.primary,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Academic Year 2026-27',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: isDark
+                        ? AppColors.darkTextPrimary
+                        : AppColors.lightTextPrimary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildStatCards(BuildContext context, bool isMobile) {
+    final cards = [
+      StatCard(
+        label: 'Total Students',
+        value: '2,847',
+        subtitle: 'Active enrollments',
+        icon: Icons.people_rounded,
+        gradient: AppColors.statStudents,
+        trend: '+12%',
+        trendUp: true,
+      ),
+      StatCard(
+        label: 'Total Staff',
+        value: '186',
+        subtitle: 'Teaching & non-teaching',
+        icon: Icons.badge_rounded,
+        gradient: AppColors.statStaff,
+        trend: '+3%',
+        trendUp: true,
+      ),
+      StatCard(
+        label: 'Revenue (MTD)',
+        value: '₹24.5L',
+        subtitle: 'Fee collection this month',
+        icon: Icons.account_balance_wallet_rounded,
+        gradient: AppColors.statRevenue,
+        trend: '+8%',
+        trendUp: true,
+      ),
+      StatCard(
+        label: 'Attendance Today',
+        value: '94.2%',
+        subtitle: 'Student attendance rate',
+        icon: Icons.fact_check_rounded,
+        gradient: AppColors.statAttendance,
+        trend: '-1.2%',
+        trendUp: false,
+      ),
+    ];
+
+    if (isMobile) {
+      return Column(
+        children: cards
+            .map((card) => Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: SizedBox(height: 160, child: card),
+                ))
+            .toList(),
+      );
+    }
+
+    return GridView.count(
+      crossAxisCount: context.responsive(mobile: 1, tablet: 2, desktop: 4),
+      crossAxisSpacing: 16,
+      mainAxisSpacing: 16,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      childAspectRatio: context.responsive(
+        mobile: 2.0,
+        tablet: 1.6,
+        desktop: 1.45,
+      ),
+      children: cards,
+    );
+  }
+
+  Widget _buildChartsRow(BuildContext context, bool isDark, bool isMobile) {
+    if (isMobile) {
+      return Column(
+        children: [
+          _buildAttendanceChart(isDark),
+          const SizedBox(height: 16),
+          _buildFeeCollectionChart(isDark),
+        ],
+      );
+    }
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(flex: 3, child: _buildAttendanceChart(isDark)),
+        const SizedBox(width: 16),
+        Expanded(flex: 2, child: _buildFeeCollectionChart(isDark)),
+      ],
+    );
+  }
+
+  Widget _buildAttendanceChart(bool isDark) {
+    return GlassCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Weekly Attendance Trend',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: isDark
+                      ? AppColors.darkTextPrimary
+                      : AppColors.lightTextPrimary,
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.primarySurface,
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: const Text(
+                  'This Week',
+                  style: TextStyle(
+                    color: AppColors.primary,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          // Simplified chart placeholder with bars
+          SizedBox(
+            height: 180,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                _buildBar('Mon', 0.92, isDark),
+                _buildBar('Tue', 0.88, isDark),
+                _buildBar('Wed', 0.95, isDark),
+                _buildBar('Thu', 0.91, isDark),
+                _buildBar('Fri', 0.87, isDark),
+                _buildBar('Sat', 0.78, isDark),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBar(String label, double value, bool isDark) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        Text(
+          '${(value * 100).toInt()}%',
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            color: isDark
+                ? AppColors.darkTextSecondary
+                : AppColors.lightTextSecondary,
+          ),
+        ),
+        const SizedBox(height: 4),
+        AnimatedContainer(
+          duration: AppSpacing.animSlow,
+          width: 32,
+          height: 140 * value,
+          decoration: BoxDecoration(
+            gradient: value > 0.9
+                ? AppColors.secondaryGradient
+                : value > 0.85
+                    ? AppColors.cyanGradient
+                    : AppColors.accentGradient,
+            borderRadius: BorderRadius.circular(6),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            color: isDark
+                ? AppColors.darkTextTertiary
+                : AppColors.lightTextTertiary,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFeeCollectionChart(bool isDark) {
+    return GlassCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Fee Collection Status',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: isDark
+                  ? AppColors.darkTextPrimary
+                  : AppColors.lightTextPrimary,
+            ),
+          ),
+          const SizedBox(height: 20),
+          // Circular progress indicator
+          Center(
+            child: SizedBox(
+              width: 140,
+              height: 140,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  SizedBox(
+                    width: 140,
+                    height: 140,
+                    child: CircularProgressIndicator(
+                      value: 0.73,
+                      strokeWidth: 12,
+                      backgroundColor: isDark
+                          ? AppColors.darkBorder
+                          : AppColors.lightBorder,
+                      valueColor: const AlwaysStoppedAnimation(AppColors.secondary),
+                      strokeCap: StrokeCap.round,
+                    ),
+                  ),
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        '73%',
+                        style: TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.w700,
+                          color: isDark
+                              ? AppColors.darkTextPrimary
+                              : AppColors.lightTextPrimary,
+                        ),
+                      ),
+                      Text(
+                        'Collected',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: isDark
+                              ? AppColors.darkTextTertiary
+                              : AppColors.lightTextTertiary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+          _buildFeeRow('Collected', '₹18.2L', AppColors.secondary, isDark),
+          const SizedBox(height: 8),
+          _buildFeeRow('Pending', '₹5.3L', AppColors.warning, isDark),
+          const SizedBox(height: 8),
+          _buildFeeRow('Overdue', '₹1.5L', AppColors.error, isDark),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFeeRow(String label, String value, Color color, bool isDark) {
+    return Row(
+      children: [
+        Container(
+          width: 10,
+          height: 10,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(3),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 13,
+              color: isDark
+                  ? AppColors.darkTextSecondary
+                  : AppColors.lightTextSecondary,
+            ),
+          ),
+        ),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: isDark
+                ? AppColors.darkTextPrimary
+                : AppColors.lightTextPrimary,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBottomSection(BuildContext context, bool isDark, bool isMobile) {
+    if (isMobile) {
+      return Column(
+        children: [
+          _buildQuickActions(isDark),
+          const SizedBox(height: 16),
+          _buildRecentActivity(isDark),
+        ],
+      );
+    }
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(flex: 2, child: _buildQuickActions(isDark)),
+        const SizedBox(width: 16),
+        Expanded(flex: 3, child: _buildRecentActivity(isDark)),
+      ],
+    );
+  }
+
+  Widget _buildQuickActions(bool isDark) {
+    final actions = [
+      _QuickAction(Icons.person_add_rounded, 'New Student', AppColors.primary),
+      _QuickAction(Icons.receipt_rounded, 'Collect Fee', AppColors.secondary),
+      _QuickAction(Icons.fact_check_rounded, 'Mark Attendance', AppColors.accentCyan),
+      _QuickAction(Icons.assignment_rounded, 'Create Exam', AppColors.accentAmber),
+      _QuickAction(Icons.campaign_rounded, 'Send Notice', AppColors.accentPink),
+      _QuickAction(Icons.event_rounded, 'Add Event', AppColors.accent),
+    ];
+
+    return GlassCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Quick Actions',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: isDark
+                  ? AppColors.darkTextPrimary
+                  : AppColors.lightTextPrimary,
+            ),
+          ),
+          const SizedBox(height: 16),
+          GridView.count(
+            crossAxisCount: 3,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            crossAxisSpacing: 10,
+            mainAxisSpacing: 10,
+            childAspectRatio: 1.0,
+            children: actions.map((action) {
+              return _QuickActionTile(action: action, isDark: isDark);
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRecentActivity(bool isDark) {
+    final activities = [
+      _Activity(
+        Icons.person_add_rounded,
+        'New student enrolled',
+        'Aarav Mehta was enrolled in Class 10-A',
+        '2 min ago',
+        AppColors.primary,
+      ),
+      _Activity(
+        Icons.payments_rounded,
+        'Fee collected',
+        '₹25,000 received from Priya Sharma (Class 8-B)',
+        '15 min ago',
+        AppColors.secondary,
+      ),
+      _Activity(
+        Icons.fact_check_rounded,
+        'Attendance marked',
+        'Class 9-A attendance marked by Ms. Anita Desai',
+        '32 min ago',
+        AppColors.accentCyan,
+      ),
+      _Activity(
+        Icons.assignment_rounded,
+        'Exam scheduled',
+        'Mid-term exams scheduled for Sept 15-22',
+        '1 hr ago',
+        AppColors.accentAmber,
+      ),
+      _Activity(
+        Icons.campaign_rounded,
+        'Notice published',
+        'School reopening notice sent to all parents',
+        '3 hrs ago',
+        AppColors.accentPink,
+      ),
+    ];
+
+    return GlassCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Recent Activity',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: isDark
+                      ? AppColors.darkTextPrimary
+                      : AppColors.lightTextPrimary,
+                ),
+              ),
+              TextButton(
+                onPressed: () {},
+                child: const Text(
+                  'View All',
+                  style: TextStyle(fontSize: 13),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          ...activities.map((activity) => _buildActivityItem(activity, isDark)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActivityItem(_Activity activity, bool isDark) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: activity.color.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(
+              activity.icon,
+              size: 18,
+              color: activity.color,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  activity.title,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: isDark
+                        ? AppColors.darkTextPrimary
+                        : AppColors.lightTextPrimary,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  activity.description,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: isDark
+                        ? AppColors.darkTextSecondary
+                        : AppColors.lightTextSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Text(
+            activity.time,
+            style: TextStyle(
+              fontSize: 11,
+              color: isDark
+                  ? AppColors.darkTextTertiary
+                  : AppColors.lightTextTertiary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+/// Module Placeholder — Shown for modules not yet built
+/// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+class _ModulePlaceholder extends StatelessWidget {
+  final String moduleId;
+  final String title;
+
+  const _ModulePlaceholder({
+    super.key,
+    required this.moduleId,
+    required this.title,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = context.isDarkMode;
+
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              color: AppColors.primarySurface,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: const Icon(
+              Icons.construction_rounded,
+              size: 40,
+              color: AppColors.primary,
+            ),
+          ),
+          const SizedBox(height: 20),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w600,
+              color: isDark
+                  ? AppColors.darkTextPrimary
+                  : AppColors.lightTextPrimary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'This module is under development.\nComing soon in the next phase!',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 14,
+              color: isDark
+                  ? AppColors.darkTextSecondary
+                  : AppColors.lightTextSecondary,
+            ),
+          ),
+          const SizedBox(height: 24),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.darkCard : AppColors.lightCard,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+              ),
+            ),
+            child: Text(
+              'Module ID: $moduleId',
+              style: TextStyle(
+                fontSize: 12,
+                fontFamily: 'monospace',
+                color: isDark
+                    ? AppColors.darkTextTertiary
+                    : AppColors.lightTextTertiary,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Helper Classes ──────────────────────────────
+
+class _QuickAction {
+  final IconData icon;
+  final String label;
+  final Color color;
+  const _QuickAction(this.icon, this.label, this.color);
+}
+
+class _QuickActionTile extends StatefulWidget {
+  final _QuickAction action;
+  final bool isDark;
+  const _QuickActionTile({required this.action, required this.isDark});
+
+  @override
+  State<_QuickActionTile> createState() => _QuickActionTileState();
+}
+
+class _QuickActionTileState extends State<_QuickActionTile> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: GestureDetector(
+        onTap: () {},
+        child: AnimatedContainer(
+          duration: AppSpacing.animFast,
+          decoration: BoxDecoration(
+            color: _isHovered
+                ? widget.action.color.withValues(alpha: 0.12)
+                : (widget.isDark ? AppColors.darkCard : AppColors.lightBg),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: _isHovered
+                  ? widget.action.color.withValues(alpha: 0.3)
+                  : (widget.isDark ? AppColors.darkBorder : AppColors.lightBorder),
+            ),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                widget.action.icon,
+                size: 24,
+                color: widget.action.color,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                widget.action.label,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                  color: widget.isDark
+                      ? AppColors.darkTextSecondary
+                      : AppColors.lightTextSecondary,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _Activity {
+  final IconData icon;
+  final String title;
+  final String description;
+  final String time;
+  final Color color;
+  const _Activity(this.icon, this.title, this.description, this.time, this.color);
+}
