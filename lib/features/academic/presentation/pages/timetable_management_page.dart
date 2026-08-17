@@ -5001,7 +5001,6 @@ class _TimetableManagementPageState
                         ),
                       ),
                     const SizedBox(height: 16),
-
                     if (_conflictError != null)
                       Container(
                         padding: const EdgeInsets.all(8),
@@ -5100,7 +5099,6 @@ class _TimetableManagementPageState
                       });
                       return;
                     }
-
                     // Conflict Check 2: Classroom Clash
                     if (selectedRoomName.isNotEmpty) {
                       final roomConflictingSlot = allSlots.where((slot) {
