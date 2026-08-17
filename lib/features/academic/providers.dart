@@ -314,6 +314,32 @@ final List<SectionEntity> _defaultSections = [
     classTeacher: 'Mr. Devendra Singh',
     maxStudentsCapacity: 40,
   ),
+
+  // Mumbai Class Sections
+  const SectionEntity(
+    id: 'SEC-A-008',
+    classId: 'CLS-008',
+    name: 'A',
+    roomNumber: 'M-101',
+    classTeacher: 'Mrs. Rekha Rao',
+    maxStudentsCapacity: 35,
+  ),
+  const SectionEntity(
+    id: 'SEC-A-009',
+    classId: 'CLS-009',
+    name: 'A',
+    roomNumber: 'M-201',
+    classTeacher: 'Mr. Manoj Bajpayee',
+    maxStudentsCapacity: 35,
+  ),
+  const SectionEntity(
+    id: 'SEC-A-010',
+    classId: 'CLS-010',
+    name: 'A',
+    roomNumber: 'M-301',
+    classTeacher: 'Mrs. Madhuri Dixit',
+    maxStudentsCapacity: 40,
+  ),
 ];
 
 /// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -931,6 +957,27 @@ final List<StudentEntity> _defaultStudents = [
     name: 'Fatima Shaikh',
     admissionNumber: 'ADM-2026-007',
     rollNumber: '202',
+  ),
+
+  // Mumbai Class 1 Students
+  const StudentEntity(
+    id: 'STU-008',
+    branchId: 'BR-002',
+    classId: 'CLS-008',
+    sectionId: 'SEC-A-008',
+    name: 'Sachin Tendulkar',
+    admissionNumber: 'ADM-MUM-001',
+    rollNumber: '101',
+  ),
+  // Mumbai Class 10 Students
+  const StudentEntity(
+    id: 'STU-009',
+    branchId: 'BR-002',
+    classId: 'CLS-010',
+    sectionId: 'SEC-A-010',
+    name: 'Lata Mangeshkar',
+    admissionNumber: 'ADM-MUM-002',
+    rollNumber: '201',
   ),
 ];
 
@@ -4103,6 +4150,32 @@ class FeeHeadsNotifier extends StateNotifier<List<FeeHeadEntity>> {
       amount: 2500,
       category: 'Transport',
     ),
+
+    // Mumbai branch Fee Heads
+    const FeeHeadEntity(
+      id: 'FH-005',
+      branchId: 'BR-002',
+      name: 'Admission Fee',
+      description: 'One-time admission registration fee',
+      amount: 12000,
+      category: 'Admission',
+    ),
+    const FeeHeadEntity(
+      id: 'FH-006',
+      branchId: 'BR-002',
+      name: 'Tuition Fee (Q1)',
+      description: 'Quarterly tuition fee charges',
+      amount: 22000,
+      category: 'Tuition',
+    ),
+    const FeeHeadEntity(
+      id: 'FH-007',
+      branchId: 'BR-002',
+      name: 'Hostel Fee',
+      description: 'Monthly school hostel & boarding charges',
+      amount: 8000,
+      category: 'Hostel',
+    ),
   ]);
 
   void addFeeHead(FeeHeadEntity head) {
@@ -4163,6 +4236,26 @@ class FeeInstallmentPlansNotifier
       lateFeePercentage: 5,
       graceDays: 10,
     ),
+
+    // Mumbai branch plans
+    const FeeInstallmentPlanEntity(
+      id: 'IP-003',
+      branchId: 'BR-002',
+      name: 'Monthly Flexi',
+      installmentsCount: 12,
+      frequency: 'Monthly',
+      lateFeePercentage: 1.5,
+      graceDays: 7,
+    ),
+    const FeeInstallmentPlanEntity(
+      id: 'IP-004',
+      branchId: 'BR-002',
+      name: 'Half-Yearly Saver',
+      installmentsCount: 2,
+      frequency: 'Half-Yearly',
+      lateFeePercentage: 4,
+      graceDays: 15,
+    ),
   ]);
 
   void addInstallmentPlan(FeeInstallmentPlanEntity plan) {
@@ -4213,6 +4306,24 @@ class FeeConcessionsNotifier extends StateNotifier<List<FeeConcessionEntity>> {
       type: 'FixedAmount',
       value: 10000,
       description: 'Flat 10,000 INR waiver for wards of school staff',
+    ),
+
+    // Mumbai branch concessions
+    const FeeConcessionEntity(
+      id: 'FC-003',
+      branchId: 'BR-002',
+      name: 'Sports Scholarship',
+      type: 'Percentage',
+      value: 30,
+      description: '30% tuition waiver for state-level athletes',
+    ),
+    const FeeConcessionEntity(
+      id: 'FC-004',
+      branchId: 'BR-002',
+      name: 'Sibling Waiver',
+      type: 'FixedAmount',
+      value: 5000,
+      description: 'Flat 5,000 INR waiver for second/subsequent sibling',
     ),
   ]);
 
@@ -4336,6 +4447,40 @@ class StudentFeeAssignmentsNotifier
       dueDate: DateTime.now().subtract(const Duration(days: 10)),
       status: 'Unpaid',
     ),
+
+    // Mumbai branch assignments
+    StudentFeeAssignmentEntity(
+      id: 'FA-004',
+      studentId: 'STU-008',
+      studentName: 'Sachin Tendulkar',
+      branchId: 'BR-002',
+      feeHeadId: 'FH-006',
+      feeHeadName: 'Tuition Fee (Q1)',
+      installmentPlanId: 'IP-003',
+      installmentPlanName: 'Monthly Flexi',
+      assignedAmount: 22000,
+      discountAmount: 6600,
+      concessionReason: 'Sports Scholarship (30%)',
+      paidAmount: 0,
+      dueDate: DateTime.now().subtract(const Duration(days: 3)),
+      status: 'Unpaid',
+    ),
+    StudentFeeAssignmentEntity(
+      id: 'FA-005',
+      studentId: 'STU-009',
+      studentName: 'Lata Mangeshkar',
+      branchId: 'BR-002',
+      feeHeadId: 'FH-005',
+      feeHeadName: 'Admission Fee',
+      installmentPlanId: 'IP-004',
+      installmentPlanName: 'Half-Yearly Saver',
+      assignedAmount: 12000,
+      discountAmount: 0,
+      concessionReason: 'None',
+      paidAmount: 12000,
+      dueDate: DateTime.now().subtract(const Duration(days: 20)),
+      status: 'Paid',
+    ),
   ]);
 
   void assignFee(StudentFeeAssignmentEntity assignment) {
@@ -4406,6 +4551,13 @@ class GatewayConfigsNotifier extends StateNotifier<List<GatewayConfigEntity>> {
       gatewayName: 'Razorpay',
       merchantAccountId: 'merch_delhi_01',
       publicKey: 'rzp_live_delhi12345',
+      isActive: true,
+    ),
+    const GatewayConfigEntity(
+      branchId: 'BR-002',
+      gatewayName: 'Stripe',
+      merchantAccountId: 'acct_mumbai_02',
+      publicKey: 'pk_live_mumbai54321',
       isActive: true,
     ),
   ]);
@@ -4506,6 +4658,22 @@ class FeeReceiptsNotifier extends StateNotifier<List<FeeReceiptEntity>> {
       paymentMode: 'Cash',
       transactionReference: 'CASH-COUNTER-1',
       paymentDate: DateTime.now().subtract(const Duration(days: 4)),
+      status: 'Active',
+    ),
+
+    // Mumbai branch receipts
+    FeeReceiptEntity(
+      id: 'REC-003',
+      receiptNumber: 'BR002-2026-0001',
+      branchId: 'BR-002',
+      studentId: 'STU-009',
+      studentName: 'Lata Mangeshkar',
+      feeHeadId: 'FH-005',
+      feeHeadName: 'Admission Fee',
+      amountPaid: 12000,
+      paymentMode: 'Online',
+      transactionReference: 'TXN-88223399',
+      paymentDate: DateTime.now().subtract(const Duration(days: 20)),
       status: 'Active',
     ),
   ]);
@@ -4622,6 +4790,19 @@ class FeeDaybookNotifier extends StateNotifier<List<FeeDaybookEntryEntity>> {
       studentName: 'Chaitra Gowda',
       description: 'Tuition Fee (Q1) Installment',
     ),
+
+    // Mumbai branch daybook entries
+    FeeDaybookEntryEntity(
+      id: 'DB-003',
+      branchId: 'BR-002',
+      counterName: 'Online Gate',
+      date: DateTime.now().subtract(const Duration(days: 20)),
+      type: 'Collection',
+      amount: 12000,
+      paymentMode: 'Online',
+      studentName: 'Lata Mangeshkar',
+      description: 'Admission Fee Payment',
+    ),
   ]);
 
   void logEntry(FeeDaybookEntryEntity entry) {
@@ -4681,6 +4862,13 @@ class StudentAdvanceBalancesNotifier
       studentName: 'Chaitra Gowda',
       branchId: 'BR-001',
       balance: 0.0,
+      lastUpdated: DateTime.now(),
+    ),
+    StudentAdvanceBalanceEntity(
+      studentId: 'STU-008',
+      studentName: 'Sachin Tendulkar',
+      branchId: 'BR-002',
+      balance: 3500.0,
       lastUpdated: DateTime.now(),
     ),
   ]);
@@ -4781,6 +4969,15 @@ class FinancialYearsNotifier extends StateNotifier<List<FinancialYearEntity>> {
       isLocked: false,
       isCurrent: true,
     ),
+    FinancialYearEntity(
+      id: 'FY-003',
+      branchId: 'BR-002',
+      name: 'FY 2026-27',
+      startDate: DateTime(2026, 4, 1),
+      endDate: DateTime(2027, 3, 31),
+      isLocked: false,
+      isCurrent: true,
+    ),
   ]);
 
   void addFinancialYear(FinancialYearEntity fy) {
@@ -4860,6 +5057,24 @@ class BudgetPlansNotifier extends StateNotifier<List<BudgetPlanEntity>> {
       category: 'Infrastructure',
       allocatedAmount: 2000000.0,
       spentAmount: 850000.0,
+    ),
+
+    // Mumbai branch budgets
+    const BudgetPlanEntity(
+      id: 'B-004',
+      branchId: 'BR-002',
+      financialYearId: 'FY-003',
+      category: 'Academics',
+      allocatedAmount: 1800000.0,
+      spentAmount: 500000.0,
+    ),
+    const BudgetPlanEntity(
+      id: 'B-005',
+      branchId: 'BR-002',
+      financialYearId: 'FY-003',
+      category: 'Staff Salaries',
+      allocatedAmount: 5500000.0,
+      spentAmount: 1500000.0,
     ),
   ]);
 
@@ -4943,6 +5158,32 @@ class FinancialVouchersNotifier extends StateNotifier<List<FinancialVoucherEntit
       amount: 30000.0,
       narration: 'Excess cash deposited in bank account',
       postedBy: 'Cashier',
+    ),
+
+    // Mumbai branch vouchers
+    FinancialVoucherEntity(
+      id: 'VOU-004',
+      voucherNumber: 'VOU-BR002-2026-0001',
+      branchId: 'BR-002',
+      type: 'Receipt',
+      date: DateTime.now().subtract(const Duration(days: 20)),
+      debitAccount: 'Cash at Bank',
+      creditAccount: 'Student Tuition Fee Account',
+      amount: 12000.0,
+      narration: 'Admission fee collected online',
+      postedBy: 'Parent portal checkout',
+    ),
+    FinancialVoucherEntity(
+      id: 'VOU-005',
+      voucherNumber: 'VOU-BR002-2026-0002',
+      branchId: 'BR-002',
+      type: 'Payment',
+      date: DateTime.now().subtract(const Duration(days: 15)),
+      debitAccount: 'Academics Expenses Account',
+      creditAccount: 'Cash in Hand',
+      amount: 8000.0,
+      narration: 'MUM classroom repair expenses',
+      postedBy: 'MUM Administrator',
     ),
   ]);
 
@@ -5032,6 +5273,18 @@ class BankReconciliationsNotifier extends StateNotifier<List<BankReconciliationE
       unclearedAmount: 2500.0,
       isReconciled: false,
     ),
+    BankReconciliationEntity(
+      id: 'REC-B-03',
+      branchId: 'BR-002',
+      bankName: 'SBI Mumbai Branch Account',
+      accountNumber: 'XXXX-XXXX-1122',
+      statementDate: DateTime.now().subtract(const Duration(days: 2)),
+      statementBalance: 980000.0,
+      ledgerBalance: 980000.0,
+      clearedAmount: 42000.0,
+      unclearedAmount: 0.0,
+      isReconciled: true,
+    ),
   ]);
 
   void addReconciliation(BankReconciliationEntity recon) {
@@ -5102,6 +5355,15 @@ class FinancialAuditTrailNotifier extends StateNotifier<List<FinancialAuditTrail
       performedBy: 'Counter cashier',
       ipAddress: '192.168.1.42',
     ),
+    FinancialAuditTrailEntity(
+      id: 'AUD-003',
+      branchId: 'BR-002',
+      timestamp: DateTime.now().subtract(const Duration(days: 20)),
+      actionType: 'PaymentCollected',
+      description: 'Fee collection receipt BR002-2026-0001 generated of amount ₹12,000',
+      performedBy: 'Parent (Self Portal)',
+      ipAddress: '192.168.1.199',
+    ),
   ]);
 
   void logAudit(FinancialAuditTrailEntity log) {
@@ -5161,6 +5423,16 @@ class FeeReminderLogsNotifier extends StateNotifier<List<FeeReminderLogEntity>> 
       sentAt: DateTime.now().subtract(const Duration(hours: 4)),
       status: 'Sent',
     ),
+    FeeReminderLogEntity(
+      id: 'REM-003',
+      branchId: 'BR-002',
+      studentId: 'STU-008',
+      studentName: 'Sachin Tendulkar',
+      channel: 'Email',
+      amountDue: 15400.0,
+      sentAt: DateTime.now().subtract(const Duration(days: 1)),
+      status: 'Sent',
+    ),
   ]);
 
   void logReminder(FeeReminderLogEntity log) {
@@ -5209,6 +5481,18 @@ class ExamTypesNotifier extends StateNotifier<List<ExamTypeEntity>> {
       branchId: 'BR-001',
       name: 'Final Examination',
       description: 'End-of-term board exams',
+    ),
+    const ExamTypeEntity(
+      id: 'ET-004',
+      branchId: 'BR-002',
+      name: 'Semester Test I',
+      description: 'First semester assessment cycle',
+    ),
+    const ExamTypeEntity(
+      id: 'ET-005',
+      branchId: 'BR-002',
+      name: 'Annual Final Term',
+      description: 'Annual comprehensive exams',
     ),
   ]);
 
@@ -5276,6 +5560,24 @@ class ExamPatternsNotifier extends StateNotifier<List<ExamPatternEntity>> {
       practicalWeight: 0.0,
       oralWeight: 20.0,
       projectWeight: 30.0,
+    ),
+    const ExamPatternEntity(
+      id: 'EP-004',
+      branchId: 'BR-002',
+      name: 'Oral & Practical Weighted (40-60)',
+      theoryWeight: 0.0,
+      practicalWeight: 60.0,
+      oralWeight: 40.0,
+      projectWeight: 0.0,
+    ),
+    const ExamPatternEntity(
+      id: 'EP-005',
+      branchId: 'BR-002',
+      name: 'CBSE Standard Pattern (80-20)',
+      theoryWeight: 80.0,
+      practicalWeight: 0.0,
+      oralWeight: 0.0,
+      projectWeight: 20.0,
     ),
   ]);
 
@@ -5371,6 +5673,42 @@ class BranchExamSchedulesNotifier extends StateNotifier<List<BranchExamScheduleE
       passingMarks: 35.0,
       roomNo: 'Exam Lab B',
     ),
+    BranchExamScheduleEntity(
+      id: 'ES-003',
+      branchId: 'BR-002',
+      examTypeId: 'ET-005',
+      examTypeName: 'Annual Final Term',
+      classId: 'CLS-008',
+      className: 'Class 11 Science - Sec A',
+      subjectId: 'SUB-001',
+      subjectName: 'Mathematics',
+      patternId: 'EP-005',
+      patternName: 'CBSE Standard Pattern (80-20)',
+      date: DateTime.now().add(const Duration(days: 12)),
+      startTime: '10:00 AM',
+      endTime: '01:00 PM',
+      maxMarks: 100.0,
+      passingMarks: 33.0,
+      roomNo: 'Mumbai Exam Hall 1',
+    ),
+    BranchExamScheduleEntity(
+      id: 'ES-004',
+      branchId: 'BR-002',
+      examTypeId: 'ET-005',
+      examTypeName: 'Annual Final Term',
+      classId: 'CLS-008',
+      className: 'Class 11 Science - Sec A',
+      subjectId: 'SUB-002',
+      subjectName: 'Science',
+      patternId: 'EP-004',
+      patternName: 'Oral & Practical Weighted (40-60)',
+      date: DateTime.now().add(const Duration(days: 14)),
+      startTime: '10:00 AM',
+      endTime: '01:00 PM',
+      maxMarks: 100.0,
+      passingMarks: 33.0,
+      roomNo: 'Mumbai Main Lab',
+    ),
   ]);
 
   void addExamSchedule(BranchExamScheduleEntity schedule) {
@@ -5462,6 +5800,60 @@ class GradingScalesNotifier extends StateNotifier<List<GradingScaleEntity>> {
       letter: 'F',
       minPercentage: 0.0,
       maxPercentage: 34.9,
+      gpaPoint: 0.0,
+      remarks: 'Fail',
+    ),
+    const GradingScaleEntity(
+      id: 'GS-007',
+      branchId: 'BR-002',
+      letter: 'O',
+      minPercentage: 90.0,
+      maxPercentage: 100.0,
+      gpaPoint: 10.0,
+      remarks: 'Outstanding',
+    ),
+    const GradingScaleEntity(
+      id: 'GS-008',
+      branchId: 'BR-002',
+      letter: 'A',
+      minPercentage: 80.0,
+      maxPercentage: 89.9,
+      gpaPoint: 9.0,
+      remarks: 'Very Good',
+    ),
+    const GradingScaleEntity(
+      id: 'GS-009',
+      branchId: 'BR-002',
+      letter: 'B',
+      minPercentage: 70.0,
+      maxPercentage: 79.9,
+      gpaPoint: 8.0,
+      remarks: 'Good',
+    ),
+    const GradingScaleEntity(
+      id: 'GS-010',
+      branchId: 'BR-002',
+      letter: 'C',
+      minPercentage: 60.0,
+      maxPercentage: 69.9,
+      gpaPoint: 7.0,
+      remarks: 'Average',
+    ),
+    const GradingScaleEntity(
+      id: 'GS-011',
+      branchId: 'BR-002',
+      letter: 'P',
+      minPercentage: 33.0,
+      maxPercentage: 59.9,
+      gpaPoint: 5.0,
+      remarks: 'Pass',
+    ),
+    const GradingScaleEntity(
+      id: 'GS-012',
+      branchId: 'BR-002',
+      letter: 'F',
+      minPercentage: 0.0,
+      maxPercentage: 32.9,
       gpaPoint: 0.0,
       remarks: 'Fail',
     ),
@@ -5599,6 +5991,40 @@ class StudentExamMarksNotifier extends StateNotifier<List<StudentExamMarksEntity
       status: 'Failed',
       remarks: 'Incomplete preparation',
     ),
+    const StudentExamMarksEntity(
+      id: 'SM-004',
+      branchId: 'BR-002',
+      scheduleId: 'ES-003',
+      studentId: 'STU-008',
+      studentName: 'Sachin Tendulkar',
+      theoryMarks: 88.0,
+      practicalMarks: 0.0,
+      oralMarks: 0.0,
+      projectMarks: 0.0,
+      totalMarks: 88.0,
+      moderatedMarks: 88.0,
+      isApproved: false,
+      grade: 'A',
+      status: 'Passed',
+      remarks: 'Excellent calculation skills',
+    ),
+    const StudentExamMarksEntity(
+      id: 'SM-005',
+      branchId: 'BR-002',
+      scheduleId: 'ES-003',
+      studentId: 'STU-009',
+      studentName: 'Lata Mangeshkar',
+      theoryMarks: 94.0,
+      practicalMarks: 0.0,
+      oralMarks: 0.0,
+      projectMarks: 0.0,
+      totalMarks: 94.0,
+      moderatedMarks: 94.0,
+      isApproved: false,
+      grade: 'O',
+      status: 'Passed',
+      remarks: 'Flawless scoring',
+    ),
   ]);
 
   void enterMarks(StudentExamMarksEntity marks) {
@@ -5707,6 +6133,17 @@ class RecheckRequestsNotifier extends StateNotifier<List<RecheckRequestEntity>> 
       status: 'Pending',
       date: DateTime.now().subtract(const Duration(days: 1)),
     ),
+    RecheckRequestEntity(
+      id: 'REQ-002',
+      branchId: 'BR-002',
+      marksId: 'SM-004',
+      studentName: 'Sachin Tendulkar',
+      subjectName: 'Mathematics',
+      requestType: 'Recheck',
+      reason: 'Recounting error in main sheet',
+      status: 'Pending',
+      date: DateTime.now(),
+    ),
   ]);
 
   void addRequest(RecheckRequestEntity req) {
@@ -5767,6 +6204,15 @@ class SupplementaryExamsNotifier extends StateNotifier<List<SupplementaryExamEnt
       studentName: 'Chaitra Gowda',
       subjectName: 'Mathematics',
       examDate: DateTime.now().add(const Duration(days: 20)),
+      status: 'Scheduled',
+    ),
+    SupplementaryExamEntity(
+      id: 'SUP-002',
+      branchId: 'BR-002',
+      studentId: 'STU-009',
+      studentName: 'Lata Mangeshkar',
+      subjectName: 'Music Theory',
+      examDate: DateTime.now().add(const Duration(days: 22)),
       status: 'Scheduled',
     ),
   ]);
@@ -5832,6 +6278,26 @@ class SeatingArrangementsNotifier extends StateNotifier<List<SeatingArrangementE
       deskNo: 'A-13',
       invigilatorName: 'Mr. Harish Sen',
     ),
+    const SeatingArrangementEntity(
+      id: 'SEAT-003',
+      branchId: 'BR-002',
+      scheduleId: 'ES-003',
+      studentId: 'STU-008',
+      studentName: 'Sachin Tendulkar',
+      roomNo: 'Room 101 (Mumbai South)',
+      deskNo: 'M-05',
+      invigilatorName: 'Mrs. Rekha Joshi',
+    ),
+    const SeatingArrangementEntity(
+      id: 'SEAT-004',
+      branchId: 'BR-002',
+      scheduleId: 'ES-003',
+      studentId: 'STU-009',
+      studentName: 'Lata Mangeshkar',
+      roomNo: 'Room 101 (Mumbai South)',
+      deskNo: 'M-06',
+      invigilatorName: 'Mrs. Rekha Joshi',
+    ),
   ]);
 
   void generateArrangement(List<SeatingArrangementEntity> list) {
@@ -5893,6 +6359,14 @@ class QuestionPapersNotifier extends StateNotifier<List<QuestionPaperEntity>> {
       subjectName: 'Science',
       status: 'Draft',
       uploadedBy: 'Mr. Harish Sen',
+    ),
+    const QuestionPaperEntity(
+      id: 'QP-003',
+      branchId: 'BR-002',
+      title: 'Mumbai Term II Algebra Main',
+      subjectName: 'Mathematics',
+      status: 'Draft',
+      uploadedBy: 'Mrs. Rekha Joshi',
     ),
   ]);
 
@@ -5956,6 +6430,15 @@ class OnlineExamConfigsNotifier extends StateNotifier<List<OnlineExamConfigEntit
       totalQuestions: 30,
       isActive: true,
     ),
+    const OnlineExamConfigEntity(
+      id: 'ON-002',
+      branchId: 'BR-002',
+      title: 'Mumbai Geometry Midterm MCQ',
+      subjectName: 'Mathematics',
+      durationMinutes: 60,
+      totalQuestions: 40,
+      isActive: true,
+    ),
   ]);
 
   void addOnlineExam(OnlineExamConfigEntity config) {
@@ -6017,6 +6500,15 @@ class CertificateRequestsNotifier extends StateNotifier<List<CertificateRequestE
       type: 'Migration Certificate',
       dateGenerated: DateTime.now().subtract(const Duration(days: 3)),
       status: 'Shared',
+    ),
+    CertificateRequestEntity(
+      id: 'CERT-002',
+      branchId: 'BR-002',
+      studentId: 'STU-008',
+      studentName: 'Sachin Tendulkar',
+      type: 'Consolidated Marksheet',
+      dateGenerated: DateTime.now().subtract(const Duration(days: 1)),
+      status: 'Generated',
     ),
   ]);
 

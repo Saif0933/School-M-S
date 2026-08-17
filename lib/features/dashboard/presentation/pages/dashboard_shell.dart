@@ -21,6 +21,11 @@ import '../../../academic/presentation/pages/attendance_management_page.dart';
 import '../../../academic/presentation/pages/exam_management_page.dart';
 import '../../../finance/presentation/pages/fees_management_page.dart';
 import '../../../library/presentation/pages/library_management_page.dart';
+import '../../../transport/presentation/pages/transport_management_page.dart';
+import '../../../hostel/presentation/pages/hostel_management_page.dart';
+import '../../../academic/providers.dart';
+import '../../../organization/providers.dart';
+import '../../../library/providers.dart';
 
 /// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 /// Dashboard Shell — Main app shell after login
@@ -135,6 +140,10 @@ class _DashboardShellState extends ConsumerState<DashboardShell> {
         return const ExamManagementPage(key: ValueKey('examinations'));
       case 'library':
         return const LibraryManagementPage(key: ValueKey('library'));
+      case 'transport':
+        return const TransportManagementPage(key: ValueKey('transport'));
+      case 'hostel':
+        return const HostelManagementPage(key: ValueKey('hostel'));
       default:
         return _ModulePlaceholder(
           key: ValueKey(_selectedNavId),
@@ -411,13 +420,13 @@ class _DashboardShellState extends ConsumerState<DashboardShell> {
 /// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 /// Dashboard Overview — The main dashboard content
 /// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-class _DashboardOverview extends StatelessWidget {
+class _DashboardOverview extends ConsumerWidget {
   final UserEntity user;
 
   const _DashboardOverview({super.key, required this.user});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isDark = context.isDarkMode;
     final isMobile = context.isMobile;
 
@@ -436,9 +445,11 @@ class _DashboardOverview extends StatelessWidget {
 
           // ─── Organization Cross-Branch Analytics ───
           if (user.role.isOrgLevel) ...[
-            _buildOrgComparisonRow(context, isDark, isMobile),
+            _buildOrgComparisonRow(context, ref, isDark, isMobile),
             const SizedBox(height: 24),
-            _buildOrgFinanceRow(context, isDark, isMobile),
+            _buildOrgFinanceRow(context, ref, isDark, isMobile),
+            const SizedBox(height: 24),
+            _buildOrgLibraryRow(context, ref, isDark, isMobile),
             const SizedBox(height: 24),
           ],
 
@@ -612,11 +623,13 @@ class _DashboardOverview extends StatelessWidget {
     );
   }
 
-  Widget _buildOrgComparisonRow(BuildContext context, bool isDark, bool isMobile) {
+  Widget _buildOrgComparisonRow(BuildContext context, WidgetRef ref, bool isDark, bool isMobile) {
     if (isMobile) {
       return Column(
         children: [
-          _buildBranchComparisonChart(isDark),
+          _buildBranchComparisonChart(ref, isDark),
+          const SizedBox(height: 16),
+          _buildBranchExamComparisonChart(ref, isDark),
           const SizedBox(height: 16),
           _buildBranchAttendanceHeatMap(isDark),
         ],
@@ -626,28 +639,95 @@ class _DashboardOverview extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(flex: 3, child: _buildBranchComparisonChart(isDark)),
+        Expanded(flex: 3, child: _buildBranchComparisonChart(ref, isDark)),
+        const SizedBox(width: 16),
+        Expanded(flex: 3, child: _buildBranchExamComparisonChart(ref, isDark)),
         const SizedBox(width: 16),
         Expanded(flex: 2, child: _buildBranchAttendanceHeatMap(isDark)),
       ],
     );
   }
 
-  Widget _buildBranchComparisonChart(bool isDark) {
+  Widget _buildBranchExamComparisonChart(WidgetRef ref, bool isDark) {
     final titleColor = isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
+
+    final allBranches = ref.watch(organizationBranchesProvider);
+    final allMarks = ref.watch(studentExamMarksProvider);
 
     return GlassCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Cross-Branch Attendance Comparison',
+            'Cross-Branch Academic Averages',
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: titleColor),
           ),
           const SizedBox(height: 16),
-          _buildBranchComparisonBar('Branch Delhi (DL-01)', 0.942, AppColors.secondary, isDark),
-          _buildBranchComparisonBar('Branch Bangalore (BL-02)', 0.918, AppColors.primary, isDark),
-          _buildBranchComparisonBar('Branch Mumbai (MB-03)', 0.895, AppColors.warning, isDark),
+          if (allBranches.isEmpty)
+            const Center(child: Text('No active branches found.', style: TextStyle(fontSize: 12)))
+          else
+            ...allBranches.map((b) {
+              final branchMarks = allMarks.where((m) => m.branchId == b.id).toList();
+              final averageScore = branchMarks.isNotEmpty 
+                  ? branchMarks.fold(0.0, (sum, m) => sum + m.totalMarks) / branchMarks.length
+                  : 0.0;
+              final ratio = (averageScore / 100.0).clamp(0.0, 1.0);
+
+              Color barColor = AppColors.primary;
+              if (b.id == 'BR-001') barColor = AppColors.secondary;
+              if (b.id == 'BR-002') barColor = AppColors.warning;
+
+              return _buildBranchComparisonBar(
+                '${b.name} (Avg Score: ${averageScore.toStringAsFixed(1)}%)',
+                ratio,
+                barColor,
+                isDark,
+              );
+            }),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBranchComparisonChart(WidgetRef ref, bool isDark) {
+    final titleColor = isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
+
+    final allBranches = ref.watch(organizationBranchesProvider);
+    final allReceipts = ref.watch(feeReceiptsProvider);
+
+    final targets = {
+      'BR-001': 350000.0,
+      'BR-002': 200000.0,
+    };
+
+    return GlassCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Cross-Branch Collections vs Targets',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: titleColor),
+          ),
+          const SizedBox(height: 16),
+          if (allBranches.isEmpty)
+            const Center(child: Text('No active branches found.', style: TextStyle(fontSize: 12)))
+          else
+            ...allBranches.map((b) {
+              final collectedForBranch = allReceipts.where((r) => r.branchId == b.id && r.status != 'Refunded').fold(0.0, (sum, r) => sum + r.amountPaid);
+              final branchTarget = targets[b.id] ?? 150000.0;
+              final ratio = branchTarget > 0 ? (collectedForBranch / branchTarget).clamp(0.0, 1.0) : 0.0;
+
+              Color barColor = AppColors.primary;
+              if (b.id == 'BR-001') barColor = AppColors.secondary;
+              if (b.id == 'BR-002') barColor = AppColors.warning;
+
+              return _buildBranchComparisonBar(
+                '${b.name} (Target: ₹${(branchTarget/1000).toStringAsFixed(0)}K)',
+                ratio,
+                barColor,
+                isDark,
+              );
+            }),
         ],
       ),
     );
@@ -765,13 +845,13 @@ class _DashboardOverview extends StatelessWidget {
     }
   }
 
-  Widget _buildOrgFinanceRow(BuildContext context, bool isDark, bool isMobile) {
+  Widget _buildOrgFinanceRow(BuildContext context, WidgetRef ref, bool isDark, bool isMobile) {
     if (isMobile) {
       return Column(
         children: [
-          _buildOrgConsolidatedFeeDashboard(isDark),
+          _buildOrgConsolidatedFeeDashboard(ref, isDark),
           const SizedBox(height: 16),
-          _buildBranchRevenueRanking(isDark),
+          _buildBranchRevenueRanking(ref, isDark),
         ],
       );
     }
@@ -779,16 +859,29 @@ class _DashboardOverview extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(flex: 3, child: _buildOrgConsolidatedFeeDashboard(isDark)),
+        Expanded(flex: 3, child: _buildOrgConsolidatedFeeDashboard(ref, isDark)),
         const SizedBox(width: 16),
-        Expanded(flex: 2, child: _buildBranchRevenueRanking(isDark)),
+        Expanded(flex: 2, child: _buildBranchRevenueRanking(ref, isDark)),
       ],
     );
   }
 
-  Widget _buildOrgConsolidatedFeeDashboard(bool isDark) {
+  Widget _buildOrgConsolidatedFeeDashboard(WidgetRef ref, bool isDark) {
     final titleColor = isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
     final textSec = isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+
+    final allBranches = ref.watch(organizationBranchesProvider);
+    final allAssignments = ref.watch(studentFeeAssignmentsProvider);
+    final allReceipts = ref.watch(feeReceiptsProvider);
+
+    final totalCollected = allReceipts.where((r) => r.status != 'Refunded').fold(0.0, (sum, r) => sum + r.amountPaid);
+    final totalOutstanding = allAssignments.fold(0.0, (sum, fa) => sum + (fa.assignedAmount - fa.discountAmount - fa.paidAmount));
+    final efficiency = (totalCollected + totalOutstanding) > 0 ? (totalCollected / (totalCollected + totalOutstanding)) * 100 : 0.0;
+
+    final targets = {
+      'BR-001': 350000.0,
+      'BR-002': 200000.0,
+    };
 
     return GlassCard(
       child: Column(
@@ -802,9 +895,9 @@ class _DashboardOverview extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _buildFinanceKpi('Total Collected', '₹5,55,000', AppColors.secondary, isDark),
-              _buildFinanceKpi('Total Outstanding', '₹1,25,000', AppColors.error, isDark),
-              _buildFinanceKpi('Collection Efficiency', '81.6%', AppColors.primary, isDark),
+              _buildFinanceKpi('Total Collected', '₹${totalCollected.toStringAsFixed(0)}', AppColors.secondary, isDark),
+              _buildFinanceKpi('Total Outstanding', '₹${totalOutstanding.toStringAsFixed(0)}', AppColors.error, isDark),
+              _buildFinanceKpi('Collection Efficiency', '${efficiency.toStringAsFixed(1)}%', AppColors.primary, isDark),
             ],
           ),
           const SizedBox(height: 16),
@@ -813,9 +906,25 @@ class _DashboardOverview extends StatelessWidget {
             style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: textSec),
           ),
           const SizedBox(height: 8),
-          _buildBranchComparisonBar('Branch Delhi (Target: 3.0L)', 0.833, AppColors.secondary, isDark),
-          _buildBranchComparisonBar('Branch Bangalore (Target: 2.2L)', 0.841, AppColors.primary, isDark),
-          _buildBranchComparisonBar('Branch Mumbai (Target: 1.5L)', 0.800, AppColors.warning, isDark),
+          if (allBranches.isEmpty)
+            const Center(child: Text('No branches found.', style: TextStyle(fontSize: 12)))
+          else
+            ...allBranches.map((b) {
+              final collectedForBranch = allReceipts.where((r) => r.branchId == b.id && r.status != 'Refunded').fold(0.0, (sum, r) => sum + r.amountPaid);
+              final branchTarget = targets[b.id] ?? 150000.0;
+              final ratio = branchTarget > 0 ? (collectedForBranch / branchTarget).clamp(0.0, 1.0) : 0.0;
+
+              Color barColor = AppColors.primary;
+              if (b.id == 'BR-001') barColor = AppColors.secondary;
+              if (b.id == 'BR-002') barColor = AppColors.warning;
+
+              return _buildBranchComparisonBar(
+                '${b.name} (Target: ₹${(branchTarget/1000).toStringAsFixed(0)}K)',
+                ratio,
+                barColor,
+                isDark,
+              );
+            }),
         ],
       ),
     );
@@ -832,8 +941,18 @@ class _DashboardOverview extends StatelessWidget {
     );
   }
 
-  Widget _buildBranchRevenueRanking(bool isDark) {
+  Widget _buildBranchRevenueRanking(WidgetRef ref, bool isDark) {
     final titleColor = isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
+
+    final allBranches = ref.watch(organizationBranchesProvider);
+    final allReceipts = ref.watch(feeReceiptsProvider);
+
+    final branchRevenues = allBranches.map((b) {
+      final rev = allReceipts.where((r) => r.branchId == b.id && r.status != 'Refunded').fold(0.0, (sum, r) => sum + r.amountPaid);
+      return MapEntry(b.name, rev);
+    }).toList();
+
+    branchRevenues.sort((a, b) => b.value.compareTo(a.value));
 
     return GlassCard(
       child: Column(
@@ -844,9 +963,144 @@ class _DashboardOverview extends StatelessWidget {
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: titleColor),
           ),
           const SizedBox(height: 16),
-          _buildRankTile('Delhi Branch (DL-01)', '₹2,50,000', '1st', Colors.amber, isDark),
-          _buildRankTile('Bangalore Branch (BL-02)', '₹1,85,000', '2nd', const Color(0xFFC0C0C0), isDark),
-          _buildRankTile('Mumbai Branch (MB-03)', '₹1,20,000', '3rd', const Color(0xFFCD7F32), isDark),
+          if (branchRevenues.isEmpty)
+            const Center(child: Text('No revenue data recorded.', style: TextStyle(fontSize: 12)))
+          else
+            ...List.generate(branchRevenues.length, (index) {
+              final entry = branchRevenues[index];
+              final ordinal = (index == 0) ? '1st' : (index == 1) ? '2nd' : (index == 2) ? '3rd' : '${index + 1}th';
+              final medalColor = (index == 0) ? Colors.amber : (index == 1) ? const Color(0xFFC0C0C0) : (index == 2) ? const Color(0xFFCD7F32) : Colors.blueGrey;
+
+              return _buildRankTile(
+                entry.key,
+                '₹${entry.value.toStringAsFixed(0)}',
+                ordinal,
+                medalColor,
+                isDark,
+              );
+            }),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOrgLibraryRow(BuildContext context, WidgetRef ref, bool isDark, bool isMobile) {
+    if (isMobile) {
+      return Column(
+        children: [
+          _buildOrgConsolidatedLibraryDashboard(ref, isDark),
+          const SizedBox(height: 16),
+          _buildBranchLibraryRanking(ref, isDark),
+        ],
+      );
+    }
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(flex: 3, child: _buildOrgConsolidatedLibraryDashboard(ref, isDark)),
+        const SizedBox(width: 16),
+        Expanded(flex: 2, child: _buildBranchLibraryRanking(ref, isDark)),
+      ],
+    );
+  }
+
+  Widget _buildOrgConsolidatedLibraryDashboard(WidgetRef ref, bool isDark) {
+    final titleColor = isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
+    final textSec = isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+
+    final allBranches = ref.watch(organizationBranchesProvider);
+    final allBooks = ref.watch(bookCatalogProvider);
+
+    final totalBooksCount = allBooks.length;
+    final activeIssuedCount = allBooks.where((b) => b.status == 'Issued').length;
+    final overallIssueRate = totalBooksCount > 0 ? (activeIssuedCount / totalBooksCount) * 100 : 0.0;
+
+    return GlassCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Consolidated Library Catalog Dashboard',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: titleColor),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildFinanceKpi('Total Books', '$totalBooksCount items', AppColors.secondary, isDark),
+              _buildFinanceKpi('Active Issues', '$activeIssuedCount books', AppColors.warning, isDark),
+              _buildFinanceKpi('Overall Issue Rate', '${overallIssueRate.toStringAsFixed(1)}%', AppColors.primary, isDark),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Branch Book Stock vs Active Issues',
+            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: textSec),
+          ),
+          const SizedBox(height: 8),
+          if (allBranches.isEmpty)
+            const Center(child: Text('No active branches found.', style: TextStyle(fontSize: 12)))
+          else
+            ...allBranches.map((b) {
+              final branchBooksCount = allBooks.where((bk) => bk.branchId == b.id).length;
+              final branchIssuedCount = allBooks.where((bk) => bk.branchId == b.id && bk.status == 'Issued').length;
+              final ratio = branchBooksCount > 0 ? (branchIssuedCount / branchBooksCount).clamp(0.0, 1.0) : 0.0;
+
+              Color barColor = AppColors.primary;
+              if (b.id == 'BR-001') barColor = AppColors.secondary;
+              if (b.id == 'BR-002') barColor = AppColors.warning;
+
+              return _buildBranchComparisonBar(
+                '${b.name} ($branchIssuedCount Issued / $branchBooksCount Total)',
+                ratio,
+                barColor,
+                isDark,
+              );
+            }),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBranchLibraryRanking(WidgetRef ref, bool isDark) {
+    final titleColor = isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
+
+    final allBranches = ref.watch(organizationBranchesProvider);
+    final allBooks = ref.watch(bookCatalogProvider);
+
+    final branchBookSizes = allBranches.map((b) {
+      final size = allBooks.where((bk) => bk.branchId == b.id).length;
+      return MapEntry(b.name, size);
+    }).toList();
+
+    branchBookSizes.sort((a, b) => b.value.compareTo(a.value));
+
+    return GlassCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Branch Library Stock Ranking',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: titleColor),
+          ),
+          const SizedBox(height: 16),
+          if (branchBookSizes.isEmpty)
+            const Center(child: Text('No book data registered.', style: TextStyle(fontSize: 12)))
+          else
+            ...List.generate(branchBookSizes.length, (index) {
+              final entry = branchBookSizes[index];
+              final ordinal = (index == 0) ? '1st' : (index == 1) ? '2nd' : (index == 2) ? '3rd' : '${index + 1}th';
+              final medalColor = (index == 0) ? Colors.amber : (index == 1) ? const Color(0xFFC0C0C0) : (index == 2) ? const Color(0xFFCD7F32) : Colors.blueGrey;
+
+              return _buildRankTile(
+                entry.key,
+                '${entry.value} Books',
+                ordinal,
+                medalColor,
+                isDark,
+              );
+            }),
         ],
       ),
     );

@@ -953,17 +953,42 @@ class _CollectFeesTabState extends ConsumerState<_CollectFeesTab> {
     final cardExpiryCtrl = TextEditingController(text: '12/28');
     final cardCvvCtrl = TextEditingController(text: '321');
 
+    final gateway = ref.read(gatewayConfigsProvider).firstWhere(
+      (c) => c.branchId == widget.branchId,
+      orElse: () => GatewayConfigEntity(
+        branchId: widget.branchId,
+        gatewayName: 'Stripe',
+        merchantAccountId: 'merch_default',
+        publicKey: 'pk_default',
+        isActive: true,
+      ),
+    );
+
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text('Razorpay/Stripe Payment Portal — ${fa.feeHeadName}'),
+          title: Text('${gateway.gatewayName} Payment Gateway Portal — ${fa.feeHeadName}'),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Parent Portal Credit Card Payment Simulator', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                Text('Secure Online Checkout powered by ${gateway.gatewayName}', style: const TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+                  ),
+                  child: Text(
+                    'Branch Gateway Account:\nMerchant ID: ${gateway.merchantAccountId}\nAPI Key: ${gateway.publicKey}',
+                    style: const TextStyle(fontSize: 9, fontFamily: 'monospace', color: AppColors.primary),
+                  ),
+                ),
                 const SizedBox(height: 16),
                 Text('Total Due: ₹${totalDue.toStringAsFixed(0)}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
                 const SizedBox(height: 12),
@@ -1060,7 +1085,7 @@ class _CollectFeesTabState extends ConsumerState<_CollectFeesTab> {
                     branchId: widget.branchId,
                     timestamp: DateTime.now(),
                     actionType: 'PaymentCollected',
-                    description: 'Parent payment checkout successfully cleared via Stripe gateway account of amount ₹${totalDue.toStringAsFixed(0)}',
+                    description: 'Parent payment checkout successfully cleared via ${gateway.gatewayName} gateway account (Merchant ID: ${gateway.merchantAccountId}) of amount ₹${totalDue.toStringAsFixed(0)}',
                     performedBy: 'Parent (Self Portal)',
                     ipAddress: '192.168.1.199',
                   ),
@@ -2250,6 +2275,9 @@ class _AccountingReportsTabState extends ConsumerState<_AccountingReportsTab> {
     final reminderLogs = ref.watch(feeReminderLogsProvider).where((rem) => rem.branchId == widget.branchId).toList();
     final assignments = ref.watch(studentFeeAssignmentsProvider).where((a) => a.branchId == widget.branchId).toList();
     final plans = ref.watch(feeInstallmentPlansProvider).where((p) => p.branchId == widget.branchId).toList();
+    final receipts = ref.watch(feeReceiptsProvider).where((r) => r.branchId == widget.branchId).toList();
+    final classes = ref.watch(academicClassesProvider).where((c) => c.branchId == widget.branchId).toList();
+    final studentsList = ref.watch(academicStudentsProvider).where((s) => s.branchId == widget.branchId).toList();
 
     final textPri = isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
     final textSec = isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
@@ -2282,6 +2310,48 @@ class _AccountingReportsTabState extends ConsumerState<_AccountingReportsTab> {
       return fa.dueDate.isBefore(DateTime.now()) && fa.paidAmount < netPayable;
     }).toList();
 
+    final todayDate = DateTime.now();
+    final todayReceipts = receipts.where((r) =>
+        r.paymentDate.day == todayDate.day &&
+        r.paymentDate.month == todayDate.month &&
+        r.paymentDate.year == todayDate.year).toList();
+
+    final cashCollectedToday = todayReceipts
+        .where((r) => r.paymentMode == 'Cash' && r.status != 'Refunded')
+        .fold(0.0, (sum, r) => sum + r.amountPaid);
+    final onlineCollectedToday = todayReceipts
+        .where((r) => r.paymentMode == 'Online' && r.status != 'Refunded')
+        .fold(0.0, (sum, r) => sum + r.amountPaid);
+    final bankCollectedToday = todayReceipts
+        .where((r) => (r.paymentMode == 'Cheque' || r.paymentMode == 'DD' || r.paymentMode == 'UPI' || r.paymentMode == 'Card') && r.status != 'Refunded')
+        .fold(0.0, (sum, r) => sum + r.amountPaid);
+    final totalCollectedToday = cashCollectedToday + onlineCollectedToday + bankCollectedToday;
+
+    final totalAssignedCount = assignments.length;
+    final totalAssignedAmt = assignments.fold(0.0, (sum, item) => sum + item.assignedAmount);
+    final totalDiscountAmt = assignments.fold(0.0, (sum, item) => sum + item.discountAmount);
+    final totalNetPayable = totalAssignedAmt - totalDiscountAmt;
+    final totalCollectedAmt = assignments.fold(0.0, (sum, item) => sum + item.paidAmount);
+    final outstandingDuesAmt = totalNetPayable - totalCollectedAmt;
+    final totalOutstandingFines = assignments.fold(0.0, (sum, item) => sum + calculateFine(item));
+    final grandOutstandingDues = outstandingDuesAmt + totalOutstandingFines;
+
+    // Class-wise dues mapping
+    final Map<String, double> classDuesMap = {};
+    final Map<String, String> classIdToName = {
+      for (final c in classes) c.id: c.name
+    };
+
+    for (final fa in assignments) {
+      final student = studentsList.firstWhere((s) => s.id == fa.studentId, orElse: () => StudentEntity(id: '', branchId: '', classId: '', sectionId: '', name: '', admissionNumber: '', rollNumber: ''));
+      final className = classIdToName[student.classId] ?? 'Other / Unassigned';
+      final netPayable = fa.assignedAmount - fa.discountAmount;
+      final dues = netPayable + calculateFine(fa) - fa.paidAmount;
+      if (dues > 0) {
+        classDuesMap[className] = (classDuesMap[className] ?? 0.0) + dues;
+      }
+    }
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -2292,6 +2362,8 @@ class _AccountingReportsTabState extends ConsumerState<_AccountingReportsTab> {
             scrollDirection: Axis.horizontal,
             child: Row(
               children: [
+                'Daily Collection Report',
+                'Outstanding Dues Report',
                 'P&L Statement',
                 'Balance Sheet',
                 'Trial Balance',
@@ -2322,7 +2394,145 @@ class _AccountingReportsTabState extends ConsumerState<_AccountingReportsTab> {
           ),
           const SizedBox(height: 16),
 
-          if (_activeReport == 'P&L Statement') ...[
+          if (_activeReport == 'Daily Collection Report') ...[
+            GlassCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Daily Fee Collection Report', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: textPri)),
+                      Text('${todayDate.day}/${todayDate.month}/${todayDate.year}', style: TextStyle(fontSize: 12, color: textSec, fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                  const Divider(height: 20),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _DaybookSummaryCounterCard(
+                          title: 'Cash Collection',
+                          amount: cashCollectedToday,
+                          color: AppColors.secondary,
+                          icon: Icons.payments_rounded,
+                          isDark: isDark,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: _DaybookSummaryCounterCard(
+                          title: 'Online Gateway',
+                          amount: onlineCollectedToday,
+                          color: AppColors.primary,
+                          icon: Icons.credit_card_rounded,
+                          isDark: isDark,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: _DaybookSummaryCounterCard(
+                          title: 'Bank (Cheque/UPI/Card)',
+                          amount: bankCollectedToday,
+                          color: AppColors.warning,
+                          icon: Icons.qr_code_2_rounded,
+                          isDark: isDark,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  const Divider(height: 12),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Total Daily Collection (Net)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: textPri)),
+                      Text('₹${totalCollectedToday.toStringAsFixed(0)}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.secondary)),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  Text('Daily Transaction Logs', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: textPri)),
+                  const SizedBox(height: 10),
+                  if (todayReceipts.isEmpty)
+                    Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Text('No collection records logged today.', style: TextStyle(color: textSec, fontSize: 12)),
+                      ),
+                    )
+                  else
+                    ...todayReceipts.map((r) {
+                      final isRefunded = r.status == 'Refunded';
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        child: GlassCard(
+                          child: ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            leading: CircleAvatar(
+                              backgroundColor: isRefunded ? AppColors.error.withValues(alpha: 0.12) : AppColors.secondary.withValues(alpha: 0.12),
+                              child: Icon(isRefunded ? Icons.assignment_return_rounded : Icons.receipt_long_rounded, color: isRefunded ? AppColors.error : AppColors.secondary, size: 16),
+                            ),
+                            title: Text('${r.receiptNumber} (${r.studentName})', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: textPri)),
+                            subtitle: Text('Mode: ${r.paymentMode} • Ref: ${r.transactionReference}', style: TextStyle(color: textSec, fontSize: 10)),
+                            trailing: Text(
+                              '₹${r.amountPaid.toStringAsFixed(0)}',
+                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: isRefunded ? AppColors.error : AppColors.secondary),
+                            ),
+                          ),
+                        ),
+                      );
+                    }),
+                ],
+              ),
+            ),
+          ] else if (_activeReport == 'Outstanding Dues Report') ...[
+            GlassCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Outstanding Fees & Dues Analysis', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: textPri)),
+                  const Divider(height: 20),
+                  _buildReportRow('Total Active Students Assigned', totalAssignedCount.toDouble(), textPri),
+                  _buildReportRow('Gross Assigned Fee Structure', totalAssignedAmt, textPri),
+                  _buildReportRow('Total Concessions & Scholarships', totalDiscountAmt, textPri),
+                  _buildReportRow('Net Fee Payable Dues', totalNetPayable, textPri),
+                  _buildReportRow('Total Fees Collected', totalCollectedAmt, textPri),
+                  _buildReportRow('Overdue Fines/Penalties Calculated', totalOutstandingFines, textPri),
+                  const Divider(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Net Outstanding Dues (Net + Fines)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: textPri)),
+                      Text('₹${grandOutstandingDues.toStringAsFixed(0)}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.error)),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  Text('Class-wise Outstanding Dues Breakdown', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: textPri)),
+                  const SizedBox(height: 10),
+                  if (classDuesMap.isEmpty)
+                    Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Text('Perfect! No outstanding dues recorded for any class.', style: TextStyle(color: textSec, fontSize: 12)),
+                      ),
+                    )
+                  else
+                    ...classDuesMap.entries.map((entry) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 6),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(entry.key, style: TextStyle(fontSize: 12, color: textPri, fontWeight: FontWeight.w600)),
+                            Text('₹${entry.value.toStringAsFixed(0)}', style: const TextStyle(fontSize: 12, color: AppColors.error, fontWeight: FontWeight.bold)),
+                          ],
+                        ),
+                      );
+                    }),
+                ],
+              ),
+            ),
+          ] else if (_activeReport == 'P&L Statement') ...[
             GlassCard(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
