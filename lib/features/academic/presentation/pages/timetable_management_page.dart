@@ -13,10 +13,12 @@ class TimetableManagementPage extends ConsumerStatefulWidget {
   const TimetableManagementPage({super.key});
 
   @override
-  ConsumerState<TimetableManagementPage> createState() => _TimetableManagementPageState();
+  ConsumerState<TimetableManagementPage> createState() =>
+      _TimetableManagementPageState();
 }
 
-class _TimetableManagementPageState extends ConsumerState<TimetableManagementPage>
+class _TimetableManagementPageState
+    extends ConsumerState<TimetableManagementPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
@@ -44,8 +46,18 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
   bool _studentPortalShared = true;
   bool _parentPortalShared = true;
   final List<Map<String, String>> _shareLogs = [
-    {'time': 'Aug 14, 2026 09:00 AM', 'channel': 'Portal Broadcast', 'scope': 'BR-001 Students & Parents', 'status': 'Published'},
-    {'time': 'Aug 12, 2026 03:30 PM', 'channel': 'SMS Broadcast', 'scope': 'Class 10-A Parents', 'status': 'Delivered (82 alerts)'},
+    {
+      'time': 'Aug 14, 2026 09:00 AM',
+      'channel': 'Portal Broadcast',
+      'scope': 'BR-001 Students & Parents',
+      'status': 'Published',
+    },
+    {
+      'time': 'Aug 12, 2026 03:30 PM',
+      'channel': 'SMS Broadcast',
+      'scope': 'Class 10-A Parents',
+      'status': 'Delivered (82 alerts)',
+    },
   ];
 
   bool _googleSyncEnabled = true;
@@ -57,9 +69,24 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
   bool _alertEmail = true;
   bool _alertSms = false;
   final List<Map<String, String>> _alertLogs = [
-    {'time': 'Aug 14, 2026 07:30 AM', 'title': 'Daily Agenda Alert', 'sent': '340 recipients', 'failures': '0'},
-    {'time': 'Aug 13, 2026 07:30 AM', 'title': 'Daily Agenda Alert', 'sent': '340 recipients', 'failures': '0'},
-    {'time': 'Aug 12, 2026 07:30 AM', 'title': 'Daily Agenda Alert', 'sent': '340 recipients', 'failures': '0'},
+    {
+      'time': 'Aug 14, 2026 07:30 AM',
+      'title': 'Daily Agenda Alert',
+      'sent': '340 recipients',
+      'failures': '0',
+    },
+    {
+      'time': 'Aug 13, 2026 07:30 AM',
+      'title': 'Daily Agenda Alert',
+      'sent': '340 recipients',
+      'failures': '0',
+    },
+    {
+      'time': 'Aug 12, 2026 07:30 AM',
+      'title': 'Daily Agenda Alert',
+      'sent': '340 recipients',
+      'failures': '0',
+    },
   ];
 
   @override
@@ -82,7 +109,10 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
     // Auth & Branch Context
     final user = ref.watch(currentUserProvider);
     final userHomeBranchId = user?.activeBranch?.branchId;
-    final isOrgAdmin = user?.role == UserRole.orgAdmin || user?.role == UserRole.superAdmin || user?.role == UserRole.platformAdmin;
+    final isOrgAdmin =
+        user?.role == UserRole.orgAdmin ||
+        user?.role == UserRole.superAdmin ||
+        user?.role == UserRole.platformAdmin;
     final allBranches = ref.watch(organizationBranchesProvider);
 
     final effectiveBranchId = _overrideBranchId ?? userHomeBranchId;
@@ -90,12 +120,15 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
     if (effectiveBranchId == null) {
       return const Scaffold(
         body: Center(
-          child: Text('No active branch selected. Please select a branch from the top bar.'),
+          child: Text(
+            'No active branch selected. Please select a branch from the top bar.',
+          ),
         ),
       );
     }
 
-    final isReadOnly = _overrideBranchId != null && _overrideBranchId != userHomeBranchId;
+    final isReadOnly =
+        _overrideBranchId != null && _overrideBranchId != userHomeBranchId;
 
     // Branch Settings
     final allBranchSettings = ref.watch(branchTimetableSettingsProvider);
@@ -103,26 +136,47 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
       (s) => s.branchId == effectiveBranchId,
       orElse: () => BranchTimetableSettingsEntity(
         branchId: effectiveBranchId,
-        workingDays: const ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
+        workingDays: const [
+          'Monday',
+          'Tuesday',
+          'Wednesday',
+          'Thursday',
+          'Friday',
+        ],
         periodDurationMinutes: 45,
-        schoolStartTime: _selectedShift == 'Morning Shift' ? '08:15 AM' : '01:15 PM',
+        schoolStartTime: _selectedShift == 'Morning Shift'
+            ? '08:15 AM'
+            : '01:15 PM',
         breaks: const [],
       ),
     );
 
     // Classes & Sections for this branch
-    final classes = ref.watch(academicClassesProvider).where((c) => c.branchId == effectiveBranchId).toList();
+    final classes = ref
+        .watch(academicClassesProvider)
+        .where((c) => c.branchId == effectiveBranchId)
+        .toList();
     final sections = ref.watch(academicSectionsProvider);
 
     // Branch Staff Teachers
     final allStaff = ref.watch(staffProvider);
-    final branchTeachers = allStaff.where((s) => s.branchId == effectiveBranchId && (s.role.toLowerCase() == 'teacher' || s.designation.toLowerCase().contains('teacher') || s.role.toLowerCase() == 'hod')).toList();
+    final branchTeachers = allStaff
+        .where(
+          (s) =>
+              s.branchId == effectiveBranchId &&
+              (s.role.toLowerCase() == 'teacher' ||
+                  s.designation.toLowerCase().contains('teacher') ||
+                  s.role.toLowerCase() == 'hod'),
+        )
+        .toList();
 
     // Default Selection Logic
     if (_selectedClassId == null && classes.isNotEmpty) {
       _selectedClassId = classes.first.id;
     }
-    final filteredSections = sections.where((s) => s.classId == _selectedClassId).toList();
+    final filteredSections = sections
+        .where((s) => s.classId == _selectedClassId)
+        .toList();
     if (_selectedSectionId == null && filteredSections.isNotEmpty) {
       _selectedSectionId = filteredSections.first.id;
     }
@@ -144,9 +198,16 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
           color: isDark ? AppColors.darkBg : Colors.grey[100],
           child: Row(
             children: [
-              const Icon(Icons.schedule_rounded, color: AppColors.primary, size: 20),
+              const Icon(
+                Icons.schedule_rounded,
+                color: AppColors.primary,
+                size: 20,
+              ),
               const SizedBox(width: 8),
-              const Text('Active Shift:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+              const Text(
+                'Active Shift:',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+              ),
               const SizedBox(width: 12),
 
               // Shift Selector Chips
@@ -154,12 +215,18 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                 segments: const [
                   ButtonSegment(
                     value: 'Morning Shift',
-                    label: Text('Morning Shift (08:00 AM - 01:30 PM)', style: TextStyle(fontSize: 10)),
+                    label: Text(
+                      'Morning Shift (08:00 AM - 01:30 PM)',
+                      style: TextStyle(fontSize: 10),
+                    ),
                     icon: Icon(Icons.wb_sunny_outlined, size: 14),
                   ),
                   ButtonSegment(
                     value: 'Afternoon Shift',
-                    label: Text('Afternoon/Evening Shift (01:30 PM - 06:30 PM)', style: TextStyle(fontSize: 10)),
+                    label: Text(
+                      'Afternoon/Evening Shift (01:30 PM - 06:30 PM)',
+                      style: TextStyle(fontSize: 10),
+                    ),
                     icon: Icon(Icons.wb_twilight_rounded, size: 14),
                   ),
                 ],
@@ -184,17 +251,33 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                   decoration: BoxDecoration(
                     color: isDark ? AppColors.darkSurface : Colors.white,
                     borderRadius: BorderRadius.circular(6),
-                    border: Border.all(color: isReadOnly ? Colors.amber : (isDark ? AppColors.darkBorder : AppColors.lightBorder)),
+                    border: Border.all(
+                      color: isReadOnly
+                          ? Colors.amber
+                          : (isDark
+                                ? AppColors.darkBorder
+                                : AppColors.lightBorder),
+                    ),
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.corporate_fare_rounded, size: 14, color: isReadOnly ? Colors.amber : AppColors.primary),
+                      Icon(
+                        Icons.corporate_fare_rounded,
+                        size: 14,
+                        color: isReadOnly ? Colors.amber : AppColors.primary,
+                      ),
                       const SizedBox(width: 6),
                       DropdownButtonHideUnderline(
                         child: DropdownButton<String>(
                           value: effectiveBranchId,
-                          style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 11, fontWeight: FontWeight.bold),
-                          dropdownColor: isDark ? AppColors.darkSurface : Colors.white,
+                          style: TextStyle(
+                            color: isDark ? Colors.white : Colors.black,
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          dropdownColor: isDark
+                              ? AppColors.darkSurface
+                              : Colors.white,
                           onChanged: (val) {
                             if (val != null) {
                               setState(() {
@@ -210,7 +293,9 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                             final isHome = b.id == userHomeBranchId;
                             return DropdownMenuItem(
                               value: b.id,
-                              child: Text('${b.name} ${isHome ? '(Home Branch)' : '(Read-Only View)'}'),
+                              child: Text(
+                                '${b.name} ${isHome ? '(Home Branch)' : '(Read-Only View)'}',
+                              ),
                             );
                           }).toList(),
                         ),
@@ -223,12 +308,26 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
 
               // Version History Action Button
               OutlinedButton.icon(
-                onPressed: () => _showVersionHistoryDialog(context, isDark, effectiveBranchId),
-                icon: const Icon(Icons.history_rounded, size: 14, color: AppColors.primary),
-                label: const Text('Version Snapshots', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+                onPressed: () => _showVersionHistoryDialog(
+                  context,
+                  isDark,
+                  effectiveBranchId,
+                ),
+                icon: const Icon(
+                  Icons.history_rounded,
+                  size: 14,
+                  color: AppColors.primary,
+                ),
+                label: const Text(
+                  'Version Snapshots',
+                  style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+                ),
                 style: OutlinedButton.styleFrom(
                   visualDensity: VisualDensity.compact,
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 8,
+                  ),
                 ),
               ),
               const SizedBox(width: 8),
@@ -236,19 +335,27 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
               // Clash Report Button
               Consumer(
                 builder: (context, ref, child) {
-                  final currentSlots = ref.watch(timetableSlotsProvider).where((s) => s.branchId == effectiveBranchId).toList();
+                  final currentSlots = ref
+                      .watch(timetableSlotsProvider)
+                      .where((s) => s.branchId == effectiveBranchId)
+                      .toList();
                   final clashes = _calculateClashes(currentSlots);
                   final hasClashes = clashes.isNotEmpty;
 
                   return OutlinedButton.icon(
-                    onPressed: () => _showClashesReportDialog(context, isDark, clashes),
+                    onPressed: () =>
+                        _showClashesReportDialog(context, isDark, clashes),
                     icon: Icon(
-                      hasClashes ? Icons.warning_amber_rounded : Icons.check_circle_outline_rounded,
+                      hasClashes
+                          ? Icons.warning_amber_rounded
+                          : Icons.check_circle_outline_rounded,
                       size: 14,
                       color: hasClashes ? Colors.redAccent : Colors.green,
                     ),
                     label: Text(
-                      hasClashes ? 'Clash Report (${clashes.length})' : 'No Clashes',
+                      hasClashes
+                          ? 'Clash Report (${clashes.length})'
+                          : 'No Clashes',
                       style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.bold,
@@ -257,8 +364,15 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                     ),
                     style: OutlinedButton.styleFrom(
                       visualDensity: VisualDensity.compact,
-                      side: BorderSide(color: hasClashes ? Colors.redAccent.withValues(alpha: 0.5) : Colors.green.withValues(alpha: 0.5)),
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                      side: BorderSide(
+                        color: hasClashes
+                            ? Colors.redAccent.withValues(alpha: 0.5)
+                            : Colors.green.withValues(alpha: 0.5),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 8,
+                      ),
                     ),
                   );
                 },
@@ -267,13 +381,28 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
 
               // Org Master Templates Button
               ElevatedButton.icon(
-                onPressed: () => _showOrgTemplatesDialog(context, isDark, effectiveBranchId, isReadOnly),
-                icon: const Icon(Icons.grid_view_rounded, size: 14, color: Colors.white),
-                label: const Text('Master Templates', style: TextStyle(fontSize: 10, color: Colors.white)),
+                onPressed: () => _showOrgTemplatesDialog(
+                  context,
+                  isDark,
+                  effectiveBranchId,
+                  isReadOnly,
+                ),
+                icon: const Icon(
+                  Icons.grid_view_rounded,
+                  size: 14,
+                  color: Colors.white,
+                ),
+                label: const Text(
+                  'Master Templates',
+                  style: TextStyle(fontSize: 10, color: Colors.white),
+                ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   visualDensity: VisualDensity.compact,
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 8,
+                  ),
                 ),
               ),
             ],
@@ -288,12 +417,20 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
             color: Colors.amber.withValues(alpha: 0.15),
             child: Row(
               children: [
-                const Icon(Icons.lock_outline_rounded, color: Colors.amber, size: 16),
+                const Icon(
+                  Icons.lock_outline_rounded,
+                  color: Colors.amber,
+                  size: 16,
+                ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     'Organization Admin Read-Only View — Inspecting timetable of non-home branch (${allBranches.where((b) => b.id == effectiveBranchId).firstOrNull?.name ?? "Selected Branch"}). Modifying slots is disabled.',
-                    style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.amber),
+                    style: const TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.amber,
+                    ),
                   ),
                 ),
                 TextButton(
@@ -304,7 +441,14 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                       _selectedSectionId = null;
                     });
                   },
-                  child: const Text('Reset to Home Branch', style: TextStyle(fontSize: 10, color: AppColors.primary, fontWeight: FontWeight.bold)),
+                  child: const Text(
+                    'Reset to Home Branch',
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -328,7 +472,10 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
             labelColor: AppColors.primary,
             unselectedLabelColor: isDark ? Colors.grey[400] : Colors.grey[600],
             indicatorWeight: 3,
-            labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+            labelStyle: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 12,
+            ),
             tabs: const [
               Tab(
                 icon: Icon(Icons.calendar_view_week_rounded, size: 16),
@@ -359,10 +506,37 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
           child: TabBarView(
             controller: _tabController,
             children: [
-              _buildClassGridTab(isDark, effectiveBranchId, branchSettings, classes, filteredSections),
-              _buildTeacherViewTab(isDark, effectiveBranchId, branchSettings, branchTeachers, classes, sections),
-              _buildAllocationsAndAITab(isDark, effectiveBranchId, branchSettings, classes, sections, branchTeachers),
-              _buildSubstitutionsTab(isDark, effectiveBranchId, branchSettings, branchTeachers, classes, sections),
+              _buildClassGridTab(
+                isDark,
+                effectiveBranchId,
+                branchSettings,
+                classes,
+                filteredSections,
+              ),
+              _buildTeacherViewTab(
+                isDark,
+                effectiveBranchId,
+                branchSettings,
+                branchTeachers,
+                classes,
+                sections,
+              ),
+              _buildAllocationsAndAITab(
+                isDark,
+                effectiveBranchId,
+                branchSettings,
+                classes,
+                sections,
+                branchTeachers,
+              ),
+              _buildSubstitutionsTab(
+                isDark,
+                effectiveBranchId,
+                branchSettings,
+                branchTeachers,
+                classes,
+                sections,
+              ),
               _buildBranchConfigTab(isDark, effectiveBranchId, branchSettings),
             ],
           ),
@@ -382,10 +556,16 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
     List<SectionEntity> sections,
   ) {
     final allSlots = ref.watch(timetableSlotsProvider);
-    final branchSlots = allSlots.where((s) => s.branchId == branchId && s.shiftName == _selectedShift).toList();
-    final classSectionSlots = branchSlots.where((s) =>
-        s.classId == _selectedClassId &&
-        (s.sectionId == 'ALL' || s.sectionId == _selectedSectionId)).toList();
+    final branchSlots = allSlots
+        .where((s) => s.branchId == branchId && s.shiftName == _selectedShift)
+        .toList();
+    final classSectionSlots = branchSlots
+        .where(
+          (s) =>
+              s.classId == _selectedClassId &&
+              (s.sectionId == 'ALL' || s.sectionId == _selectedSectionId),
+        )
+        .toList();
 
     final timeSlots = settings.calculateTimeSlots(8);
 
@@ -399,7 +579,11 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: Row(
               children: [
-                const Icon(Icons.filter_list_rounded, color: AppColors.primary, size: 20),
+                const Icon(
+                  Icons.filter_list_rounded,
+                  color: AppColors.primary,
+                  size: 20,
+                ),
                 const SizedBox(width: 12),
                 const Text(
                   'Target Class & Section:',
@@ -408,7 +592,13 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                 const SizedBox(width: 24),
 
                 // Class Selection
-                Text('Class: ', style: TextStyle(color: isDark ? Colors.grey[300] : Colors.grey[700], fontSize: 11)),
+                Text(
+                  'Class: ',
+                  style: TextStyle(
+                    color: isDark ? Colors.grey[300] : Colors.grey[700],
+                    fontSize: 11,
+                  ),
+                ),
                 const SizedBox(width: 6),
                 Container(
                   height: 34,
@@ -420,17 +610,30 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                   child: DropdownButtonHideUnderline(
                     child: DropdownButton<String>(
                       value: _selectedClassId,
-                      style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 11),
-                      dropdownColor: isDark ? AppColors.darkSurface : Colors.white,
+                      style: TextStyle(
+                        color: isDark ? Colors.white : Colors.black,
+                        fontSize: 11,
+                      ),
+                      dropdownColor: isDark
+                          ? AppColors.darkSurface
+                          : Colors.white,
                       onChanged: (val) {
                         setState(() {
                           _selectedClassId = val;
-                          final list = ref.read(academicSectionsProvider).where((s) => s.classId == val).toList();
-                          _selectedSectionId = list.isNotEmpty ? list.first.id : null;
+                          final list = ref
+                              .read(academicSectionsProvider)
+                              .where((s) => s.classId == val)
+                              .toList();
+                          _selectedSectionId = list.isNotEmpty
+                              ? list.first.id
+                              : null;
                         });
                       },
                       items: classes.map((c) {
-                        return DropdownMenuItem(value: c.id, child: Text(c.name));
+                        return DropdownMenuItem(
+                          value: c.id,
+                          child: Text(c.name),
+                        );
                       }).toList(),
                     ),
                   ),
@@ -438,7 +641,13 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                 const SizedBox(width: 20),
 
                 // Section Selection
-                Text('Section: ', style: TextStyle(color: isDark ? Colors.grey[300] : Colors.grey[700], fontSize: 11)),
+                Text(
+                  'Section: ',
+                  style: TextStyle(
+                    color: isDark ? Colors.grey[300] : Colors.grey[700],
+                    fontSize: 11,
+                  ),
+                ),
                 const SizedBox(width: 6),
                 Container(
                   height: 34,
@@ -450,15 +659,23 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                   child: DropdownButtonHideUnderline(
                     child: DropdownButton<String>(
                       value: _selectedSectionId,
-                      style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 11),
-                      dropdownColor: isDark ? AppColors.darkSurface : Colors.white,
+                      style: TextStyle(
+                        color: isDark ? Colors.white : Colors.black,
+                        fontSize: 11,
+                      ),
+                      dropdownColor: isDark
+                          ? AppColors.darkSurface
+                          : Colors.white,
                       onChanged: (val) {
                         setState(() {
                           _selectedSectionId = val;
                         });
                       },
                       items: sections.map((s) {
-                        return DropdownMenuItem(value: s.id, child: Text('Section ${s.name}'));
+                        return DropdownMenuItem(
+                          value: s.id,
+                          child: Text('Section ${s.name}'),
+                        );
                       }).toList(),
                     ),
                   ),
@@ -467,14 +684,30 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
 
                 // Add Schedule Button
                 ElevatedButton.icon(
-                  onPressed: () => _showScheduleDialog(context, isDark, branchId, settings, classes, sections, null),
+                  onPressed: () => _showScheduleDialog(
+                    context,
+                    isDark,
+                    branchId,
+                    settings,
+                    classes,
+                    sections,
+                    null,
+                  ),
                   icon: const Icon(Icons.add_rounded, size: 14),
-                  label: const Text('Add Lecture / Lab Slot', style: TextStyle(fontSize: 11)),
+                  label: const Text(
+                    'Add Lecture / Lab Slot',
+                    style: TextStyle(fontSize: 11),
+                  ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 10,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(6),
+                    ),
                   ),
                 ),
               ],
@@ -513,7 +746,9 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 11,
-                              color: isDark ? Colors.grey[400] : Colors.grey[600],
+                              color: isDark
+                                  ? Colors.grey[400]
+                                  : Colors.grey[600],
                             ),
                           ),
                         ),
@@ -525,12 +760,26 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                             padding: const EdgeInsets.symmetric(vertical: 8),
                             decoration: BoxDecoration(
                               color: ts.isAssembly
-                                  ? Colors.amber.withValues(alpha: isDark ? 0.25 : 0.15)
+                                  ? Colors.amber.withValues(
+                                      alpha: isDark ? 0.25 : 0.15,
+                                    )
                                   : (ts.isBreak
-                                      ? (isDark ? Colors.grey[800]!.withValues(alpha: 0.3) : Colors.grey[300]!.withValues(alpha: 0.4))
-                                      : AppColors.primarySurface),
+                                        ? (isDark
+                                              ? Colors.grey[800]!.withValues(
+                                                  alpha: 0.3,
+                                                )
+                                              : Colors.grey[300]!.withValues(
+                                                  alpha: 0.4,
+                                                ))
+                                        : AppColors.primarySurface),
                               borderRadius: BorderRadius.circular(6),
-                              border: ts.isAssembly ? Border.all(color: Colors.amber.withValues(alpha: 0.5)) : null,
+                              border: ts.isAssembly
+                                  ? Border.all(
+                                      color: Colors.amber.withValues(
+                                        alpha: 0.5,
+                                      ),
+                                    )
+                                  : null,
                             ),
                             child: Column(
                               children: [
@@ -539,13 +788,20 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 10,
-                                    color: ts.isAssembly ? Colors.amber[800] : (ts.isBreak ? Colors.grey : AppColors.primary),
+                                    color: ts.isAssembly
+                                        ? Colors.amber[800]
+                                        : (ts.isBreak
+                                              ? Colors.grey
+                                              : AppColors.primary),
                                   ),
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
                                   '${ts.startTime} - ${ts.endTime}',
-                                  style: const TextStyle(fontSize: 8, color: Colors.grey),
+                                  style: const TextStyle(
+                                    fontSize: 8,
+                                    color: Colors.grey,
+                                  ),
                                 ),
                               ],
                             ),
@@ -566,9 +822,13 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                               height: 90,
                               alignment: Alignment.center,
                               decoration: BoxDecoration(
-                                color: isDark ? AppColors.darkSurface : Colors.grey[100],
+                                color: isDark
+                                    ? AppColors.darkSurface
+                                    : Colors.grey[100],
                                 border: Border.all(
-                                  color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                                  color: isDark
+                                      ? AppColors.darkBorder
+                                      : AppColors.lightBorder,
                                 ),
                                 borderRadius: BorderRadius.circular(8),
                               ),
@@ -585,17 +845,30 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                                 return Container(
                                   width: 100,
                                   height: 90,
-                                  margin: const EdgeInsets.symmetric(horizontal: 4),
+                                  margin: const EdgeInsets.symmetric(
+                                    horizontal: 4,
+                                  ),
                                   decoration: BoxDecoration(
-                                    color: Colors.amber.withValues(alpha: isDark ? 0.15 : 0.08),
+                                    color: Colors.amber.withValues(
+                                      alpha: isDark ? 0.15 : 0.08,
+                                    ),
                                     borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(color: Colors.amber.withValues(alpha: 0.4)),
+                                    border: Border.all(
+                                      color: Colors.amber.withValues(
+                                        alpha: 0.4,
+                                      ),
+                                    ),
                                   ),
                                   child: Center(
                                     child: Column(
-                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
                                       children: [
-                                        const Icon(Icons.wb_sunny_rounded, color: Colors.amber, size: 16),
+                                        const Icon(
+                                          Icons.wb_sunny_rounded,
+                                          color: Colors.amber,
+                                          size: 16,
+                                        ),
                                         const SizedBox(height: 4),
                                         Text(
                                           'Morning\nAssembly',
@@ -603,7 +876,9 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                                           style: TextStyle(
                                             fontWeight: FontWeight.bold,
                                             fontSize: 9,
-                                            color: isDark ? Colors.amber[300] : Colors.amber[900],
+                                            color: isDark
+                                                ? Colors.amber[300]
+                                                : Colors.amber[900],
                                           ),
                                         ),
                                       ],
@@ -616,12 +891,22 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                                 return Container(
                                   width: 100,
                                   height: 90,
-                                  margin: const EdgeInsets.symmetric(horizontal: 4),
+                                  margin: const EdgeInsets.symmetric(
+                                    horizontal: 4,
+                                  ),
                                   decoration: BoxDecoration(
-                                    color: isDark ? Colors.grey[900]!.withValues(alpha: 0.5) : Colors.grey[200]!.withValues(alpha: 0.7),
+                                    color: isDark
+                                        ? Colors.grey[900]!.withValues(
+                                            alpha: 0.5,
+                                          )
+                                        : Colors.grey[200]!.withValues(
+                                            alpha: 0.7,
+                                          ),
                                     borderRadius: BorderRadius.circular(8),
                                     border: Border.all(
-                                      color: isDark ? Colors.grey[800]! : Colors.grey[300]!,
+                                      color: isDark
+                                          ? Colors.grey[800]!
+                                          : Colors.grey[300]!,
                                       style: BorderStyle.solid,
                                     ),
                                   ),
@@ -635,7 +920,9 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                                           fontWeight: FontWeight.bold,
                                           fontSize: 9,
                                           letterSpacing: 2,
-                                          color: isDark ? Colors.grey[600] : Colors.grey[500],
+                                          color: isDark
+                                              ? Colors.grey[600]
+                                              : Colors.grey[500],
                                         ),
                                       ),
                                     ),
@@ -644,11 +931,20 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                               }
 
                               final slotMatch = classSectionSlots.firstWhere(
-                                (s) => s.dayOfWeek == day && s.periodName == ts.name,
+                                (s) =>
+                                    s.dayOfWeek == day &&
+                                    s.periodName == ts.name,
                                 orElse: () => const TimetableSlotEntity(
-                                  id: '', branchId: '', classId: '', sectionId: '',
-                                  dayOfWeek: '', periodName: '', startTime: '', endTime: '',
-                                  subjectName: '', teacherName: '',
+                                  id: '',
+                                  branchId: '',
+                                  classId: '',
+                                  sectionId: '',
+                                  dayOfWeek: '',
+                                  periodName: '',
+                                  startTime: '',
+                                  endTime: '',
+                                  subjectName: '',
+                                  teacherName: '',
                                 ),
                               );
 
@@ -657,10 +953,27 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                               return Container(
                                 width: 150,
                                 height: 90,
-                                margin: const EdgeInsets.symmetric(horizontal: 4),
+                                margin: const EdgeInsets.symmetric(
+                                  horizontal: 4,
+                                ),
                                 child: hasSlot
-                                    ? _buildPeriodCard(isDark, slotMatch, branchId, settings, classes, sections)
-                                    : _buildEmptyPeriodCard(isDark, day, ts.name, branchId, settings, classes, sections),
+                                    ? _buildPeriodCard(
+                                        isDark,
+                                        slotMatch,
+                                        branchId,
+                                        settings,
+                                        classes,
+                                        sections,
+                                      )
+                                    : _buildEmptyPeriodCard(
+                                        isDark,
+                                        day,
+                                        ts.name,
+                                        branchId,
+                                        settings,
+                                        classes,
+                                        sections,
+                                      ),
                               );
                             }),
                           ],
@@ -689,10 +1002,17 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
     List<SectionEntity> sections,
   ) {
     final allSlots = ref.watch(timetableSlotsProvider);
-    final branchSlots = allSlots.where((s) => s.branchId == branchId && s.shiftName == _selectedShift).toList();
+    final branchSlots = allSlots
+        .where((s) => s.branchId == branchId && s.shiftName == _selectedShift)
+        .toList();
 
-    final teacherSlots = branchSlots.where((s) =>
-        s.teacherName.toLowerCase() == (_selectedTeacherName ?? '').toLowerCase()).toList();
+    final teacherSlots = branchSlots
+        .where(
+          (s) =>
+              s.teacherName.toLowerCase() ==
+              (_selectedTeacherName ?? '').toLowerCase(),
+        )
+        .toList();
 
     final timeSlots = settings.calculateTimeSlots(8);
 
@@ -705,7 +1025,11 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: Row(
               children: [
-                const Icon(Icons.badge_rounded, color: AppColors.primary, size: 20),
+                const Icon(
+                  Icons.badge_rounded,
+                  color: AppColors.primary,
+                  size: 20,
+                ),
                 const SizedBox(width: 12),
                 const Text(
                   'Select Branch Teacher:',
@@ -723,15 +1047,23 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                   child: DropdownButtonHideUnderline(
                     child: DropdownButton<String>(
                       value: _selectedTeacherName,
-                      style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 11),
-                      dropdownColor: isDark ? AppColors.darkSurface : Colors.white,
+                      style: TextStyle(
+                        color: isDark ? Colors.white : Colors.black,
+                        fontSize: 11,
+                      ),
+                      dropdownColor: isDark
+                          ? AppColors.darkSurface
+                          : Colors.white,
                       onChanged: (val) {
                         setState(() {
                           _selectedTeacherName = val;
                         });
                       },
                       items: branchTeachers.map((t) {
-                        return DropdownMenuItem(value: t.name, child: Text('${t.name} (${t.designation})'));
+                        return DropdownMenuItem(
+                          value: t.name,
+                          child: Text('${t.name} (${t.designation})'),
+                        );
                       }).toList(),
                     ),
                   ),
@@ -739,15 +1071,24 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                 const Spacer(),
 
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.primarySurface,
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+                    border: Border.all(
+                      color: AppColors.primary.withValues(alpha: 0.3),
+                    ),
                   ),
                   child: Text(
                     'Weekly Load: ${teacherSlots.length} Periods',
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: AppColors.primary),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 11,
+                      color: AppColors.primary,
+                    ),
                   ),
                 ),
               ],
@@ -763,17 +1104,46 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.analytics_rounded, color: AppColors.primary, size: 16),
+                    const Icon(
+                      Icons.analytics_rounded,
+                      color: AppColors.primary,
+                      size: 16,
+                    ),
                     const SizedBox(width: 8),
-                    const Text('Branch Teacher Workload & Availability Tracker', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                    const Text(
+                      'Branch Teacher Workload & Availability Tracker',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                    ),
                     const Spacer(),
                     OutlinedButton.icon(
-                      onPressed: () => _showTeacherWorkloadReportDialog(context, isDark, branchId, branchTeachers, branchSlots),
-                      icon: const Icon(Icons.bar_chart_rounded, size: 12, color: AppColors.primary),
-                      label: const Text('Workload Analysis', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+                      onPressed: () => _showTeacherWorkloadReportDialog(
+                        context,
+                        isDark,
+                        branchId,
+                        branchTeachers,
+                        branchSlots,
+                      ),
+                      icon: const Icon(
+                        Icons.bar_chart_rounded,
+                        size: 12,
+                        color: AppColors.primary,
+                      ),
+                      label: const Text(
+                        'Workload Analysis',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                       style: OutlinedButton.styleFrom(
                         visualDensity: VisualDensity.compact,
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
                       ),
                     ),
                   ],
@@ -788,22 +1158,41 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                     itemCount: branchTeachers.length,
                     itemBuilder: (ctx, idx) {
                       final t = branchTeachers[idx];
-                      final load = branchSlots.where((s) => s.teacherName.toLowerCase() == t.name.toLowerCase()).length;
+                      final load = branchSlots
+                          .where(
+                            (s) =>
+                                s.teacherName.toLowerCase() ==
+                                t.name.toLowerCase(),
+                          )
+                          .length;
                       final maxCap = 25;
-                      final isSelected = t.name.toLowerCase() == (_selectedTeacherName ?? '').toLowerCase();
+                      final isSelected =
+                          t.name.toLowerCase() ==
+                          (_selectedTeacherName ?? '').toLowerCase();
                       final isHighLoad = load >= 20;
 
                       return InkWell(
-                        onTap: () => setState(() => _selectedTeacherName = t.name),
+                        onTap: () =>
+                            setState(() => _selectedTeacherName = t.name),
                         child: Container(
                           width: 160,
                           margin: const EdgeInsets.only(right: 10),
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
-                            color: isSelected ? AppColors.primary.withValues(alpha: 0.1) : (isDark ? AppColors.darkBg : Colors.grey[100]),
+                            color: isSelected
+                                ? AppColors.primary.withValues(alpha: 0.1)
+                                : (isDark
+                                      ? AppColors.darkBg
+                                      : Colors.grey[100]),
                             borderRadius: BorderRadius.circular(8),
                             border: Border.all(
-                              color: isSelected ? AppColors.primary : (isHighLoad ? Colors.amber.withValues(alpha: 0.5) : (isDark ? AppColors.darkBorder : AppColors.lightBorder)),
+                              color: isSelected
+                                  ? AppColors.primary
+                                  : (isHighLoad
+                                        ? Colors.amber.withValues(alpha: 0.5)
+                                        : (isDark
+                                              ? AppColors.darkBorder
+                                              : AppColors.lightBorder)),
                               width: isSelected ? 2 : 1,
                             ),
                           ),
@@ -811,22 +1200,61 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                             crossAxisAlignment: CrossAxisAlignment.start,
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Text(t.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11), maxLines: 1, overflow: TextOverflow.ellipsis),
-                              Text(t.designation, style: const TextStyle(fontSize: 9, color: Colors.grey), maxLines: 1, overflow: TextOverflow.ellipsis),
+                              Text(
+                                t.name,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 11,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              Text(
+                                t.designation,
+                                style: const TextStyle(
+                                  fontSize: 9,
+                                  color: Colors.grey,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                               const SizedBox(height: 8),
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Text('Load: $load/$maxCap p', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: isHighLoad ? Colors.amber : AppColors.primary)),
+                                  Text(
+                                    'Load: $load/$maxCap p',
+                                    style: TextStyle(
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.bold,
+                                      color: isHighLoad
+                                          ? Colors.amber
+                                          : AppColors.primary,
+                                    ),
+                                  ),
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 4,
+                                      vertical: 2,
+                                    ),
                                     decoration: BoxDecoration(
-                                      color: (isHighLoad ? Colors.amber : Colors.green).withValues(alpha: 0.15),
+                                      color:
+                                          (isHighLoad
+                                                  ? Colors.amber
+                                                  : Colors.green)
+                                              .withValues(alpha: 0.15),
                                       borderRadius: BorderRadius.circular(4),
                                     ),
                                     child: Text(
                                       isHighLoad ? 'High Load' : 'Available',
-                                      style: TextStyle(fontSize: 8, fontWeight: FontWeight.bold, color: isHighLoad ? Colors.amber : Colors.green),
+                                      style: TextStyle(
+                                        fontSize: 8,
+                                        fontWeight: FontWeight.bold,
+                                        color: isHighLoad
+                                            ? Colors.amber
+                                            : Colors.green,
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -847,7 +1275,10 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
             const GlassCard(
               padding: EdgeInsets.all(40),
               child: Center(
-                child: Text('No teachers found in active branch staff directory.', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                child: Text(
+                  'No teachers found in active branch staff directory.',
+                  style: TextStyle(color: Colors.grey, fontSize: 12),
+                ),
               ),
             )
           else ...[
@@ -865,7 +1296,13 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                           alignment: Alignment.center,
                           child: Text(
                             'Day / Period',
-                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: isDark ? Colors.grey[400] : Colors.grey[600]),
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 11,
+                              color: isDark
+                                  ? Colors.grey[400]
+                                  : Colors.grey[600],
+                            ),
                           ),
                         ),
                         ...timeSlots.map((ts) {
@@ -876,17 +1313,42 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                             padding: const EdgeInsets.symmetric(vertical: 8),
                             decoration: BoxDecoration(
                               color: ts.isAssembly
-                                  ? Colors.amber.withValues(alpha: isDark ? 0.25 : 0.15)
+                                  ? Colors.amber.withValues(
+                                      alpha: isDark ? 0.25 : 0.15,
+                                    )
                                   : (ts.isBreak
-                                      ? (isDark ? Colors.grey[800]!.withValues(alpha: 0.3) : Colors.grey[300]!.withValues(alpha: 0.4))
-                                      : AppColors.primarySurface),
+                                        ? (isDark
+                                              ? Colors.grey[800]!.withValues(
+                                                  alpha: 0.3,
+                                                )
+                                              : Colors.grey[300]!.withValues(
+                                                  alpha: 0.4,
+                                                ))
+                                        : AppColors.primarySurface),
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Column(
                               children: [
-                                Text(ts.name, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10, color: ts.isAssembly ? Colors.amber[800] : (ts.isBreak ? Colors.grey : AppColors.primary))),
+                                Text(
+                                  ts.name,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 10,
+                                    color: ts.isAssembly
+                                        ? Colors.amber[800]
+                                        : (ts.isBreak
+                                              ? Colors.grey
+                                              : AppColors.primary),
+                                  ),
+                                ),
                                 const SizedBox(height: 2),
-                                Text('${ts.startTime} - ${ts.endTime}', style: const TextStyle(fontSize: 8, color: Colors.grey)),
+                                Text(
+                                  '${ts.startTime} - ${ts.endTime}',
+                                  style: const TextStyle(
+                                    fontSize: 8,
+                                    color: Colors.grey,
+                                  ),
+                                ),
                               ],
                             ),
                           );
@@ -905,11 +1367,23 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                               height: 80,
                               alignment: Alignment.center,
                               decoration: BoxDecoration(
-                                color: isDark ? AppColors.darkSurface : Colors.grey[100],
-                                border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.lightBorder),
+                                color: isDark
+                                    ? AppColors.darkSurface
+                                    : Colors.grey[100],
+                                border: Border.all(
+                                  color: isDark
+                                      ? AppColors.darkBorder
+                                      : AppColors.lightBorder,
+                                ),
                                 borderRadius: BorderRadius.circular(8),
                               ),
-                              child: Text(day, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
+                              child: Text(
+                                day,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 11,
+                                ),
+                              ),
                             ),
 
                             ...timeSlots.map((ts) {
@@ -917,23 +1391,51 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                                 return Container(
                                   width: 100,
                                   height: 80,
-                                  margin: const EdgeInsets.symmetric(horizontal: 4),
+                                  margin: const EdgeInsets.symmetric(
+                                    horizontal: 4,
+                                  ),
                                   decoration: BoxDecoration(
-                                    color: isDark ? Colors.grey[900]!.withValues(alpha: 0.5) : Colors.grey[200]!.withValues(alpha: 0.7),
+                                    color: isDark
+                                        ? Colors.grey[900]!.withValues(
+                                            alpha: 0.5,
+                                          )
+                                        : Colors.grey[200]!.withValues(
+                                            alpha: 0.7,
+                                          ),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: Center(
                                     child: RotatedBox(
                                       quarterTurns: 3,
-                                      child: Text(ts.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 8, color: Colors.grey)),
+                                      child: Text(
+                                        ts.name,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 8,
+                                          color: Colors.grey,
+                                        ),
+                                      ),
                                     ),
                                   ),
                                 );
                               }
 
                               final slotMatch = teacherSlots.firstWhere(
-                                (s) => s.dayOfWeek == day && s.periodName == ts.name,
-                                orElse: () => const TimetableSlotEntity(id: '', branchId: '', classId: '', sectionId: '', dayOfWeek: '', periodName: '', startTime: '', endTime: '', subjectName: '', teacherName: ''),
+                                (s) =>
+                                    s.dayOfWeek == day &&
+                                    s.periodName == ts.name,
+                                orElse: () => const TimetableSlotEntity(
+                                  id: '',
+                                  branchId: '',
+                                  classId: '',
+                                  sectionId: '',
+                                  dayOfWeek: '',
+                                  periodName: '',
+                                  startTime: '',
+                                  endTime: '',
+                                  subjectName: '',
+                                  teacherName: '',
+                                ),
                               );
 
                               final hasSlot = slotMatch.id.isNotEmpty;
@@ -942,29 +1444,69 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                                 return Container(
                                   width: 150,
                                   height: 80,
-                                  margin: const EdgeInsets.symmetric(horizontal: 4),
+                                  margin: const EdgeInsets.symmetric(
+                                    horizontal: 4,
+                                  ),
                                   decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(color: isDark ? Colors.grey[850]! : Colors.grey[300]!),
+                                    border: Border.all(
+                                      color: isDark
+                                          ? Colors.grey[850]!
+                                          : Colors.grey[300]!,
+                                    ),
                                   ),
                                   child: const Center(
-                                    child: Text('Free Period', style: TextStyle(fontSize: 9, color: Colors.grey)),
+                                    child: Text(
+                                      'Free Period',
+                                      style: TextStyle(
+                                        fontSize: 9,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
                                   ),
                                 );
                               }
 
-                              final targetClass = classes.firstWhere((c) => c.id == slotMatch.classId, orElse: () => ClassEntity(id: '', branchId: '', departmentId: '', name: 'Class', code: '', maxStudentsCapacity: 0));
-                              final targetSec = sections.firstWhere((s) => s.id == slotMatch.sectionId, orElse: () => SectionEntity(id: '', classId: '', name: 'A', roomNumber: '', classTeacher: '', maxStudentsCapacity: 0));
+                              final targetClass = classes.firstWhere(
+                                (c) => c.id == slotMatch.classId,
+                                orElse: () => ClassEntity(
+                                  id: '',
+                                  branchId: '',
+                                  departmentId: '',
+                                  name: 'Class',
+                                  code: '',
+                                  maxStudentsCapacity: 0,
+                                ),
+                              );
+                              final targetSec = sections.firstWhere(
+                                (s) => s.id == slotMatch.sectionId,
+                                orElse: () => SectionEntity(
+                                  id: '',
+                                  classId: '',
+                                  name: 'A',
+                                  roomNumber: '',
+                                  classTeacher: '',
+                                  maxStudentsCapacity: 0,
+                                ),
+                              );
 
                               return Container(
                                 width: 150,
                                 height: 80,
-                                margin: const EdgeInsets.symmetric(horizontal: 4),
+                                margin: const EdgeInsets.symmetric(
+                                  horizontal: 4,
+                                ),
                                 padding: const EdgeInsets.all(8),
                                 decoration: BoxDecoration(
-                                  color: AppColors.primary.withValues(alpha: isDark ? 0.15 : 0.08),
+                                  color: AppColors.primary.withValues(
+                                    alpha: isDark ? 0.15 : 0.08,
+                                  ),
                                   borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(color: AppColors.primary.withValues(alpha: 0.5)),
+                                  border: Border.all(
+                                    color: AppColors.primary.withValues(
+                                      alpha: 0.5,
+                                    ),
+                                  ),
                                 ),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -972,17 +1514,28 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                                   children: [
                                     Text(
                                       '${targetClass.name} - Sec ${targetSec.name}',
-                                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11),
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 11,
+                                      ),
                                     ),
                                     const SizedBox(height: 2),
                                     Text(
                                       slotMatch.subjectName,
-                                      style: const TextStyle(fontSize: 9, color: AppColors.primary),
+                                      style: const TextStyle(
+                                        fontSize: 9,
+                                        color: AppColors.primary,
+                                      ),
                                     ),
                                     const SizedBox(height: 2),
                                     Text(
-                                      slotMatch.roomNumber.isNotEmpty ? 'Room ${slotMatch.roomNumber}' : 'N/A',
-                                      style: const TextStyle(fontSize: 8, color: Colors.grey),
+                                      slotMatch.roomNumber.isNotEmpty
+                                          ? 'Room ${slotMatch.roomNumber}'
+                                          : 'N/A',
+                                      style: const TextStyle(
+                                        fontSize: 8,
+                                        color: Colors.grey,
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -1013,13 +1566,31 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
     List<SectionEntity> sections,
     List<StaffEntity> branchTeachers,
   ) {
-    final subjects = ref.watch(branchSubjectsProvider).where((s) => s.branchId == branchId).toList();
-    final allocations = ref.watch(subjectAllocationsProvider).where((a) => a.branchId == branchId).toList();
-    final labs = ref.watch(branchLabsProvider).where((l) => l.branchId == branchId).toList();
+    final subjects = ref
+        .watch(branchSubjectsProvider)
+        .where((s) => s.branchId == branchId)
+        .toList();
+    final allocations = ref
+        .watch(subjectAllocationsProvider)
+        .where((a) => a.branchId == branchId)
+        .toList();
+    final labs = ref
+        .watch(branchLabsProvider)
+        .where((l) => l.branchId == branchId)
+        .toList();
 
     final selectedAllocClass = classes.firstWhere(
-      (c) => c.id == (_selectedClassId ?? (classes.isNotEmpty ? classes.first.id : '')),
-      orElse: () => ClassEntity(id: '', branchId: '', departmentId: '', name: 'Class 1', code: '', maxStudentsCapacity: 0),
+      (c) =>
+          c.id ==
+          (_selectedClassId ?? (classes.isNotEmpty ? classes.first.id : '')),
+      orElse: () => ClassEntity(
+        id: '',
+        branchId: '',
+        departmentId: '',
+        name: 'Class 1',
+        code: '',
+        maxStudentsCapacity: 0,
+      ),
     );
 
     return SingleChildScrollView(
@@ -1038,7 +1609,11 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                     color: AppColors.primarySurface,
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(Icons.auto_awesome_rounded, color: AppColors.primary, size: 32),
+                  child: const Icon(
+                    Icons.auto_awesome_rounded,
+                    color: AppColors.primary,
+                    size: 32,
+                  ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -1047,12 +1622,18 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                     children: [
                       const Text(
                         'AI Timetable Optimization Engine (Branch Scoped)',
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         'Automatically generate a complete, 100% conflict-free weekly schedule across all classes and sections using branch subject quotas, working days, lab allocations, and teacher pools.',
-                        style: TextStyle(fontSize: 11, color: isDark ? Colors.grey[300] : Colors.grey[700]),
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: isDark ? Colors.grey[300] : Colors.grey[700],
+                        ),
                       ),
                     ],
                   ),
@@ -1062,28 +1643,46 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                   onPressed: () {
                     if (allocations.isEmpty) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Please add subject allocations for classes first.')),
+                        const SnackBar(
+                          content: Text(
+                            'Please add subject allocations for classes first.',
+                          ),
+                        ),
                       );
                       return;
                     }
-                    ref.read(timetableSlotsProvider.notifier).autoGenerateBranchTimetable(
-                      branchId: branchId,
-                      classes: classes,
-                      sections: sections,
-                      allocations: allocations,
-                      settings: settings,
-                    );
+                    ref
+                        .read(timetableSlotsProvider.notifier)
+                        .autoGenerateBranchTimetable(
+                          branchId: branchId,
+                          classes: classes,
+                          sections: sections,
+                          allocations: allocations,
+                          settings: settings,
+                        );
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('AI Optimization Complete! Conflict-free timetable generated for current shift.')),
+                      const SnackBar(
+                        content: Text(
+                          'AI Optimization Complete! Conflict-free timetable generated for current shift.',
+                        ),
+                      ),
                     );
                   },
                   icon: const Icon(Icons.flash_on_rounded, size: 16),
-                  label: const Text('Auto-Generate Timetable', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                  label: const Text(
+                    'Auto-Generate Timetable',
+                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                  ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 14,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                   ),
                 ),
               ],
@@ -1107,12 +1706,26 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              const Text('Branch Subjects Master', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                              const Text(
+                                'Branch Subjects Master',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13,
+                                ),
+                              ),
                               IconButton(
-                                icon: const Icon(Icons.add_circle_outline_rounded, color: AppColors.primary, size: 18),
+                                icon: const Icon(
+                                  Icons.add_circle_outline_rounded,
+                                  color: AppColors.primary,
+                                  size: 18,
+                                ),
                                 padding: EdgeInsets.zero,
                                 constraints: const BoxConstraints(),
-                                onPressed: () => _showAddSubjectDialog(context, isDark, branchId),
+                                onPressed: () => _showAddSubjectDialog(
+                                  context,
+                                  isDark,
+                                  branchId,
+                                ),
                               ),
                             ],
                           ),
@@ -1121,34 +1734,69 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                           if (subjects.isEmpty)
                             const Padding(
                               padding: EdgeInsets.symmetric(vertical: 20),
-                              child: Center(child: Text('No subjects added for this branch.', style: TextStyle(fontSize: 11, color: Colors.grey))),
+                              child: Center(
+                                child: Text(
+                                  'No subjects added for this branch.',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                              ),
                             )
                           else
                             ...subjects.map((sub) {
                               return Container(
                                 margin: const EdgeInsets.symmetric(vertical: 4),
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 8,
+                                ),
                                 decoration: BoxDecoration(
-                                  color: isDark ? AppColors.darkBg : Colors.grey[100],
+                                  color: isDark
+                                      ? AppColors.darkBg
+                                      : Colors.grey[100],
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
                                     Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
-                                        Text(sub.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
+                                        Text(
+                                          sub.name,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 11,
+                                          ),
+                                        ),
                                         const SizedBox(height: 2),
-                                        Text('${sub.code} • ${sub.category}', style: const TextStyle(fontSize: 9, color: Colors.grey)),
+                                        Text(
+                                          '${sub.code} • ${sub.category}',
+                                          style: const TextStyle(
+                                            fontSize: 9,
+                                            color: Colors.grey,
+                                          ),
+                                        ),
                                       ],
                                     ),
                                     IconButton(
-                                      icon: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent, size: 16),
+                                      icon: const Icon(
+                                        Icons.delete_outline_rounded,
+                                        color: Colors.redAccent,
+                                        size: 16,
+                                      ),
                                       padding: EdgeInsets.zero,
                                       constraints: const BoxConstraints(),
                                       onPressed: () {
-                                        ref.read(branchSubjectsProvider.notifier).removeSubject(sub.id);
+                                        ref
+                                            .read(
+                                              branchSubjectsProvider.notifier,
+                                            )
+                                            .removeSubject(sub.id);
                                       },
                                     ),
                                   ],
@@ -1169,12 +1817,26 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              const Text('Branch Labs & Practical Rooms', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                              const Text(
+                                'Branch Labs & Practical Rooms',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13,
+                                ),
+                              ),
                               IconButton(
-                                icon: const Icon(Icons.add_circle_outline_rounded, color: AppColors.primary, size: 18),
+                                icon: const Icon(
+                                  Icons.add_circle_outline_rounded,
+                                  color: AppColors.primary,
+                                  size: 18,
+                                ),
                                 padding: EdgeInsets.zero,
                                 constraints: const BoxConstraints(),
-                                onPressed: () => _showAddLabDialog(context, isDark, branchId),
+                                onPressed: () => _showAddLabDialog(
+                                  context,
+                                  isDark,
+                                  branchId,
+                                ),
                               ),
                             ],
                           ),
@@ -1183,26 +1845,56 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                           if (labs.isEmpty)
                             const Padding(
                               padding: EdgeInsets.symmetric(vertical: 16),
-                              child: Center(child: Text('No labs registered for this branch.', style: TextStyle(fontSize: 11, color: Colors.grey))),
+                              child: Center(
+                                child: Text(
+                                  'No labs registered for this branch.',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                              ),
                             )
                           else
                             ...labs.map((lab) {
                               return Container(
                                 margin: const EdgeInsets.symmetric(vertical: 4),
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 8,
+                                ),
                                 decoration: BoxDecoration(
-                                  color: isDark ? AppColors.darkBg : Colors.grey[100],
+                                  color: isDark
+                                      ? AppColors.darkBg
+                                      : Colors.grey[100],
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: Row(
                                   children: [
-                                    const Icon(Icons.science_rounded, size: 16, color: AppColors.primary),
+                                    const Icon(
+                                      Icons.science_rounded,
+                                      size: 16,
+                                      color: AppColors.primary,
+                                    ),
                                     const SizedBox(width: 8),
                                     Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
-                                        Text(lab.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
-                                        Text('${lab.building} (Cap: ${lab.capacity})', style: const TextStyle(fontSize: 9, color: Colors.grey)),
+                                        Text(
+                                          lab.name,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 11,
+                                          ),
+                                        ),
+                                        Text(
+                                          '${lab.building} (Cap: ${lab.capacity})',
+                                          style: const TextStyle(
+                                            fontSize: 9,
+                                            color: Colors.grey,
+                                          ),
+                                        ),
                                       ],
                                     ),
                                   ],
@@ -1228,24 +1920,41 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text('Subject Period Allocation — ${selectedAllocClass.name}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                          Text(
+                            'Subject Period Allocation — ${selectedAllocClass.name}',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
+                            ),
+                          ),
                           Container(
                             height: 32,
                             padding: const EdgeInsets.symmetric(horizontal: 8),
                             decoration: BoxDecoration(
-                              color: isDark ? AppColors.darkBg : Colors.grey[200],
+                              color: isDark
+                                  ? AppColors.darkBg
+                                  : Colors.grey[200],
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: DropdownButtonHideUnderline(
                               child: DropdownButton<String>(
                                 value: selectedAllocClass.id,
-                                style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 11),
-                                dropdownColor: isDark ? AppColors.darkSurface : Colors.white,
+                                style: TextStyle(
+                                  color: isDark ? Colors.white : Colors.black,
+                                  fontSize: 11,
+                                ),
+                                dropdownColor: isDark
+                                    ? AppColors.darkSurface
+                                    : Colors.white,
                                 onChanged: (val) {
-                                  if (val != null) setState(() => _selectedClassId = val);
+                                  if (val != null)
+                                    setState(() => _selectedClassId = val);
                                 },
                                 items: classes.map((c) {
-                                  return DropdownMenuItem(value: c.id, child: Text(c.name));
+                                  return DropdownMenuItem(
+                                    value: c.id,
+                                    child: Text(c.name),
+                                  );
                                 }).toList(),
                               ),
                             ),
@@ -1256,12 +1965,30 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
 
                       ...subjects.map((sub) {
                         final alloc = allocations.firstWhere(
-                          (a) => a.classId == selectedAllocClass.id && a.subjectName == sub.name,
-                          orElse: () => SubjectAllocationEntity(id: '', branchId: branchId, classId: selectedAllocClass.id, subjectName: sub.name, periodsPerWeek: 4, assignedTeacherName: branchTeachers.isNotEmpty ? branchTeachers.first.name : ''),
+                          (a) =>
+                              a.classId == selectedAllocClass.id &&
+                              a.subjectName == sub.name,
+                          orElse: () => SubjectAllocationEntity(
+                            id: '',
+                            branchId: branchId,
+                            classId: selectedAllocClass.id,
+                            subjectName: sub.name,
+                            periodsPerWeek: 4,
+                            assignedTeacherName: branchTeachers.isNotEmpty
+                                ? branchTeachers.first.name
+                                : '',
+                          ),
                         );
 
-                        final periodsCtrl = TextEditingController(text: alloc.periodsPerWeek.toString());
-                        String selectedTeacher = alloc.assignedTeacherName.isNotEmpty ? alloc.assignedTeacherName : (branchTeachers.isNotEmpty ? branchTeachers.first.name : '');
+                        final periodsCtrl = TextEditingController(
+                          text: alloc.periodsPerWeek.toString(),
+                        );
+                        String selectedTeacher =
+                            alloc.assignedTeacherName.isNotEmpty
+                            ? alloc.assignedTeacherName
+                            : (branchTeachers.isNotEmpty
+                                  ? branchTeachers.first.name
+                                  : '');
 
                         return Padding(
                           padding: const EdgeInsets.symmetric(vertical: 6),
@@ -1269,7 +1996,13 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                             children: [
                               Expanded(
                                 flex: 3,
-                                child: Text(sub.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
+                                child: Text(
+                                  sub.name,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 11,
+                                  ),
+                                ),
                               ),
                               Expanded(
                                 flex: 2,
@@ -1279,16 +2012,24 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                                     controller: periodsCtrl,
                                     keyboardType: TextInputType.number,
                                     style: const TextStyle(fontSize: 11),
-                                    decoration: const InputDecoration(labelText: 'Periods/Wk', isDense: true),
+                                    decoration: const InputDecoration(
+                                      labelText: 'Periods/Wk',
+                                      isDense: true,
+                                    ),
                                     onSubmitted: (val) {
                                       final numPeriods = int.tryParse(val) ?? 4;
-                                      ref.read(subjectAllocationsProvider.notifier).setAllocation(
-                                        branchId: branchId,
-                                        classId: selectedAllocClass.id,
-                                        subjectName: sub.name,
-                                        periodsPerWeek: numPeriods,
-                                        assignedTeacherName: selectedTeacher,
-                                      );
+                                      ref
+                                          .read(
+                                            subjectAllocationsProvider.notifier,
+                                          )
+                                          .setAllocation(
+                                            branchId: branchId,
+                                            classId: selectedAllocClass.id,
+                                            subjectName: sub.name,
+                                            periodsPerWeek: numPeriods,
+                                            assignedTeacherName:
+                                                selectedTeacher,
+                                          );
                                     },
                                   ),
                                 ),
@@ -1298,29 +2039,59 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                                 flex: 4,
                                 child: Container(
                                   height: 32,
-                                  padding: const EdgeInsets.symmetric(horizontal: 6),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                  ),
                                   decoration: BoxDecoration(
-                                    color: isDark ? AppColors.darkBg : Colors.grey[200],
+                                    color: isDark
+                                        ? AppColors.darkBg
+                                        : Colors.grey[200],
                                     borderRadius: BorderRadius.circular(6),
                                   ),
                                   child: DropdownButtonHideUnderline(
                                     child: DropdownButton<String>(
-                                      value: branchTeachers.any((t) => t.name == selectedTeacher) ? selectedTeacher : (branchTeachers.isNotEmpty ? branchTeachers.first.name : null),
-                                      style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 10),
-                                      dropdownColor: isDark ? AppColors.darkSurface : Colors.white,
+                                      value:
+                                          branchTeachers.any(
+                                            (t) => t.name == selectedTeacher,
+                                          )
+                                          ? selectedTeacher
+                                          : (branchTeachers.isNotEmpty
+                                                ? branchTeachers.first.name
+                                                : null),
+                                      style: TextStyle(
+                                        color: isDark
+                                            ? Colors.white
+                                            : Colors.black,
+                                        fontSize: 10,
+                                      ),
+                                      dropdownColor: isDark
+                                          ? AppColors.darkSurface
+                                          : Colors.white,
                                       onChanged: (val) {
                                         if (val != null) {
-                                          ref.read(subjectAllocationsProvider.notifier).setAllocation(
-                                            branchId: branchId,
-                                            classId: selectedAllocClass.id,
-                                            subjectName: sub.name,
-                                            periodsPerWeek: int.tryParse(periodsCtrl.text) ?? 4,
-                                            assignedTeacherName: val,
-                                          );
+                                          ref
+                                              .read(
+                                                subjectAllocationsProvider
+                                                    .notifier,
+                                              )
+                                              .setAllocation(
+                                                branchId: branchId,
+                                                classId: selectedAllocClass.id,
+                                                subjectName: sub.name,
+                                                periodsPerWeek:
+                                                    int.tryParse(
+                                                      periodsCtrl.text,
+                                                    ) ??
+                                                    4,
+                                                assignedTeacherName: val,
+                                              );
                                         }
                                       },
                                       items: branchTeachers.map((t) {
-                                        return DropdownMenuItem(value: t.name, child: Text(t.name));
+                                        return DropdownMenuItem(
+                                          value: t.name,
+                                          child: Text(t.name),
+                                        );
                                       }).toList(),
                                     ),
                                   ),
@@ -1352,11 +2123,22 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
     List<ClassEntity> classes,
     List<SectionEntity> sections,
   ) {
-    final allSlots = ref.watch(timetableSlotsProvider).where((s) => s.branchId == branchId && s.shiftName == _selectedShift).toList();
-    final substitutions = ref.watch(timetableSubstitutionsProvider).where((s) => s.branchId == branchId).toList();
+    final allSlots = ref
+        .watch(timetableSlotsProvider)
+        .where((s) => s.branchId == branchId && s.shiftName == _selectedShift)
+        .toList();
+    final substitutions = ref
+        .watch(timetableSubstitutionsProvider)
+        .where((s) => s.branchId == branchId)
+        .toList();
 
-    final absentTeacherSlots = allSlots.where((s) =>
-        s.teacherName.toLowerCase() == (_substTeacherName ?? '').toLowerCase()).toList();
+    final absentTeacherSlots = allSlots
+        .where(
+          (s) =>
+              s.teacherName.toLowerCase() ==
+              (_substTeacherName ?? '').toLowerCase(),
+        )
+        .toList();
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -1367,9 +2149,16 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
             padding: const EdgeInsets.all(16),
             child: Row(
               children: [
-                const Icon(Icons.published_with_changes_rounded, color: AppColors.primary, size: 22),
+                const Icon(
+                  Icons.published_with_changes_rounded,
+                  color: AppColors.primary,
+                  size: 22,
+                ),
                 const SizedBox(width: 12),
-                const Text('Select Absent / On-Leave Teacher:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                const Text(
+                  'Select Absent / On-Leave Teacher:',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                ),
                 const SizedBox(width: 16),
 
                 Container(
@@ -1382,19 +2171,33 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                   child: DropdownButtonHideUnderline(
                     child: DropdownButton<String>(
                       value: _substTeacherName,
-                      style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 11),
-                      dropdownColor: isDark ? AppColors.darkSurface : Colors.white,
+                      style: TextStyle(
+                        color: isDark ? Colors.white : Colors.black,
+                        fontSize: 11,
+                      ),
+                      dropdownColor: isDark
+                          ? AppColors.darkSurface
+                          : Colors.white,
                       onChanged: (val) {
                         setState(() => _substTeacherName = val);
                       },
                       items: branchTeachers.map((t) {
-                        return DropdownMenuItem(value: t.name, child: Text(t.name));
+                        return DropdownMenuItem(
+                          value: t.name,
+                          child: Text(t.name),
+                        );
                       }).toList(),
                     ),
                   ),
                 ),
                 const SizedBox(width: 24),
-                Text('Date: $_substDate', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
+                Text(
+                  'Date: $_substDate',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 11,
+                  ),
+                ),
               ],
             ),
           ),
@@ -1412,44 +2215,112 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                     children: [
                       Text(
                         'Affected Lectures for $_substTeacherName',
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                        ),
                       ),
                       const SizedBox(height: 12),
 
                       if (absentTeacherSlots.isEmpty)
                         const Padding(
                           padding: EdgeInsets.symmetric(vertical: 20),
-                          child: Center(child: Text('No scheduled lectures for this teacher.', style: TextStyle(fontSize: 11, color: Colors.grey))),
+                          child: Center(
+                            child: Text(
+                              'No scheduled lectures for this teacher.',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ),
                         )
                       else
                         ...absentTeacherSlots.map((slot) {
-                          final cls = classes.firstWhere((c) => c.id == slot.classId, orElse: () => ClassEntity(id: '', branchId: '', departmentId: '', name: 'Class', code: '', maxStudentsCapacity: 0));
-                          final sec = sections.firstWhere((s) => s.id == slot.sectionId, orElse: () => SectionEntity(id: '', classId: '', name: 'A', roomNumber: '', classTeacher: '', maxStudentsCapacity: 0));
+                          final cls = classes.firstWhere(
+                            (c) => c.id == slot.classId,
+                            orElse: () => ClassEntity(
+                              id: '',
+                              branchId: '',
+                              departmentId: '',
+                              name: 'Class',
+                              code: '',
+                              maxStudentsCapacity: 0,
+                            ),
+                          );
+                          final sec = sections.firstWhere(
+                            (s) => s.id == slot.sectionId,
+                            orElse: () => SectionEntity(
+                              id: '',
+                              classId: '',
+                              name: 'A',
+                              roomNumber: '',
+                              classTeacher: '',
+                              maxStudentsCapacity: 0,
+                            ),
+                          );
 
                           return Container(
                             margin: const EdgeInsets.symmetric(vertical: 4),
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
-                              color: isDark ? AppColors.darkBg : Colors.grey[100],
+                              color: isDark
+                                  ? AppColors.darkBg
+                                  : Colors.grey[100],
                               borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.lightBorder),
+                              border: Border.all(
+                                color: isDark
+                                    ? AppColors.darkBorder
+                                    : AppColors.lightBorder,
+                              ),
                             ),
                             child: Row(
                               children: [
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
-                                      Text('${slot.dayOfWeek} • ${slot.periodName} (${slot.startTime})', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
+                                      Text(
+                                        '${slot.dayOfWeek} • ${slot.periodName} (${slot.startTime})',
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 11,
+                                        ),
+                                      ),
                                       const SizedBox(height: 2),
-                                      Text('${cls.name} Section ${sec.name} — ${slot.subjectName}', style: const TextStyle(fontSize: 10, color: AppColors.primary)),
+                                      Text(
+                                        '${cls.name} Section ${sec.name} — ${slot.subjectName}',
+                                        style: const TextStyle(
+                                          fontSize: 10,
+                                          color: AppColors.primary,
+                                        ),
+                                      ),
                                     ],
                                   ),
                                 ),
                                 ElevatedButton(
-                                  onPressed: () => _showAssignSubstituteDialog(context, isDark, branchId, slot, branchTeachers),
-                                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6)),
-                                  child: const Text('Assign Sub', style: TextStyle(fontSize: 10, color: Colors.white)),
+                                  onPressed: () => _showAssignSubstituteDialog(
+                                    context,
+                                    isDark,
+                                    branchId,
+                                    slot,
+                                    branchTeachers,
+                                  ),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppColors.primary,
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 6,
+                                    ),
+                                  ),
+                                  child: const Text(
+                                    'Assign Sub',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: Colors.white,
+                                    ),
+                                  ),
                                 ),
                               ],
                             ),
@@ -1468,13 +2339,27 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Assigned Substitutions Log', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                      const Text(
+                        'Assigned Substitutions Log',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                        ),
+                      ),
                       const SizedBox(height: 12),
 
                       if (substitutions.isEmpty)
                         const Padding(
                           padding: EdgeInsets.symmetric(vertical: 20),
-                          child: Center(child: Text('No substitution adjustments logged.', style: TextStyle(fontSize: 11, color: Colors.grey))),
+                          child: Center(
+                            child: Text(
+                              'No substitution adjustments logged.',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ),
                         )
                       else
                         ...substitutions.map((subst) {
@@ -1482,27 +2367,63 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                             margin: const EdgeInsets.symmetric(vertical: 4),
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
-                              color: isDark ? AppColors.darkBg : Colors.grey[100],
+                              color: isDark
+                                  ? AppColors.darkBg
+                                  : Colors.grey[100],
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Text('${subst.dayOfWeek} • ${subst.periodName}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
+                                    Text(
+                                      '${subst.dayOfWeek} • ${subst.periodName}',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 11,
+                                      ),
+                                    ),
                                     Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                      decoration: BoxDecoration(color: Colors.green.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(4)),
-                                      child: Text(subst.status, style: const TextStyle(fontSize: 9, color: Colors.green, fontWeight: FontWeight.bold)),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 6,
+                                        vertical: 2,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Colors.green.withValues(
+                                          alpha: 0.2,
+                                        ),
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      child: Text(
+                                        subst.status,
+                                        style: const TextStyle(
+                                          fontSize: 9,
+                                          color: Colors.green,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
                                     ),
                                   ],
                                 ),
                                 const SizedBox(height: 4),
-                                Text('Original: ${subst.originalTeacherName} ➔ Substitute: ${subst.substituteTeacherName}', style: const TextStyle(fontSize: 10, color: AppColors.primary)),
+                                Text(
+                                  'Original: ${subst.originalTeacherName} ➔ Substitute: ${subst.substituteTeacherName}',
+                                  style: const TextStyle(
+                                    fontSize: 10,
+                                    color: AppColors.primary,
+                                  ),
+                                ),
                                 const SizedBox(height: 2),
-                                Text('Reason: ${subst.reason}', style: const TextStyle(fontSize: 9, color: Colors.grey)),
+                                Text(
+                                  'Reason: ${subst.reason}',
+                                  style: const TextStyle(
+                                    fontSize: 9,
+                                    color: Colors.grey,
+                                  ),
+                                ),
                               ],
                             ),
                           );
@@ -1526,13 +2447,24 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
     String branchId,
     BranchTimetableSettingsEntity settings,
   ) {
-    final classes = ref.watch(academicClassesProvider).where((c) => c.branchId == branchId).toList();
+    final classes = ref
+        .watch(academicClassesProvider)
+        .where((c) => c.branchId == branchId)
+        .toList();
     final sections = ref.watch(academicSectionsProvider);
 
-    final startController = TextEditingController(text: settings.schoolStartTime);
-    final durationController = TextEditingController(text: settings.periodDurationMinutes.toString());
-    final assemblyStartCtrl = TextEditingController(text: settings.assemblyStartTime);
-    final assemblyEndCtrl = TextEditingController(text: settings.assemblyEndTime);
+    final startController = TextEditingController(
+      text: settings.schoolStartTime,
+    );
+    final durationController = TextEditingController(
+      text: settings.periodDurationMinutes.toString(),
+    );
+    final assemblyStartCtrl = TextEditingController(
+      text: settings.assemblyStartTime,
+    );
+    final assemblyEndCtrl = TextEditingController(
+      text: settings.assemblyEndTime,
+    );
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -1550,49 +2482,92 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Working Days & Weekend Policy', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                      const Text(
+                        'Working Days & Weekend Policy',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                        ),
+                      ),
                       const SizedBox(height: 4),
-                      const Text('Configure branch working days and Saturday off policy.', style: TextStyle(fontSize: 10, color: Colors.grey)),
+                      const Text(
+                        'Configure branch working days and Saturday off policy.',
+                        style: TextStyle(fontSize: 10, color: Colors.grey),
+                      ),
                       const SizedBox(height: 12),
 
                       DropdownButtonFormField<String>(
                         initialValue: settings.weekendPolicy,
-                        style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 11),
-                        decoration: const InputDecoration(labelText: 'Saturday Policy', isDense: true),
-                        dropdownColor: isDark ? AppColors.darkSurface : Colors.white,
+                        style: TextStyle(
+                          color: isDark ? Colors.white : Colors.black,
+                          fontSize: 11,
+                        ),
+                        decoration: const InputDecoration(
+                          labelText: 'Saturday Policy',
+                          isDense: true,
+                        ),
+                        dropdownColor: isDark
+                            ? AppColors.darkSurface
+                            : Colors.white,
                         items: const [
-                          DropdownMenuItem(value: 'All Saturdays On', child: Text('All Saturdays Active')),
-                          DropdownMenuItem(value: '2nd & 4th Saturday Off', child: Text('2nd & 4th Saturday Off')),
-                          DropdownMenuItem(value: 'All Saturdays Off', child: Text('All Saturdays Off')),
+                          DropdownMenuItem(
+                            value: 'All Saturdays On',
+                            child: Text('All Saturdays Active'),
+                          ),
+                          DropdownMenuItem(
+                            value: '2nd & 4th Saturday Off',
+                            child: Text('2nd & 4th Saturday Off'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'All Saturdays Off',
+                            child: Text('All Saturdays Off'),
+                          ),
                         ],
                         onChanged: (val) {
                           if (val != null) {
-                            ref.read(branchTimetableSettingsProvider.notifier).updateSettings(
-                              settings.copyWith(weekendPolicy: val),
-                            );
+                            ref
+                                .read(branchTimetableSettingsProvider.notifier)
+                                .updateSettings(
+                                  settings.copyWith(weekendPolicy: val),
+                                );
                           }
                         },
                       ),
                       const SizedBox(height: 12),
 
-                      ...['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day) {
+                      ...[
+                        'Monday',
+                        'Tuesday',
+                        'Wednesday',
+                        'Thursday',
+                        'Friday',
+                        'Saturday',
+                        'Sunday',
+                      ].map((day) {
                         final isActive = settings.workingDays.contains(day);
                         return CheckboxListTile(
-                          title: Text(day, style: const TextStyle(fontSize: 11)),
+                          title: Text(
+                            day,
+                            style: const TextStyle(fontSize: 11),
+                          ),
                           value: isActive,
                           dense: true,
                           visualDensity: VisualDensity.compact,
                           activeColor: AppColors.primary,
                           onChanged: (checked) {
-                            var newList = List<String>.from(settings.workingDays);
+                            var newList = List<String>.from(
+                              settings.workingDays,
+                            );
                             if (checked == true && !newList.contains(day)) {
                               newList.add(day);
                             } else if (checked == false) {
                               newList.remove(day);
                             }
-                            ref.read(branchTimetableSettingsProvider.notifier).updateSettings(
-                              settings.copyWith(workingDays: newList),
-                            );
+                            ref
+                                .read(branchTimetableSettingsProvider.notifier)
+                                .updateSettings(
+                                  settings.copyWith(workingDays: newList),
+                                );
                           },
                         );
                       }),
@@ -1612,7 +2587,13 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('Assembly & Period Timings', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                          const Text(
+                            'Assembly & Period Timings',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
+                            ),
+                          ),
                           const SizedBox(height: 12),
 
                           // Assembly Timings
@@ -1623,7 +2604,10 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                                 child: TextField(
                                   controller: assemblyStartCtrl,
                                   style: const TextStyle(fontSize: 11),
-                                  decoration: const InputDecoration(labelText: 'Assembly Start Time', isDense: true),
+                                  decoration: const InputDecoration(
+                                    labelText: 'Assembly Start Time',
+                                    isDense: true,
+                                  ),
                                 ),
                               ),
                               const SizedBox(width: 8),
@@ -1632,7 +2616,10 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                                 child: TextField(
                                   controller: assemblyEndCtrl,
                                   style: const TextStyle(fontSize: 11),
-                                  decoration: const InputDecoration(labelText: 'Assembly End Time', isDense: true),
+                                  decoration: const InputDecoration(
+                                    labelText: 'Assembly End Time',
+                                    isDense: true,
+                                  ),
                                 ),
                               ),
                             ],
@@ -1641,13 +2628,26 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
 
                           Row(
                             children: [
-                              const Expanded(flex: 4, child: Text('School Day Start Time:', style: TextStyle(fontSize: 11))),
+                              const Expanded(
+                                flex: 4,
+                                child: Text(
+                                  'School Day Start Time:',
+                                  style: TextStyle(fontSize: 11),
+                                ),
+                              ),
                               Expanded(
                                 flex: 5,
                                 child: TextField(
                                   controller: startController,
                                   style: const TextStyle(fontSize: 11),
-                                  decoration: const InputDecoration(labelText: 'e.g. 08:15 AM', isDense: true, suffixIcon: Icon(Icons.access_time_rounded, size: 16)),
+                                  decoration: const InputDecoration(
+                                    labelText: 'e.g. 08:15 AM',
+                                    isDense: true,
+                                    suffixIcon: Icon(
+                                      Icons.access_time_rounded,
+                                      size: 16,
+                                    ),
+                                  ),
                                 ),
                               ),
                             ],
@@ -1656,14 +2656,23 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
 
                           Row(
                             children: [
-                              const Expanded(flex: 4, child: Text('Period Duration (mins):', style: TextStyle(fontSize: 11))),
+                              const Expanded(
+                                flex: 4,
+                                child: Text(
+                                  'Period Duration (mins):',
+                                  style: TextStyle(fontSize: 11),
+                                ),
+                              ),
                               Expanded(
                                 flex: 5,
                                 child: TextField(
                                   controller: durationController,
                                   keyboardType: TextInputType.number,
                                   style: const TextStyle(fontSize: 11),
-                                  decoration: const InputDecoration(labelText: 'e.g. 45', isDense: true),
+                                  decoration: const InputDecoration(
+                                    labelText: 'e.g. 45',
+                                    isDense: true,
+                                  ),
                                 ),
                               ),
                             ],
@@ -1674,19 +2683,39 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                             width: double.infinity,
                             child: ElevatedButton(
                               onPressed: () {
-                                ref.read(branchTimetableSettingsProvider.notifier).updateSettings(
-                                  settings.copyWith(
-                                    assemblyStartTime: assemblyStartCtrl.text.trim(),
-                                    assemblyEndTime: assemblyEndCtrl.text.trim(),
-                                    schoolStartTime: startController.text.trim(),
-                                    periodDurationMinutes: int.tryParse(durationController.text) ?? 45,
+                                ref
+                                    .read(
+                                      branchTimetableSettingsProvider.notifier,
+                                    )
+                                    .updateSettings(
+                                      settings.copyWith(
+                                        assemblyStartTime: assemblyStartCtrl
+                                            .text
+                                            .trim(),
+                                        assemblyEndTime: assemblyEndCtrl.text
+                                            .trim(),
+                                        schoolStartTime: startController.text
+                                            .trim(),
+                                        periodDurationMinutes:
+                                            int.tryParse(
+                                              durationController.text,
+                                            ) ??
+                                            45,
+                                      ),
+                                    );
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      'Assembly & Period timings updated.',
+                                    ),
                                   ),
                                 );
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('Assembly & Period timings updated.')),
-                                );
                               },
-                              style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white, textStyle: const TextStyle(fontSize: 11)),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.primary,
+                                foregroundColor: Colors.white,
+                                textStyle: const TextStyle(fontSize: 11),
+                              ),
                               child: const Text('Save Timings Config'),
                             ),
                           ),
@@ -1704,12 +2733,26 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              const Text('School Breaks / Recess', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                              const Text(
+                                'School Breaks / Recess',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13,
+                                ),
+                              ),
                               IconButton(
-                                icon: const Icon(Icons.add_circle_outline_rounded, color: AppColors.primary, size: 18),
+                                icon: const Icon(
+                                  Icons.add_circle_outline_rounded,
+                                  color: AppColors.primary,
+                                  size: 18,
+                                ),
                                 padding: EdgeInsets.zero,
                                 constraints: const BoxConstraints(),
-                                onPressed: () => _showAddBreakDialog(context, isDark, branchId),
+                                onPressed: () => _showAddBreakDialog(
+                                  context,
+                                  isDark,
+                                  branchId,
+                                ),
                               ),
                             ],
                           ),
@@ -1718,35 +2761,75 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                           if (settings.breaks.isEmpty)
                             const Padding(
                               padding: EdgeInsets.symmetric(vertical: 12),
-                              child: Center(child: Text('No breaks configured. Add recess or lunch breaks.', style: TextStyle(fontSize: 11, color: Colors.grey))),
+                              child: Center(
+                                child: Text(
+                                  'No breaks configured. Add recess or lunch breaks.',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                              ),
                             )
                           else
                             ...settings.breaks.map((brk) {
                               return Container(
                                 margin: const EdgeInsets.symmetric(vertical: 4),
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 8,
+                                ),
                                 decoration: BoxDecoration(
-                                  color: isDark ? AppColors.darkBg : Colors.grey[100],
+                                  color: isDark
+                                      ? AppColors.darkBg
+                                      : Colors.grey[100],
                                   borderRadius: BorderRadius.circular(6),
-                                  border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.lightBorder),
+                                  border: Border.all(
+                                    color: isDark
+                                        ? AppColors.darkBorder
+                                        : AppColors.lightBorder,
+                                  ),
                                 ),
                                 child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
                                     Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
-                                        Text(brk.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
+                                        Text(
+                                          brk.name,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 11,
+                                          ),
+                                        ),
                                         const SizedBox(height: 2),
-                                        Text('${brk.startTime} - ${brk.endTime} (After Period ${brk.afterPeriodNumber})', style: const TextStyle(fontSize: 9, color: Colors.grey)),
+                                        Text(
+                                          '${brk.startTime} - ${brk.endTime} (After Period ${brk.afterPeriodNumber})',
+                                          style: const TextStyle(
+                                            fontSize: 9,
+                                            color: Colors.grey,
+                                          ),
+                                        ),
                                       ],
                                     ),
                                     IconButton(
-                                      icon: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent, size: 16),
+                                      icon: const Icon(
+                                        Icons.delete_outline_rounded,
+                                        color: Colors.redAccent,
+                                        size: 16,
+                                      ),
                                       padding: EdgeInsets.zero,
                                       constraints: const BoxConstraints(),
                                       onPressed: () {
-                                        ref.read(branchTimetableSettingsProvider.notifier).removeBreak(branchId, brk.id);
+                                        ref
+                                            .read(
+                                              branchTimetableSettingsProvider
+                                                  .notifier,
+                                            )
+                                            .removeBreak(branchId, brk.id);
                                       },
                                     ),
                                   ],
@@ -1768,9 +2851,15 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Branch School Day Timeline Preview', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                const Text(
+                  'Branch School Day Timeline Preview',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                ),
                 const SizedBox(height: 4),
-                const Text('A visual projection of how morning assembly, lectures, and breaks flow chronologically.', style: TextStyle(fontSize: 10, color: Colors.grey)),
+                const Text(
+                  'A visual projection of how morning assembly, lectures, and breaks flow chronologically.',
+                  style: TextStyle(fontSize: 10, color: Colors.grey),
+                ),
                 const SizedBox(height: 16),
 
                 SizedBox(
@@ -1780,26 +2869,56 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                     children: settings.calculateTimeSlots(8).map((ts) {
                       return Container(
                         margin: const EdgeInsets.symmetric(horizontal: 4),
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
                         decoration: BoxDecoration(
                           color: ts.isAssembly
-                              ? Colors.amber.withValues(alpha: isDark ? 0.25 : 0.15)
+                              ? Colors.amber.withValues(
+                                  alpha: isDark ? 0.25 : 0.15,
+                                )
                               : (ts.isBreak
-                                  ? (isDark ? Colors.amber[900]!.withValues(alpha: 0.2) : Colors.amber[50])
-                                  : AppColors.primarySurface),
+                                    ? (isDark
+                                          ? Colors.amber[900]!.withValues(
+                                              alpha: 0.2,
+                                            )
+                                          : Colors.amber[50])
+                                    : AppColors.primarySurface),
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
                             color: ts.isAssembly
                                 ? Colors.amber
-                                : (ts.isBreak ? Colors.amber.withValues(alpha: 0.5) : AppColors.primary.withValues(alpha: 0.5)),
+                                : (ts.isBreak
+                                      ? Colors.amber.withValues(alpha: 0.5)
+                                      : AppColors.primary.withValues(
+                                          alpha: 0.5,
+                                        )),
                           ),
                         ),
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text(ts.name, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10, color: ts.isAssembly ? Colors.amber[800] : (ts.isBreak ? Colors.amber[800] : AppColors.primary))),
+                            Text(
+                              ts.name,
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 10,
+                                color: ts.isAssembly
+                                    ? Colors.amber[800]
+                                    : (ts.isBreak
+                                          ? Colors.amber[800]
+                                          : AppColors.primary),
+                              ),
+                            ),
                             const SizedBox(height: 2),
-                            Text('${ts.startTime} - ${ts.endTime}', style: const TextStyle(fontSize: 8, color: Colors.grey)),
+                            Text(
+                              '${ts.startTime} - ${ts.endTime}',
+                              style: const TextStyle(
+                                fontSize: 8,
+                                color: Colors.grey,
+                              ),
+                            ),
                           ],
                         ),
                       );
@@ -1825,28 +2944,54 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text('Branch Classrooms', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                          const Text(
+                            'Branch Classrooms',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
+                            ),
+                          ),
                           IconButton(
-                            icon: const Icon(Icons.add_circle_outline_rounded, color: AppColors.primary, size: 18),
+                            icon: const Icon(
+                              Icons.add_circle_outline_rounded,
+                              color: AppColors.primary,
+                              size: 18,
+                            ),
                             padding: EdgeInsets.zero,
                             constraints: const BoxConstraints(),
-                            onPressed: () => _showAddClassroomDialog(context, isDark, branchId),
+                            onPressed: () => _showAddClassroomDialog(
+                              context,
+                              isDark,
+                              branchId,
+                            ),
                           ),
                         ],
                       ),
                       const SizedBox(height: 8),
-                      const Text('Define classrooms available in this branch.', style: TextStyle(fontSize: 10, color: Colors.grey)),
+                      const Text(
+                        'Define classrooms available in this branch.',
+                        style: TextStyle(fontSize: 10, color: Colors.grey),
+                      ),
                       const SizedBox(height: 12),
-                      
+
                       // List of Classrooms
                       Consumer(
                         builder: (context, ref, child) {
-                          final classrooms = ref.watch(branchClassroomsProvider).where((rm) => rm.branchId == branchId).toList();
+                          final classrooms = ref
+                              .watch(branchClassroomsProvider)
+                              .where((rm) => rm.branchId == branchId)
+                              .toList();
                           if (classrooms.isEmpty) {
                             return const Center(
                               child: Padding(
                                 padding: EdgeInsets.symmetric(vertical: 20),
-                                child: Text('No classrooms registered yet.', style: TextStyle(fontSize: 11, color: Colors.grey)),
+                                child: Text(
+                                  'No classrooms registered yet.',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.grey,
+                                  ),
+                                ),
                               ),
                             );
                           }
@@ -1858,28 +3003,59 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                               final rm = classrooms[index];
                               return Container(
                                 margin: const EdgeInsets.symmetric(vertical: 4),
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 8,
+                                ),
                                 decoration: BoxDecoration(
-                                  color: isDark ? AppColors.darkBg : Colors.grey[100],
+                                  color: isDark
+                                      ? AppColors.darkBg
+                                      : Colors.grey[100],
                                   borderRadius: BorderRadius.circular(6),
-                                  border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.lightBorder),
+                                  border: Border.all(
+                                    color: isDark
+                                        ? AppColors.darkBorder
+                                        : AppColors.lightBorder,
+                                  ),
                                 ),
                                 child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
                                     Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
-                                        Text(rm.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
-                                        Text('${rm.building} • Cap: ${rm.capacity}', style: const TextStyle(fontSize: 9, color: Colors.grey)),
+                                        Text(
+                                          rm.name,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 11,
+                                          ),
+                                        ),
+                                        Text(
+                                          '${rm.building} • Cap: ${rm.capacity}',
+                                          style: const TextStyle(
+                                            fontSize: 9,
+                                            color: Colors.grey,
+                                          ),
+                                        ),
                                       ],
                                     ),
                                     IconButton(
-                                      icon: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent, size: 16),
+                                      icon: const Icon(
+                                        Icons.delete_outline_rounded,
+                                        color: Colors.redAccent,
+                                        size: 16,
+                                      ),
                                       padding: EdgeInsets.zero,
                                       constraints: const BoxConstraints(),
                                       onPressed: () {
-                                        ref.read(branchClassroomsProvider.notifier).removeClassroom(rm.id);
+                                        ref
+                                            .read(
+                                              branchClassroomsProvider.notifier,
+                                            )
+                                            .removeClassroom(rm.id);
                                       },
                                     ),
                                   ],
@@ -1894,7 +3070,7 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                 ),
               ),
               const SizedBox(width: 16),
-              
+
               // Resources Manager
               Expanded(
                 flex: 1,
@@ -1906,28 +3082,54 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text('Shared Resource Pool', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                          const Text(
+                            'Shared Resource Pool',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
+                            ),
+                          ),
                           IconButton(
-                            icon: const Icon(Icons.add_circle_outline_rounded, color: AppColors.primary, size: 18),
+                            icon: const Icon(
+                              Icons.add_circle_outline_rounded,
+                              color: AppColors.primary,
+                              size: 18,
+                            ),
                             padding: EdgeInsets.zero,
                             constraints: const BoxConstraints(),
-                            onPressed: () => _showAddResourceDialog(context, isDark, branchId),
+                            onPressed: () => _showAddResourceDialog(
+                              context,
+                              isDark,
+                              branchId,
+                            ),
                           ),
                         ],
                       ),
                       const SizedBox(height: 8),
-                      const Text('Manage projectors, smart boards, and AV devices.', style: TextStyle(fontSize: 10, color: Colors.grey)),
+                      const Text(
+                        'Manage projectors, smart boards, and AV devices.',
+                        style: TextStyle(fontSize: 10, color: Colors.grey),
+                      ),
                       const SizedBox(height: 12),
-                      
+
                       // List of Resources
                       Consumer(
                         builder: (context, ref, child) {
-                          final resources = ref.watch(branchResourcesProvider).where((r) => r.branchId == branchId).toList();
+                          final resources = ref
+                              .watch(branchResourcesProvider)
+                              .where((r) => r.branchId == branchId)
+                              .toList();
                           if (resources.isEmpty) {
                             return const Center(
                               child: Padding(
                                 padding: EdgeInsets.symmetric(vertical: 20),
-                                child: Text('No resources registered yet.', style: TextStyle(fontSize: 11, color: Colors.grey)),
+                                child: Text(
+                                  'No resources registered yet.',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.grey,
+                                  ),
+                                ),
                               ),
                             );
                           }
@@ -1940,52 +3142,105 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                               final isAvail = res.status == 'Available';
                               return Container(
                                 margin: const EdgeInsets.symmetric(vertical: 4),
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 8,
+                                ),
                                 decoration: BoxDecoration(
-                                  color: isDark ? AppColors.darkBg : Colors.grey[100],
+                                  color: isDark
+                                      ? AppColors.darkBg
+                                      : Colors.grey[100],
                                   borderRadius: BorderRadius.circular(6),
-                                  border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.lightBorder),
+                                  border: Border.all(
+                                    color: isDark
+                                        ? AppColors.darkBorder
+                                        : AppColors.lightBorder,
+                                  ),
                                 ),
                                 child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
                                     Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
-                                        Text(res.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
-                                        Text('Type: ${res.type}', style: const TextStyle(fontSize: 9, color: Colors.grey)),
+                                        Text(
+                                          res.name,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 11,
+                                          ),
+                                        ),
+                                        Text(
+                                          'Type: ${res.type}',
+                                          style: const TextStyle(
+                                            fontSize: 9,
+                                            color: Colors.grey,
+                                          ),
+                                        ),
                                       ],
                                     ),
                                     Row(
                                       children: [
                                         InkWell(
                                           onTap: () {
-                                            ref.read(branchResourcesProvider.notifier).toggleResourceStatus(res.id);
+                                            ref
+                                                .read(
+                                                  branchResourcesProvider
+                                                      .notifier,
+                                                )
+                                                .toggleResourceStatus(res.id);
                                           },
                                           child: Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 6,
+                                              vertical: 2,
+                                            ),
                                             decoration: BoxDecoration(
-                                              color: isAvail ? Colors.green.withValues(alpha: 0.15) : Colors.amber.withValues(alpha: 0.15),
-                                              borderRadius: BorderRadius.circular(4),
-                                              border: Border.all(color: isAvail ? Colors.green : Colors.amber),
+                                              color: isAvail
+                                                  ? Colors.green.withValues(
+                                                      alpha: 0.15,
+                                                    )
+                                                  : Colors.amber.withValues(
+                                                      alpha: 0.15,
+                                                    ),
+                                              borderRadius:
+                                                  BorderRadius.circular(4),
+                                              border: Border.all(
+                                                color: isAvail
+                                                    ? Colors.green
+                                                    : Colors.amber,
+                                              ),
                                             ),
                                             child: Text(
                                               res.status,
                                               style: TextStyle(
                                                 fontSize: 8,
                                                 fontWeight: FontWeight.bold,
-                                                color: isAvail ? Colors.green : Colors.amber[805]!,
+                                                color: isAvail
+                                                    ? Colors.green
+                                                    : Colors.amber[805]!,
                                               ),
                                             ),
                                           ),
                                         ),
                                         const SizedBox(width: 8),
                                         IconButton(
-                                          icon: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent, size: 16),
+                                          icon: const Icon(
+                                            Icons.delete_outline_rounded,
+                                            color: Colors.redAccent,
+                                            size: 16,
+                                          ),
                                           padding: EdgeInsets.zero,
                                           constraints: const BoxConstraints(),
                                           onPressed: () {
-                                            ref.read(branchResourcesProvider.notifier).removeResource(res.id);
+                                            ref
+                                                .read(
+                                                  branchResourcesProvider
+                                                      .notifier,
+                                                )
+                                                .removeResource(res.id);
                                           },
                                         ),
                                       ],
@@ -2018,27 +3273,55 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text('Special Day Timetables', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                          const Text(
+                            'Special Day Timetables',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
+                            ),
+                          ),
                           IconButton(
-                            icon: const Icon(Icons.add_circle_outline_rounded, color: AppColors.primary, size: 18),
+                            icon: const Icon(
+                              Icons.add_circle_outline_rounded,
+                              color: AppColors.primary,
+                              size: 18,
+                            ),
                             padding: EdgeInsets.zero,
                             constraints: const BoxConstraints(),
-                            onPressed: () => _showAddSpecialDayDialog(context, isDark, branchId, classes, sections),
+                            onPressed: () => _showAddSpecialDayDialog(
+                              context,
+                              isDark,
+                              branchId,
+                              classes,
+                              sections,
+                            ),
                           ),
                         ],
                       ),
                       const SizedBox(height: 8),
-                      const Text('Schedule exam days, event days, and other special schedules.', style: TextStyle(fontSize: 10, color: Colors.grey)),
+                      const Text(
+                        'Schedule exam days, event days, and other special schedules.',
+                        style: TextStyle(fontSize: 10, color: Colors.grey),
+                      ),
                       const SizedBox(height: 12),
 
                       Consumer(
                         builder: (context, ref, child) {
-                          final specialDays = ref.watch(specialDayTimetableProvider).where((sd) => sd.branchId == branchId).toList();
+                          final specialDays = ref
+                              .watch(specialDayTimetableProvider)
+                              .where((sd) => sd.branchId == branchId)
+                              .toList();
                           if (specialDays.isEmpty) {
                             return const Center(
                               child: Padding(
                                 padding: EdgeInsets.symmetric(vertical: 20),
-                                child: Text('No special day timetables configured.', style: TextStyle(fontSize: 11, color: Colors.grey)),
+                                child: Text(
+                                  'No special day timetables configured.',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.grey,
+                                  ),
+                                ),
                               ),
                             );
                           }
@@ -2052,30 +3335,49 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                                 margin: const EdgeInsets.symmetric(vertical: 4),
                                 padding: const EdgeInsets.all(10),
                                 decoration: BoxDecoration(
-                                  color: isDark ? AppColors.darkBg : Colors.grey[100],
+                                  color: isDark
+                                      ? AppColors.darkBg
+                                      : Colors.grey[100],
                                   borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.lightBorder),
+                                  border: Border.all(
+                                    color: isDark
+                                        ? AppColors.darkBorder
+                                        : AppColors.lightBorder,
+                                  ),
                                 ),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
                                       children: [
                                         Expanded(
                                           child: Text(
                                             sd.name,
-                                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11),
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 11,
+                                            ),
                                             maxLines: 1,
                                             overflow: TextOverflow.ellipsis,
                                           ),
                                         ),
                                         IconButton(
-                                          icon: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent, size: 16),
+                                          icon: const Icon(
+                                            Icons.delete_outline_rounded,
+                                            color: Colors.redAccent,
+                                            size: 16,
+                                          ),
                                           padding: EdgeInsets.zero,
                                           constraints: const BoxConstraints(),
                                           onPressed: () {
-                                            ref.read(specialDayTimetableProvider.notifier).removeSpecialDay(sd.id);
+                                            ref
+                                                .read(
+                                                  specialDayTimetableProvider
+                                                      .notifier,
+                                                )
+                                                .removeSpecialDay(sd.id);
                                           },
                                         ),
                                       ],
@@ -2084,44 +3386,90 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                                     Row(
                                       children: [
                                         Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 5,
+                                            vertical: 2,
+                                          ),
                                           decoration: BoxDecoration(
-                                            color: (sd.type == 'Exam Day' ? Colors.red : Colors.blue).withValues(alpha: 0.15),
-                                            borderRadius: BorderRadius.circular(4),
+                                            color:
+                                                (sd.type == 'Exam Day'
+                                                        ? Colors.red
+                                                        : Colors.blue)
+                                                    .withValues(alpha: 0.15),
+                                            borderRadius: BorderRadius.circular(
+                                              4,
+                                            ),
                                           ),
                                           child: Text(
                                             sd.type,
                                             style: TextStyle(
                                               fontSize: 8,
                                               fontWeight: FontWeight.bold,
-                                              color: sd.type == 'Exam Day' ? Colors.red : Colors.blue,
+                                              color: sd.type == 'Exam Day'
+                                                  ? Colors.red
+                                                  : Colors.blue,
                                             ),
                                           ),
                                         ),
                                         const SizedBox(width: 8),
                                         Text(
-                                          DateFormat('yyyy-MM-dd').format(sd.date),
-                                          style: const TextStyle(fontSize: 9, color: Colors.grey),
+                                          DateFormat(
+                                            'yyyy-MM-dd',
+                                          ).format(sd.date),
+                                          style: const TextStyle(
+                                            fontSize: 9,
+                                            color: Colors.grey,
+                                          ),
                                         ),
                                       ],
                                     ),
                                     if (sd.slots.isNotEmpty) ...[
                                       const Divider(height: 12),
                                       ...sd.slots.map((s) {
-                                        final cls = classes.firstWhere((c) => c.id == s.classId, orElse: () => ClassEntity(id: '', branchId: '', departmentId: '', name: 'Class', code: '', maxStudentsCapacity: 0));
-                                        final sec = sections.firstWhere((sec) => sec.id == s.sectionId, orElse: () => SectionEntity(id: '', classId: '', name: 'A', roomNumber: '', classTeacher: '', maxStudentsCapacity: 0));
+                                        final cls = classes.firstWhere(
+                                          (c) => c.id == s.classId,
+                                          orElse: () => ClassEntity(
+                                            id: '',
+                                            branchId: '',
+                                            departmentId: '',
+                                            name: 'Class',
+                                            code: '',
+                                            maxStudentsCapacity: 0,
+                                          ),
+                                        );
+                                        final sec = sections.firstWhere(
+                                          (sec) => sec.id == s.sectionId,
+                                          orElse: () => SectionEntity(
+                                            id: '',
+                                            classId: '',
+                                            name: 'A',
+                                            roomNumber: '',
+                                            classTeacher: '',
+                                            maxStudentsCapacity: 0,
+                                          ),
+                                        );
                                         return Padding(
-                                          padding: const EdgeInsets.symmetric(vertical: 2),
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 2,
+                                          ),
                                           child: Row(
                                             children: [
-                                              const Icon(Icons.lens, size: 5, color: Colors.grey),
+                                              const Icon(
+                                                Icons.lens,
+                                                size: 5,
+                                                color: Colors.grey,
+                                              ),
                                               const SizedBox(width: 6),
                                               Expanded(
                                                 child: Text(
                                                   '${s.startTime}-${s.endTime}: ${cls.name}-${sec.name} ${s.activityOrExamName} (${s.roomNumber})',
-                                                  style: const TextStyle(fontSize: 8, color: Colors.grey),
+                                                  style: const TextStyle(
+                                                    fontSize: 8,
+                                                    color: Colors.grey,
+                                                  ),
                                                   maxLines: 1,
-                                                  overflow: TextOverflow.ellipsis,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
                                                 ),
                                               ),
                                             ],
@@ -2153,27 +3501,53 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text('Co-Curricular Activities', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                          const Text(
+                            'Co-Curricular Activities',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
+                            ),
+                          ),
                           IconButton(
-                            icon: const Icon(Icons.add_circle_outline_rounded, color: AppColors.primary, size: 18),
+                            icon: const Icon(
+                              Icons.add_circle_outline_rounded,
+                              color: AppColors.primary,
+                              size: 18,
+                            ),
                             padding: EdgeInsets.zero,
                             constraints: const BoxConstraints(),
-                            onPressed: () => _showAddCoCurricularDialog(context, isDark, branchId),
+                            onPressed: () => _showAddCoCurricularDialog(
+                              context,
+                              isDark,
+                              branchId,
+                            ),
                           ),
                         ],
                       ),
                       const SizedBox(height: 8),
-                      const Text('Schedule activities such as STEM clubs, music bands, arts and crafts.', style: TextStyle(fontSize: 10, color: Colors.grey)),
+                      const Text(
+                        'Schedule activities such as STEM clubs, music bands, arts and crafts.',
+                        style: TextStyle(fontSize: 10, color: Colors.grey),
+                      ),
                       const SizedBox(height: 12),
 
                       Consumer(
                         builder: (context, ref, child) {
-                          final activities = ref.watch(coCurricularActivitiesProvider).where((cca) => cca.branchId == branchId).toList();
+                          final activities = ref
+                              .watch(coCurricularActivitiesProvider)
+                              .where((cca) => cca.branchId == branchId)
+                              .toList();
                           if (activities.isEmpty) {
                             return const Center(
                               child: Padding(
                                 padding: EdgeInsets.symmetric(vertical: 20),
-                                child: Text('No co-curricular activities scheduled.', style: TextStyle(fontSize: 11, color: Colors.grey)),
+                                child: Text(
+                                  'No co-curricular activities scheduled.',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.grey,
+                                  ),
+                                ),
                               ),
                             );
                           }
@@ -2187,30 +3561,65 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                                 margin: const EdgeInsets.symmetric(vertical: 4),
                                 padding: const EdgeInsets.all(10),
                                 decoration: BoxDecoration(
-                                  color: isDark ? AppColors.darkBg : Colors.grey[100],
+                                  color: isDark
+                                      ? AppColors.darkBg
+                                      : Colors.grey[100],
                                   borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.lightBorder),
+                                  border: Border.all(
+                                    color: isDark
+                                        ? AppColors.darkBorder
+                                        : AppColors.lightBorder,
+                                  ),
                                 ),
                                 child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
                                     Expanded(
                                       child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
-                                          Text(act.activityName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
+                                          Text(
+                                            act.activityName,
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 11,
+                                            ),
+                                          ),
                                           const SizedBox(height: 2),
-                                          Text('Instructor: ${act.instructorName}', style: const TextStyle(fontSize: 9, color: Colors.grey)),
-                                          Text('${act.dayOfWeek} • ${act.timeSlot} • ${act.venue}', style: const TextStyle(fontSize: 9, color: Colors.grey)),
+                                          Text(
+                                            'Instructor: ${act.instructorName}',
+                                            style: const TextStyle(
+                                              fontSize: 9,
+                                              color: Colors.grey,
+                                            ),
+                                          ),
+                                          Text(
+                                            '${act.dayOfWeek} • ${act.timeSlot} • ${act.venue}',
+                                            style: const TextStyle(
+                                              fontSize: 9,
+                                              color: Colors.grey,
+                                            ),
+                                          ),
                                         ],
                                       ),
                                     ),
                                     IconButton(
-                                      icon: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent, size: 16),
+                                      icon: const Icon(
+                                        Icons.delete_outline_rounded,
+                                        color: Colors.redAccent,
+                                        size: 16,
+                                      ),
                                       padding: EdgeInsets.zero,
                                       constraints: const BoxConstraints(),
                                       onPressed: () {
-                                        ref.read(coCurricularActivitiesProvider.notifier).removeActivity(act.id);
+                                        ref
+                                            .read(
+                                              coCurricularActivitiesProvider
+                                                  .notifier,
+                                            )
+                                            .removeActivity(act.id);
                                       },
                                     ),
                                   ],
@@ -2231,7 +3640,11 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
     );
   }
 
-  void _showAddClassroomDialog(BuildContext context, bool isDark, String branchId) {
+  void _showAddClassroomDialog(
+    BuildContext context,
+    bool isDark,
+    String branchId,
+  ) {
     final nameCtrl = TextEditingController();
     final bldCtrl = TextEditingController(text: 'Main Block');
     final capCtrl = TextEditingController(text: '40');
@@ -2241,33 +3654,68 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
       builder: (ctx) {
         return AlertDialog(
           backgroundColor: isDark ? AppColors.darkSurface : Colors.white,
-          title: const Text('Add Classroom', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+          title: const Text(
+            'Add Classroom',
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              TextField(controller: nameCtrl, style: const TextStyle(fontSize: 11), decoration: const InputDecoration(labelText: 'Room Name / Number (e.g. Room 204)', isDense: true)),
+              TextField(
+                controller: nameCtrl,
+                style: const TextStyle(fontSize: 11),
+                decoration: const InputDecoration(
+                  labelText: 'Room Name / Number (e.g. Room 204)',
+                  isDense: true,
+                ),
+              ),
               const SizedBox(height: 12),
-              TextField(controller: bldCtrl, style: const TextStyle(fontSize: 11), decoration: const InputDecoration(labelText: 'Building Wing', isDense: true)),
+              TextField(
+                controller: bldCtrl,
+                style: const TextStyle(fontSize: 11),
+                decoration: const InputDecoration(
+                  labelText: 'Building Wing',
+                  isDense: true,
+                ),
+              ),
               const SizedBox(height: 12),
-              TextField(controller: capCtrl, keyboardType: TextInputType.number, style: const TextStyle(fontSize: 11), decoration: const InputDecoration(labelText: 'Seating Capacity', isDense: true)),
+              TextField(
+                controller: capCtrl,
+                keyboardType: TextInputType.number,
+                style: const TextStyle(fontSize: 11),
+                decoration: const InputDecoration(
+                  labelText: 'Seating Capacity',
+                  isDense: true,
+                ),
+              ),
             ],
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel', style: TextStyle(fontSize: 11))),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancel', style: TextStyle(fontSize: 11)),
+            ),
             ElevatedButton(
               onPressed: () {
                 if (nameCtrl.text.trim().isNotEmpty) {
-                  ref.read(branchClassroomsProvider.notifier).addClassroom(
-                    branchId: branchId,
-                    name: nameCtrl.text.trim(),
-                    building: bldCtrl.text.trim(),
-                    capacity: int.tryParse(capCtrl.text) ?? 40,
-                  );
+                  ref
+                      .read(branchClassroomsProvider.notifier)
+                      .addClassroom(
+                        branchId: branchId,
+                        name: nameCtrl.text.trim(),
+                        building: bldCtrl.text.trim(),
+                        capacity: int.tryParse(capCtrl.text) ?? 40,
+                      );
                   Navigator.pop(ctx);
                 }
               },
-              style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
-              child: const Text('Add Classroom', style: TextStyle(fontSize: 11, color: Colors.white)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+              ),
+              child: const Text(
+                'Add Classroom',
+                style: TextStyle(fontSize: 11, color: Colors.white),
+              ),
             ),
           ],
         );
@@ -2275,7 +3723,11 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
     );
   }
 
-  void _showAddResourceDialog(BuildContext context, bool isDark, String branchId) {
+  void _showAddResourceDialog(
+    BuildContext context,
+    bool isDark,
+    String branchId,
+  ) {
     final nameCtrl = TextEditingController();
     String selectedType = 'Projector';
 
@@ -2286,22 +3738,52 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
           builder: (context, setDialogState) {
             return AlertDialog(
               backgroundColor: isDark ? AppColors.darkSurface : Colors.white,
-              title: const Text('Register Equipment Resource', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+              title: const Text(
+                'Register Equipment Resource',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+              ),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  TextField(controller: nameCtrl, style: const TextStyle(fontSize: 11), decoration: const InputDecoration(labelText: 'Resource Name (e.g. BenQ Projector 3)', isDense: true)),
+                  TextField(
+                    controller: nameCtrl,
+                    style: const TextStyle(fontSize: 11),
+                    decoration: const InputDecoration(
+                      labelText: 'Resource Name (e.g. BenQ Projector 3)',
+                      isDense: true,
+                    ),
+                  ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
                     initialValue: selectedType,
-                    style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 11),
-                    decoration: const InputDecoration(labelText: 'Resource Type', isDense: true),
-                    dropdownColor: isDark ? AppColors.darkSurface : Colors.white,
+                    style: TextStyle(
+                      color: isDark ? Colors.white : Colors.black,
+                      fontSize: 11,
+                    ),
+                    decoration: const InputDecoration(
+                      labelText: 'Resource Type',
+                      isDense: true,
+                    ),
+                    dropdownColor: isDark
+                        ? AppColors.darkSurface
+                        : Colors.white,
                     items: const [
-                      DropdownMenuItem(value: 'Projector', child: Text('Projector')),
-                      DropdownMenuItem(value: 'Audio', child: Text('Audio / Speaker')),
-                      DropdownMenuItem(value: 'Computing', child: Text('Computing / Laptops')),
-                      DropdownMenuItem(value: 'Smart Board', child: Text('Smart Board')),
+                      DropdownMenuItem(
+                        value: 'Projector',
+                        child: Text('Projector'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'Audio',
+                        child: Text('Audio / Speaker'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'Computing',
+                        child: Text('Computing / Laptops'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'Smart Board',
+                        child: Text('Smart Board'),
+                      ),
                     ],
                     onChanged: (val) {
                       if (val != null) {
@@ -2314,20 +3796,30 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                 ],
               ),
               actions: [
-                TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel', style: TextStyle(fontSize: 11))),
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('Cancel', style: TextStyle(fontSize: 11)),
+                ),
                 ElevatedButton(
                   onPressed: () {
                     if (nameCtrl.text.trim().isNotEmpty) {
-                      ref.read(branchResourcesProvider.notifier).addResource(
-                        branchId: branchId,
-                        name: nameCtrl.text.trim(),
-                        type: selectedType,
-                      );
+                      ref
+                          .read(branchResourcesProvider.notifier)
+                          .addResource(
+                            branchId: branchId,
+                            name: nameCtrl.text.trim(),
+                            type: selectedType,
+                          );
                       Navigator.pop(ctx);
                     }
                   },
-                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
-                  child: const Text('Add Resource', style: TextStyle(fontSize: 11, color: Colors.white)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                  ),
+                  child: const Text(
+                    'Add Resource',
+                    style: TextStyle(fontSize: 11, color: Colors.white),
+                  ),
                 ),
               ],
             );
@@ -2356,7 +3848,8 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
       colorTheme = Colors.indigo;
     } else if (slot.subjectName.toLowerCase().contains('eng')) {
       colorTheme = Colors.amber[700]!;
-    } else if (slot.subjectName.toLowerCase().contains('sci') || slot.subjectName.toLowerCase().contains('phys')) {
+    } else if (slot.subjectName.toLowerCase().contains('sci') ||
+        slot.subjectName.toLowerCase().contains('phys')) {
       colorTheme = Colors.teal;
     }
 
@@ -2365,7 +3858,10 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
       decoration: BoxDecoration(
         color: colorTheme.withValues(alpha: isDark ? 0.15 : 0.08),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: colorTheme.withValues(alpha: 0.5), width: slot.isLabSession ? 2 : 1),
+        border: Border.all(
+          color: colorTheme.withValues(alpha: 0.5),
+          width: slot.isLabSession ? 2 : 1,
+        ),
       ),
       child: Stack(
         children: [
@@ -2375,7 +3871,12 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
             children: [
               Row(
                 children: [
-                  if (slot.isLabSession) const Icon(Icons.science_rounded, size: 12, color: Colors.purple),
+                  if (slot.isLabSession)
+                    const Icon(
+                      Icons.science_rounded,
+                      size: 12,
+                      color: Colors.purple,
+                    ),
                   if (slot.isLabSession) const SizedBox(width: 4),
                   Expanded(
                     child: Text(
@@ -2385,7 +3886,9 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 11,
-                        color: isDark ? Colors.white : colorTheme.withValues(alpha: 0.9),
+                        color: isDark
+                            ? Colors.white
+                            : colorTheme.withValues(alpha: 0.9),
                       ),
                     ),
                   ),
@@ -2394,7 +3897,11 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
               const SizedBox(height: 3),
               Row(
                 children: [
-                  Icon(Icons.person_outline_rounded, size: 10, color: Colors.grey[500]),
+                  Icon(
+                    Icons.person_outline_rounded,
+                    size: 10,
+                    color: Colors.grey[500],
+                  ),
                   const SizedBox(width: 4),
                   Expanded(
                     child: Text(
@@ -2425,14 +3932,22 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                 const SizedBox(height: 2),
                 Row(
                   children: [
-                    Icon(Icons.devices_other_rounded, size: 10, color: colorTheme),
+                    Icon(
+                      Icons.devices_other_rounded,
+                      size: 10,
+                      color: colorTheme,
+                    ),
                     const SizedBox(width: 4),
                     Expanded(
                       child: Text(
                         'Resources: ${slot.allocatedResourceIds.length}',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(fontSize: 8, color: colorTheme, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          fontSize: 8,
+                          color: colorTheme,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ],
@@ -2446,17 +3961,35 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
             child: Row(
               children: [
                 IconButton(
-                  icon: const Icon(Icons.edit_rounded, size: 10, color: Colors.grey),
+                  icon: const Icon(
+                    Icons.edit_rounded,
+                    size: 10,
+                    color: Colors.grey,
+                  ),
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
-                  onPressed: () => _showScheduleDialog(context, isDark, branchId, settings, classes, sections, slot),
+                  onPressed: () => _showScheduleDialog(
+                    context,
+                    isDark,
+                    branchId,
+                    settings,
+                    classes,
+                    sections,
+                    slot,
+                  ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.delete_outline_rounded, size: 10, color: Colors.redAccent),
+                  icon: const Icon(
+                    Icons.delete_outline_rounded,
+                    size: 10,
+                    color: Colors.redAccent,
+                  ),
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
                   onPressed: () {
-                    ref.read(timetableSlotsProvider.notifier).removeSlot(slot.id);
+                    ref
+                        .read(timetableSlotsProvider.notifier)
+                        .removeSlot(slot.id);
                   },
                 ),
               ],
@@ -2479,24 +4012,52 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
     return InkWell(
       onTap: () {
         final dialogSlot = TimetableSlotEntity(
-          id: '', branchId: branchId, classId: _selectedClassId ?? '', sectionId: _selectedSectionId ?? '',
-          dayOfWeek: day, periodName: periodName, startTime: '', endTime: '', subjectName: '', teacherName: '',
+          id: '',
+          branchId: branchId,
+          classId: _selectedClassId ?? '',
+          sectionId: _selectedSectionId ?? '',
+          dayOfWeek: day,
+          periodName: periodName,
+          startTime: '',
+          endTime: '',
+          subjectName: '',
+          teacherName: '',
         );
-        _showScheduleDialog(context, isDark, branchId, settings, classes, sections, dialogSlot);
+        _showScheduleDialog(
+          context,
+          isDark,
+          branchId,
+          settings,
+          classes,
+          sections,
+          dialogSlot,
+        );
       },
       borderRadius: BorderRadius.circular(8),
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: isDark ? Colors.grey[800]! : Colors.grey[350]!),
+          border: Border.all(
+            color: isDark ? Colors.grey[800]! : Colors.grey[350]!,
+          ),
         ),
         child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.add_circle_outline_rounded, size: 14, color: isDark ? Colors.grey[600] : Colors.grey[400]),
+              Icon(
+                Icons.add_circle_outline_rounded,
+                size: 14,
+                color: isDark ? Colors.grey[600] : Colors.grey[400],
+              ),
               const SizedBox(height: 4),
-              Text('Schedule', style: TextStyle(fontSize: 8, color: isDark ? Colors.grey[600] : Colors.grey[500])),
+              Text(
+                'Schedule',
+                style: TextStyle(
+                  fontSize: 8,
+                  color: isDark ? Colors.grey[600] : Colors.grey[500],
+                ),
+              ),
             ],
           ),
         ),
@@ -2504,7 +4065,11 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
     );
   }
 
-  void _showAddSubjectDialog(BuildContext context, bool isDark, String branchId) {
+  void _showAddSubjectDialog(
+    BuildContext context,
+    bool isDark,
+    String branchId,
+  ) {
     final nameCtrl = TextEditingController();
     final codeCtrl = TextEditingController();
     String category = 'Core';
@@ -2514,24 +4079,56 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
       builder: (ctx) {
         return AlertDialog(
           backgroundColor: isDark ? AppColors.darkSurface : Colors.white,
-          title: const Text('Add Branch Subject', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+          title: const Text(
+            'Add Branch Subject',
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              TextField(controller: nameCtrl, style: const TextStyle(fontSize: 11), decoration: const InputDecoration(labelText: 'Subject Name (e.g. Biology)', isDense: true)),
+              TextField(
+                controller: nameCtrl,
+                style: const TextStyle(fontSize: 11),
+                decoration: const InputDecoration(
+                  labelText: 'Subject Name (e.g. Biology)',
+                  isDense: true,
+                ),
+              ),
               const SizedBox(height: 12),
-              TextField(controller: codeCtrl, style: const TextStyle(fontSize: 11), decoration: const InputDecoration(labelText: 'Subject Code (e.g. BIO-101)', isDense: true)),
+              TextField(
+                controller: codeCtrl,
+                style: const TextStyle(fontSize: 11),
+                decoration: const InputDecoration(
+                  labelText: 'Subject Code (e.g. BIO-101)',
+                  isDense: true,
+                ),
+              ),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
                 initialValue: category,
-                style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 11),
-                decoration: const InputDecoration(labelText: 'Category', isDense: true),
+                style: TextStyle(
+                  color: isDark ? Colors.white : Colors.black,
+                  fontSize: 11,
+                ),
+                decoration: const InputDecoration(
+                  labelText: 'Category',
+                  isDense: true,
+                ),
                 dropdownColor: isDark ? AppColors.darkSurface : Colors.white,
                 items: const [
                   DropdownMenuItem(value: 'Core', child: Text('Core Subject')),
-                  DropdownMenuItem(value: 'Elective', child: Text('Elective Subject')),
-                  DropdownMenuItem(value: 'Lab', child: Text('Practical / Lab')),
-                  DropdownMenuItem(value: 'Activity', child: Text('Co-Curricular / Activity')),
+                  DropdownMenuItem(
+                    value: 'Elective',
+                    child: Text('Elective Subject'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'Lab',
+                    child: Text('Practical / Lab'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'Activity',
+                    child: Text('Co-Curricular / Activity'),
+                  ),
                 ],
                 onChanged: (val) {
                   if (val != null) category = val;
@@ -2540,21 +4137,31 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
             ],
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel', style: TextStyle(fontSize: 11))),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancel', style: TextStyle(fontSize: 11)),
+            ),
             ElevatedButton(
               onPressed: () {
                 if (nameCtrl.text.trim().isNotEmpty) {
-                  ref.read(branchSubjectsProvider.notifier).addSubject(
-                    branchId: branchId,
-                    name: nameCtrl.text.trim(),
-                    code: codeCtrl.text.trim(),
-                    category: category,
-                  );
+                  ref
+                      .read(branchSubjectsProvider.notifier)
+                      .addSubject(
+                        branchId: branchId,
+                        name: nameCtrl.text.trim(),
+                        code: codeCtrl.text.trim(),
+                        category: category,
+                      );
                   Navigator.pop(ctx);
                 }
               },
-              style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
-              child: const Text('Save Subject', style: TextStyle(fontSize: 11, color: Colors.white)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+              ),
+              child: const Text(
+                'Save Subject',
+                style: TextStyle(fontSize: 11, color: Colors.white),
+              ),
             ),
           ],
         );
@@ -2572,33 +4179,68 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
       builder: (ctx) {
         return AlertDialog(
           backgroundColor: isDark ? AppColors.darkSurface : Colors.white,
-          title: const Text('Add Branch Science / IT Lab', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+          title: const Text(
+            'Add Branch Science / IT Lab',
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              TextField(controller: nameCtrl, style: const TextStyle(fontSize: 11), decoration: const InputDecoration(labelText: 'Lab Name (e.g. Physics Lab 2)', isDense: true)),
+              TextField(
+                controller: nameCtrl,
+                style: const TextStyle(fontSize: 11),
+                decoration: const InputDecoration(
+                  labelText: 'Lab Name (e.g. Physics Lab 2)',
+                  isDense: true,
+                ),
+              ),
               const SizedBox(height: 12),
-              TextField(controller: bldCtrl, style: const TextStyle(fontSize: 11), decoration: const InputDecoration(labelText: 'Building / Floor Location', isDense: true)),
+              TextField(
+                controller: bldCtrl,
+                style: const TextStyle(fontSize: 11),
+                decoration: const InputDecoration(
+                  labelText: 'Building / Floor Location',
+                  isDense: true,
+                ),
+              ),
               const SizedBox(height: 12),
-              TextField(controller: capCtrl, keyboardType: TextInputType.number, style: const TextStyle(fontSize: 11), decoration: const InputDecoration(labelText: 'Student Capacity', isDense: true)),
+              TextField(
+                controller: capCtrl,
+                keyboardType: TextInputType.number,
+                style: const TextStyle(fontSize: 11),
+                decoration: const InputDecoration(
+                  labelText: 'Student Capacity',
+                  isDense: true,
+                ),
+              ),
             ],
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel', style: TextStyle(fontSize: 11))),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancel', style: TextStyle(fontSize: 11)),
+            ),
             ElevatedButton(
               onPressed: () {
                 if (nameCtrl.text.trim().isNotEmpty) {
-                  ref.read(branchLabsProvider.notifier).addLab(
-                    branchId: branchId,
-                    name: nameCtrl.text.trim(),
-                    building: bldCtrl.text.trim(),
-                    capacity: int.tryParse(capCtrl.text) ?? 40,
-                  );
+                  ref
+                      .read(branchLabsProvider.notifier)
+                      .addLab(
+                        branchId: branchId,
+                        name: nameCtrl.text.trim(),
+                        building: bldCtrl.text.trim(),
+                        capacity: int.tryParse(capCtrl.text) ?? 40,
+                      );
                   Navigator.pop(ctx);
                 }
               },
-              style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
-              child: const Text('Register Lab', style: TextStyle(fontSize: 11, color: Colors.white)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+              ),
+              child: const Text(
+                'Register Lab',
+                style: TextStyle(fontSize: 11, color: Colors.white),
+              ),
             ),
           ],
         );
@@ -2614,29 +4256,42 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
     List<StaffEntity> branchTeachers,
   ) {
     final allSlots = ref.read(timetableSlotsProvider);
-    final candidates = branchTeachers.where((t) => t.name.toLowerCase() != slot.teacherName.toLowerCase()).toList();
+    final candidates = branchTeachers
+        .where((t) => t.name.toLowerCase() != slot.teacherName.toLowerCase())
+        .toList();
 
     // AI Substitute Recommendation Algorithm
     final List<SubstituteRecommendation> recommendations = [];
     for (final teacher in candidates) {
       // 1. Check if occupied at slot time
-      final isOccupied = allSlots.any((s) =>
-          s.branchId == branchId &&
-          s.dayOfWeek == slot.dayOfWeek &&
-          s.periodName == slot.periodName &&
-          s.teacherName.toLowerCase() == teacher.name.toLowerCase());
+      final isOccupied = allSlots.any(
+        (s) =>
+            s.branchId == branchId &&
+            s.dayOfWeek == slot.dayOfWeek &&
+            s.periodName == slot.periodName &&
+            s.teacherName.toLowerCase() == teacher.name.toLowerCase(),
+      );
 
       if (isOccupied) continue;
 
       // 2. Subject Expertise check
-      final isExpert = teacher.specialization.toLowerCase().contains(slot.subjectName.toLowerCase()) ||
-          teacher.designation.toLowerCase().contains(slot.subjectName.toLowerCase());
+      final isExpert =
+          teacher.specialization.toLowerCase().contains(
+            slot.subjectName.toLowerCase(),
+          ) ||
+          teacher.designation.toLowerCase().contains(
+            slot.subjectName.toLowerCase(),
+          );
 
       // 3. Daily Load
-      final dailyCount = allSlots.where((s) =>
-          s.branchId == branchId &&
-          s.dayOfWeek == slot.dayOfWeek &&
-          s.teacherName.toLowerCase() == teacher.name.toLowerCase()).length;
+      final dailyCount = allSlots
+          .where(
+            (s) =>
+                s.branchId == branchId &&
+                s.dayOfWeek == slot.dayOfWeek &&
+                s.teacherName.toLowerCase() == teacher.name.toLowerCase(),
+          )
+          .length;
 
       int score = 50;
       if (isExpert) score += 40;
@@ -2646,20 +4301,24 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
           ? 'Free Period • Subject Specialist • $dailyCount lectures today'
           : 'Free Period • Available Capacity • $dailyCount lectures today';
 
-      recommendations.add(SubstituteRecommendation(
-        teacherName: teacher.name,
-        designation: teacher.designation,
-        dailyLecturesCount: dailyCount,
-        isSubjectExpert: isExpert,
-        matchReason: reason,
-        matchScore: score,
-      ));
+      recommendations.add(
+        SubstituteRecommendation(
+          teacherName: teacher.name,
+          designation: teacher.designation,
+          dailyLecturesCount: dailyCount,
+          isSubjectExpert: isExpert,
+          matchReason: reason,
+          matchScore: score,
+        ),
+      );
     }
 
     recommendations.sort((a, b) => b.matchScore.compareTo(a.matchScore));
     final topMatch = recommendations.firstOrNull;
 
-    String? selectedSubstTeacher = topMatch?.teacherName ?? (candidates.isNotEmpty ? candidates.first.name : null);
+    String? selectedSubstTeacher =
+        topMatch?.teacherName ??
+        (candidates.isNotEmpty ? candidates.first.name : null);
     final reasonCtrl = TextEditingController(text: 'Casual Leave');
 
     showDialog(
@@ -2673,7 +4332,10 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                 children: [
                   Icon(Icons.auto_awesome_rounded, color: AppColors.primary),
                   SizedBox(width: 8),
-                  Text('Assign Substitute Teacher', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                  Text(
+                    'Assign Substitute Teacher',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                  ),
                 ],
               ),
               content: SingleChildScrollView(
@@ -2690,9 +4352,22 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Original Lecture: ${slot.dayOfWeek} ${slot.periodName} (${slot.subjectName})', style: const TextStyle(fontSize: 10, color: AppColors.primary, fontWeight: FontWeight.bold)),
+                          Text(
+                            'Original Lecture: ${slot.dayOfWeek} ${slot.periodName} (${slot.subjectName})',
+                            style: const TextStyle(
+                              fontSize: 10,
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                           const SizedBox(height: 2),
-                          Text('Absent Teacher: ${slot.teacherName}', style: const TextStyle(fontSize: 10, color: Colors.grey)),
+                          Text(
+                            'Absent Teacher: ${slot.teacherName}',
+                            style: const TextStyle(
+                              fontSize: 10,
+                              color: Colors.grey,
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -2700,38 +4375,75 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
 
                     // Top AI Auto-Suggestion Card
                     if (topMatch != null) ...[
-                      const Text('AI Auto-Suggested Best Match:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10, color: AppColors.primary)),
+                      const Text(
+                        'AI Auto-Suggested Best Match:',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 10,
+                          color: AppColors.primary,
+                        ),
+                      ),
                       const SizedBox(height: 6),
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
                           color: AppColors.primary.withValues(alpha: 0.08),
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+                          border: Border.all(
+                            color: AppColors.primary.withValues(alpha: 0.3),
+                          ),
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.stars_rounded, color: Colors.amber, size: 20),
+                            const Icon(
+                              Icons.stars_rounded,
+                              color: Colors.amber,
+                              size: 20,
+                            ),
                             const SizedBox(width: 10),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text('${topMatch.teacherName} (${topMatch.designation})', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
-                                  Text(topMatch.matchReason, style: const TextStyle(fontSize: 9, color: Colors.grey)),
+                                  Text(
+                                    '${topMatch.teacherName} (${topMatch.designation})',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 11,
+                                    ),
+                                  ),
+                                  Text(
+                                    topMatch.matchReason,
+                                    style: const TextStyle(
+                                      fontSize: 9,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
                                 ],
                               ),
                             ),
                             ElevatedButton(
                               onPressed: () {
-                                setDialogState(() => selectedSubstTeacher = topMatch.teacherName);
+                                setDialogState(
+                                  () => selectedSubstTeacher =
+                                      topMatch.teacherName,
+                                );
                               },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: AppColors.primary,
                                 visualDensity: VisualDensity.compact,
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
                               ),
-                              child: const Text('Use AI Match', style: TextStyle(fontSize: 9, color: Colors.white)),
+                              child: const Text(
+                                'Use AI Match',
+                                style: TextStyle(
+                                  fontSize: 9,
+                                  color: Colors.white,
+                                ),
+                              ),
                             ),
                           ],
                         ),
@@ -2741,48 +4453,90 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
 
                     DropdownButtonFormField<String>(
                       initialValue: selectedSubstTeacher,
-                      style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 11),
-                      decoration: const InputDecoration(labelText: 'Select Free Substitute Teacher', isDense: true),
-                      dropdownColor: isDark ? AppColors.darkSurface : Colors.white,
+                      style: TextStyle(
+                        color: isDark ? Colors.white : Colors.black,
+                        fontSize: 11,
+                      ),
+                      decoration: const InputDecoration(
+                        labelText: 'Select Free Substitute Teacher',
+                        isDense: true,
+                      ),
+                      dropdownColor: isDark
+                          ? AppColors.darkSurface
+                          : Colors.white,
                       items: candidates.map((t) {
-                        final rec = recommendations.firstWhere((r) => r.teacherName == t.name, orElse: () => SubstituteRecommendation(teacherName: t.name, designation: '', dailyLecturesCount: 0, isSubjectExpert: false, matchReason: 'Busy / Occupied', matchScore: 0));
+                        final rec = recommendations.firstWhere(
+                          (r) => r.teacherName == t.name,
+                          orElse: () => SubstituteRecommendation(
+                            teacherName: t.name,
+                            designation: '',
+                            dailyLecturesCount: 0,
+                            isSubjectExpert: false,
+                            matchReason: 'Busy / Occupied',
+                            matchScore: 0,
+                          ),
+                        );
                         final isFree = rec.matchScore > 0;
                         return DropdownMenuItem(
                           value: t.name,
-                          child: Text('${t.name} • ${isFree ? 'Free Slot' : 'Occupied'} (${rec.dailyLecturesCount} periods today)'),
+                          child: Text(
+                            '${t.name} • ${isFree ? 'Free Slot' : 'Occupied'} (${rec.dailyLecturesCount} periods today)',
+                          ),
                         );
                       }).toList(),
                       onChanged: (val) {
-                        if (val != null) setDialogState(() => selectedSubstTeacher = val);
+                        if (val != null)
+                          setDialogState(() => selectedSubstTeacher = val);
                       },
                     ),
                     const SizedBox(height: 12),
-                    TextField(controller: reasonCtrl, style: const TextStyle(fontSize: 11), decoration: const InputDecoration(labelText: 'Reason for Adjustment', isDense: true)),
+                    TextField(
+                      controller: reasonCtrl,
+                      style: const TextStyle(fontSize: 11),
+                      decoration: const InputDecoration(
+                        labelText: 'Reason for Adjustment',
+                        isDense: true,
+                      ),
+                    ),
                   ],
                 ),
               ),
               actions: [
-                TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel', style: TextStyle(fontSize: 11))),
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('Cancel', style: TextStyle(fontSize: 11)),
+                ),
                 ElevatedButton(
                   onPressed: () {
                     if (selectedSubstTeacher != null) {
-                      ref.read(timetableSubstitutionsProvider.notifier).assignSubstitution(
-                        branchId: branchId,
-                        date: _substDate,
-                        dayOfWeek: slot.dayOfWeek,
-                        periodName: slot.periodName,
-                        classId: slot.classId,
-                        sectionId: slot.sectionId,
-                        originalTeacherName: slot.teacherName,
-                        substituteTeacherName: selectedSubstTeacher!,
-                        reason: reasonCtrl.text.trim(),
-                      );
+                      ref
+                          .read(timetableSubstitutionsProvider.notifier)
+                          .assignSubstitution(
+                            branchId: branchId,
+                            date: _substDate,
+                            dayOfWeek: slot.dayOfWeek,
+                            periodName: slot.periodName,
+                            classId: slot.classId,
+                            sectionId: slot.sectionId,
+                            originalTeacherName: slot.teacherName,
+                            substituteTeacherName: selectedSubstTeacher!,
+                            reason: reasonCtrl.text.trim(),
+                          );
                       Navigator.pop(ctx);
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Substitution assigned successfully.')));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Substitution assigned successfully.'),
+                        ),
+                      );
                     }
                   },
-                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
-                  child: const Text('Confirm Substitution', style: TextStyle(fontSize: 11, color: Colors.white)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                  ),
+                  child: const Text(
+                    'Confirm Substitution',
+                    style: TextStyle(fontSize: 11, color: Colors.white),
+                  ),
                 ),
               ],
             );
@@ -2803,24 +4557,59 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
       builder: (ctx) {
         return AlertDialog(
           backgroundColor: isDark ? AppColors.darkSurface : Colors.white,
-          title: const Text('Add Recess / Break Time', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+          title: const Text(
+            'Add Recess / Break Time',
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+          ),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                TextField(controller: nameCtrl, style: const TextStyle(fontSize: 11), decoration: const InputDecoration(labelText: 'Break Name (e.g. Lunch Break)', isDense: true)),
+                TextField(
+                  controller: nameCtrl,
+                  style: const TextStyle(fontSize: 11),
+                  decoration: const InputDecoration(
+                    labelText: 'Break Name (e.g. Lunch Break)',
+                    isDense: true,
+                  ),
+                ),
                 const SizedBox(height: 12),
-                TextField(controller: startCtrl, style: const TextStyle(fontSize: 11), decoration: const InputDecoration(labelText: 'Start Time (e.g. 10:15 AM)', isDense: true)),
+                TextField(
+                  controller: startCtrl,
+                  style: const TextStyle(fontSize: 11),
+                  decoration: const InputDecoration(
+                    labelText: 'Start Time (e.g. 10:15 AM)',
+                    isDense: true,
+                  ),
+                ),
                 const SizedBox(height: 12),
-                TextField(controller: endCtrl, style: const TextStyle(fontSize: 11), decoration: const InputDecoration(labelText: 'End Time (e.g. 10:45 AM)', isDense: true)),
+                TextField(
+                  controller: endCtrl,
+                  style: const TextStyle(fontSize: 11),
+                  decoration: const InputDecoration(
+                    labelText: 'End Time (e.g. 10:45 AM)',
+                    isDense: true,
+                  ),
+                ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<int>(
                   initialValue: afterPeriod,
-                  style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 11),
-                  decoration: const InputDecoration(labelText: 'Occurs After Period', isDense: true),
+                  style: TextStyle(
+                    color: isDark ? Colors.white : Colors.black,
+                    fontSize: 11,
+                  ),
+                  decoration: const InputDecoration(
+                    labelText: 'Occurs After Period',
+                    isDense: true,
+                  ),
                   dropdownColor: isDark ? AppColors.darkSurface : Colors.white,
-                  items: List.generate(8, (index) => index + 1).map((periodNum) {
-                    return DropdownMenuItem(value: periodNum, child: Text('Period $periodNum'));
+                  items: List.generate(8, (index) => index + 1).map((
+                    periodNum,
+                  ) {
+                    return DropdownMenuItem(
+                      value: periodNum,
+                      child: Text('Period $periodNum'),
+                    );
                   }).toList(),
                   onChanged: (val) {
                     if (val != null) afterPeriod = val;
@@ -2830,25 +4619,35 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
             ),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel', style: TextStyle(fontSize: 11))),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancel', style: TextStyle(fontSize: 11)),
+            ),
             ElevatedButton(
               onPressed: () {
                 if (nameCtrl.text.trim().isNotEmpty) {
-                  ref.read(branchTimetableSettingsProvider.notifier).addBreak(
-                    branchId,
-                    BranchBreakEntity(
-                      id: 'BRK-${DateTime.now().millisecondsSinceEpoch}',
-                      name: nameCtrl.text.trim(),
-                      startTime: startCtrl.text.trim(),
-                      endTime: endCtrl.text.trim(),
-                      afterPeriodNumber: afterPeriod,
-                    ),
-                  );
+                  ref
+                      .read(branchTimetableSettingsProvider.notifier)
+                      .addBreak(
+                        branchId,
+                        BranchBreakEntity(
+                          id: 'BRK-${DateTime.now().millisecondsSinceEpoch}',
+                          name: nameCtrl.text.trim(),
+                          startTime: startCtrl.text.trim(),
+                          endTime: endCtrl.text.trim(),
+                          afterPeriodNumber: afterPeriod,
+                        ),
+                      );
                   Navigator.pop(ctx);
                 }
               },
-              style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
-              child: const Text('Add Break', style: TextStyle(fontSize: 11, color: Colors.white)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+              ),
+              child: const Text(
+                'Add Break',
+                style: TextStyle(fontSize: 11, color: Colors.white),
+              ),
             ),
           ],
         );
@@ -2868,10 +4667,27 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
     final isEditing = existingSlot != null && existingSlot.id.isNotEmpty;
 
     final allStaff = ref.read(staffProvider);
-    final teachers = allStaff.where((s) => s.branchId == branchId && (s.role.toLowerCase() == 'teacher' || s.designation.toLowerCase().contains('teacher') || s.role.toLowerCase() == 'hod')).toList();
-    final branchLabs = ref.read(branchLabsProvider).where((l) => l.branchId == branchId).toList();
-    final classrooms = ref.read(branchClassroomsProvider).where((rm) => rm.branchId == branchId).toList();
-    final resources = ref.read(branchResourcesProvider).where((r) => r.branchId == branchId && r.status == 'Available').toList();
+    final teachers = allStaff
+        .where(
+          (s) =>
+              s.branchId == branchId &&
+              (s.role.toLowerCase() == 'teacher' ||
+                  s.designation.toLowerCase().contains('teacher') ||
+                  s.role.toLowerCase() == 'hod'),
+        )
+        .toList();
+    final branchLabs = ref
+        .read(branchLabsProvider)
+        .where((l) => l.branchId == branchId)
+        .toList();
+    final classrooms = ref
+        .read(branchClassroomsProvider)
+        .where((rm) => rm.branchId == branchId)
+        .toList();
+    final resources = ref
+        .read(branchResourcesProvider)
+        .where((r) => r.branchId == branchId && r.status == 'Available')
+        .toList();
 
     String selectedDay = existingSlot?.dayOfWeek ?? settings.workingDays.first;
     String selectedPeriodName = existingSlot?.periodName ?? 'Period 1';
@@ -2880,7 +4696,9 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
     String selectedRoomName = existingSlot?.roomNumber ?? '';
     bool isLabSession = existingSlot?.isLabSession ?? false;
     bool isDoublePeriod = existingSlot?.isDoublePeriod ?? false;
-    List<String> selectedResourceIds = List<String>.from(existingSlot?.allocatedResourceIds ?? []);
+    List<String> selectedResourceIds = List<String>.from(
+      existingSlot?.allocatedResourceIds ?? [],
+    );
 
     String? selectedTeacherName = existingSlot?.teacherName;
     if (selectedTeacherName == null && teachers.isNotEmpty) {
@@ -2894,15 +4712,32 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
       builder: (ctx) {
         return StatefulBuilder(
           builder: (context, setDialogState) {
-            final computedSlots = settings.calculateTimeSlots(8).where((ts) => !ts.isBreak && !ts.isAssembly).toList();
+            final computedSlots = settings
+                .calculateTimeSlots(8)
+                .where((ts) => !ts.isBreak && !ts.isAssembly)
+                .toList();
             final matchedTime = computedSlots.firstWhere(
               (ts) => ts.name == selectedPeriodName,
-              orElse: () => CalculatedTimeSlot(periodNumber: 1, startTime: '08:15 AM', endTime: '09:00 AM', isBreak: false, name: 'Period 1'),
+              orElse: () => CalculatedTimeSlot(
+                periodNumber: 1,
+                startTime: '08:15 AM',
+                endTime: '09:00 AM',
+                isBreak: false,
+                name: 'Period 1',
+              ),
             );
 
             return AlertDialog(
               backgroundColor: isDark ? AppColors.darkSurface : Colors.white,
-              title: Text(isEditing ? 'Edit Lecture Schedule' : 'Schedule Lecture / Lab Slot', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+              title: Text(
+                isEditing
+                    ? 'Edit Lecture Schedule'
+                    : 'Schedule Lecture / Lab Slot',
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -2910,11 +4745,21 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                   children: [
                     Row(
                       children: [
-                        const Icon(Icons.school_rounded, color: AppColors.primary, size: 16),
+                        const Icon(
+                          Icons.school_rounded,
+                          color: AppColors.primary,
+                          size: 16,
+                        ),
                         const SizedBox(width: 8),
                         Text(
-                          'Scheduling for: Class ${classes.firstWhere((c) => c.id == (existingSlot?.classId ?? _selectedClassId)).name} - ${sections.firstWhere((s) => s.id == (existingSlot?.sectionId ?? _selectedSectionId), orElse: () => const SectionEntity(id:'', classId:'', name:'A', roomNumber:'', classTeacher:'', maxStudentsCapacity:40)).name}',
-                          style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+                          'Scheduling for: Class ${classes.firstWhere((c) => c.id == (existingSlot?.classId ?? _selectedClassId)).name} - ${sections.firstWhere(
+                            (s) => s.id == (existingSlot?.sectionId ?? _selectedSectionId),
+                            orElse: () => const SectionEntity(id: '', classId: '', name: 'A', roomNumber: '', classTeacher: '', maxStudentsCapacity: 40),
+                          ).name}',
+                          style: const TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ],
                     ),
@@ -2922,28 +4767,51 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
 
                     DropdownButtonFormField<String>(
                       initialValue: selectedDay,
-                      style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 11),
-                      decoration: const InputDecoration(labelText: 'Day of Week', isDense: true),
-                      dropdownColor: isDark ? AppColors.darkSurface : Colors.white,
+                      style: TextStyle(
+                        color: isDark ? Colors.white : Colors.black,
+                        fontSize: 11,
+                      ),
+                      decoration: const InputDecoration(
+                        labelText: 'Day of Week',
+                        isDense: true,
+                      ),
+                      dropdownColor: isDark
+                          ? AppColors.darkSurface
+                          : Colors.white,
                       items: settings.workingDays.map((day) {
                         return DropdownMenuItem(value: day, child: Text(day));
                       }).toList(),
                       onChanged: (val) {
-                        if (val != null) setDialogState(() => selectedDay = val);
+                        if (val != null)
+                          setDialogState(() => selectedDay = val);
                       },
                     ),
                     const SizedBox(height: 12),
 
                     DropdownButtonFormField<String>(
                       initialValue: selectedPeriodName,
-                      style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 11),
-                      decoration: const InputDecoration(labelText: 'Period Slot', isDense: true),
-                      dropdownColor: isDark ? AppColors.darkSurface : Colors.white,
+                      style: TextStyle(
+                        color: isDark ? Colors.white : Colors.black,
+                        fontSize: 11,
+                      ),
+                      decoration: const InputDecoration(
+                        labelText: 'Period Slot',
+                        isDense: true,
+                      ),
+                      dropdownColor: isDark
+                          ? AppColors.darkSurface
+                          : Colors.white,
                       items: computedSlots.map((ts) {
-                        return DropdownMenuItem(value: ts.name, child: Text('${ts.name} (${ts.startTime} - ${ts.endTime})'));
+                        return DropdownMenuItem(
+                          value: ts.name,
+                          child: Text(
+                            '${ts.name} (${ts.startTime} - ${ts.endTime})',
+                          ),
+                        );
                       }).toList(),
                       onChanged: (val) {
-                        if (val != null) setDialogState(() => selectedPeriodName = val);
+                        if (val != null)
+                          setDialogState(() => selectedPeriodName = val);
                       },
                     ),
                     const SizedBox(height: 12),
@@ -2952,9 +4820,18 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                     Row(
                       children: [
                         FilterChip(
-                          label: const Text('Science/IT Lab Session', style: TextStyle(fontSize: 10)),
+                          label: const Text(
+                            'Science/IT Lab Session',
+                            style: TextStyle(fontSize: 10),
+                          ),
                           selected: isLabSession,
-                          avatar: Icon(Icons.science_rounded, size: 14, color: isLabSession ? Colors.white : AppColors.primary),
+                          avatar: Icon(
+                            Icons.science_rounded,
+                            size: 14,
+                            color: isLabSession
+                                ? Colors.white
+                                : AppColors.primary,
+                          ),
                           selectedColor: Colors.purple,
                           onSelected: (selected) {
                             setDialogState(() {
@@ -2967,9 +4844,18 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                         ),
                         const SizedBox(width: 8),
                         FilterChip(
-                          label: const Text('Double Period', style: TextStyle(fontSize: 10)),
+                          label: const Text(
+                            'Double Period',
+                            style: TextStyle(fontSize: 10),
+                          ),
                           selected: isDoublePeriod,
-                          avatar: Icon(Icons.schedule_rounded, size: 14, color: isDoublePeriod ? Colors.white : AppColors.primary),
+                          avatar: Icon(
+                            Icons.schedule_rounded,
+                            size: 14,
+                            color: isDoublePeriod
+                                ? Colors.white
+                                : AppColors.primary,
+                          ),
                           selectedColor: AppColors.primary,
                           onSelected: (selected) {
                             setDialogState(() => isDoublePeriod = selected);
@@ -2979,36 +4865,81 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                     ),
                     const SizedBox(height: 12),
 
-                    TextField(controller: subjectCtrl, style: const TextStyle(fontSize: 11), decoration: const InputDecoration(labelText: 'Subject Name (e.g. Computer Practical)', isDense: true)),
+                    TextField(
+                      controller: subjectCtrl,
+                      style: const TextStyle(fontSize: 11),
+                      decoration: const InputDecoration(
+                        labelText: 'Subject Name (e.g. Computer Practical)',
+                        isDense: true,
+                      ),
+                    ),
                     const SizedBox(height: 12),
 
                     DropdownButtonFormField<String>(
                       initialValue: selectedTeacherName,
-                      style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 11),
-                      decoration: const InputDecoration(labelText: 'Assigned Teacher', isDense: true),
-                      dropdownColor: isDark ? AppColors.darkSurface : Colors.white,
+                      style: TextStyle(
+                        color: isDark ? Colors.white : Colors.black,
+                        fontSize: 11,
+                      ),
+                      decoration: const InputDecoration(
+                        labelText: 'Assigned Teacher',
+                        isDense: true,
+                      ),
+                      dropdownColor: isDark
+                          ? AppColors.darkSurface
+                          : Colors.white,
                       items: teachers.map((teacher) {
-                        return DropdownMenuItem(value: teacher.name, child: Text('${teacher.name} (${teacher.designation})'));
+                        return DropdownMenuItem(
+                          value: teacher.name,
+                          child: Text(
+                            '${teacher.name} (${teacher.designation})',
+                          ),
+                        );
                       }).toList(),
                       onChanged: (val) {
-                        if (val != null) setDialogState(() => selectedTeacherName = val);
+                        if (val != null)
+                          setDialogState(() => selectedTeacherName = val);
                       },
                     ),
                     const SizedBox(height: 12),
 
                     DropdownButtonFormField<String>(
-                      initialValue: selectedRoomName.isEmpty ? null : selectedRoomName,
-                      style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 11),
-                      decoration: const InputDecoration(labelText: 'Classroom / Lab Allocation', isDense: true),
-                      dropdownColor: isDark ? AppColors.darkSurface : Colors.white,
+                      initialValue: selectedRoomName.isEmpty
+                          ? null
+                          : selectedRoomName,
+                      style: TextStyle(
+                        color: isDark ? Colors.white : Colors.black,
+                        fontSize: 11,
+                      ),
+                      decoration: const InputDecoration(
+                        labelText: 'Classroom / Lab Allocation',
+                        isDense: true,
+                      ),
+                      dropdownColor: isDark
+                          ? AppColors.darkSurface
+                          : Colors.white,
                       items: [
-                        const DropdownMenuItem(value: '', child: Text('No Classroom Allocated')),
+                        const DropdownMenuItem(
+                          value: '',
+                          child: Text('No Classroom Allocated'),
+                        ),
                         ...classrooms.map((rm) {
-                          return DropdownMenuItem(value: rm.name, child: Text('${rm.name} (${rm.building}, Cap: ${rm.capacity})'));
+                          return DropdownMenuItem(
+                            value: rm.name,
+                            child: Text(
+                              '${rm.name} (${rm.building}, Cap: ${rm.capacity})',
+                            ),
+                          );
                         }),
-                        if (isLabSession) ...branchLabs.map((l) {
-                          return DropdownMenuItem(value: l.name, child: Text('${l.name} (${l.building}, Cap: ${l.capacity})'));
-                        }),
+                        if (isLabSession)
+                          ...branchLabs.map((l) {
+                            return DropdownMenuItem(
+                              value: l.name,
+                              child: Text(
+                                '${l.name} (${l.building}, Cap: ${l.capacity})',
+                              ),
+                            );
+                          }),
                       ],
                       onChanged: (val) {
                         setDialogState(() => selectedRoomName = val ?? '');
@@ -3016,23 +4947,42 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                     ),
                     const SizedBox(height: 12),
 
-                    const Text('Allocate Equipment Resources:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10, color: Colors.grey)),
+                    const Text(
+                      'Allocate Equipment Resources:',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 10,
+                        color: Colors.grey,
+                      ),
+                    ),
                     const SizedBox(height: 6),
                     if (resources.isEmpty)
-                      const Text('No available resources in this branch.', style: TextStyle(fontSize: 9, color: Colors.grey))
+                      const Text(
+                        'No available resources in this branch.',
+                        style: TextStyle(fontSize: 9, color: Colors.grey),
+                      )
                     else
                       Container(
                         constraints: const BoxConstraints(maxHeight: 100),
                         decoration: BoxDecoration(
-                          border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.lightBorder),
+                          border: Border.all(
+                            color: isDark
+                                ? AppColors.darkBorder
+                                : AppColors.lightBorder,
+                          ),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: ListView(
                           shrinkWrap: true,
                           children: resources.map((res) {
-                            final isChecked = selectedResourceIds.contains(res.id);
+                            final isChecked = selectedResourceIds.contains(
+                              res.id,
+                            );
                             return CheckboxListTile(
-                              title: Text('${res.name} (${res.type})', style: const TextStyle(fontSize: 10)),
+                              title: Text(
+                                '${res.name} (${res.type})',
+                                style: const TextStyle(fontSize: 10),
+                              ),
                               value: isChecked,
                               dense: true,
                               visualDensity: VisualDensity.compact,
@@ -3058,15 +5008,28 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                         decoration: BoxDecoration(
                           color: Colors.redAccent.withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(6),
-                          border: Border.all(color: Colors.redAccent.withValues(alpha: 0.5)),
+                          border: Border.all(
+                            color: Colors.redAccent.withValues(alpha: 0.5),
+                          ),
                         ),
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Icon(Icons.error_outline_rounded, color: Colors.redAccent, size: 14),
+                            const Icon(
+                              Icons.error_outline_rounded,
+                              color: Colors.redAccent,
+                              size: 14,
+                            ),
                             const SizedBox(width: 6),
                             Expanded(
-                              child: Text(_conflictError!, style: const TextStyle(color: Colors.redAccent, fontSize: 9, fontWeight: FontWeight.bold)),
+                              child: Text(
+                                _conflictError!,
+                                style: const TextStyle(
+                                  color: Colors.redAccent,
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                             ),
                           ],
                         ),
@@ -3075,16 +5038,22 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                 ),
               ),
               actions: [
-                TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel', style: TextStyle(fontSize: 11))),
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('Cancel', style: TextStyle(fontSize: 11)),
+                ),
                 ElevatedButton(
                   onPressed: () {
-                    final targetClass = existingSlot?.classId ?? _selectedClassId!;
-                    final targetSection = existingSlot?.sectionId ?? _selectedSectionId!;
+                    final targetClass =
+                        existingSlot?.classId ?? _selectedClassId!;
+                    final targetSection =
+                        existingSlot?.sectionId ?? _selectedSectionId!;
                     final subject = subjectCtrl.text.trim();
 
                     if (subject.isEmpty || selectedTeacherName == null) {
                       setDialogState(() {
-                        _conflictError = 'Subject and Teacher must be specified.';
+                        _conflictError =
+                            'Subject and Teacher must be specified.';
                       });
                       return;
                     }
@@ -3095,17 +5064,39 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                     final teacherConflictingSlot = allSlots.where((slot) {
                       if (isEditing && slot.id == existingSlot.id) return false;
                       return slot.branchId == branchId &&
-                             slot.shiftName == _selectedShift &&
-                             slot.dayOfWeek == selectedDay &&
-                             slot.periodName == selectedPeriodName &&
-                             slot.teacherName.toLowerCase() == selectedTeacherName!.toLowerCase();
+                          slot.shiftName == _selectedShift &&
+                          slot.dayOfWeek == selectedDay &&
+                          slot.periodName == selectedPeriodName &&
+                          slot.teacherName.toLowerCase() ==
+                              selectedTeacherName!.toLowerCase();
                     }).firstOrNull;
 
                     if (teacherConflictingSlot != null) {
-                      final confClass = classes.firstWhere((c) => c.id == teacherConflictingSlot.classId, orElse: () => ClassEntity(id:'', branchId:'', departmentId:'', name:'Unknown Class', code:'', maxStudentsCapacity:0));
-                      final confSec = sections.firstWhere((s) => s.id == teacherConflictingSlot.sectionId, orElse: () => SectionEntity(id:'', classId:'', name:'A', roomNumber:'', classTeacher:'', maxStudentsCapacity:0));
+                      final confClass = classes.firstWhere(
+                        (c) => c.id == teacherConflictingSlot.classId,
+                        orElse: () => ClassEntity(
+                          id: '',
+                          branchId: '',
+                          departmentId: '',
+                          name: 'Unknown Class',
+                          code: '',
+                          maxStudentsCapacity: 0,
+                        ),
+                      );
+                      final confSec = sections.firstWhere(
+                        (s) => s.id == teacherConflictingSlot.sectionId,
+                        orElse: () => SectionEntity(
+                          id: '',
+                          classId: '',
+                          name: 'A',
+                          roomNumber: '',
+                          classTeacher: '',
+                          maxStudentsCapacity: 0,
+                        ),
+                      );
                       setDialogState(() {
-                        _conflictError = 'Teacher Conflict: $selectedTeacherName is already scheduled for Class ${confClass.name} - Section ${confSec.name} during $selectedPeriodName on $selectedDay.';
+                        _conflictError =
+                            'Teacher Conflict: $selectedTeacherName is already scheduled for Class ${confClass.name} - Section ${confSec.name} during $selectedPeriodName on $selectedDay.';
                       });
                       return;
                     }
@@ -3113,19 +5104,42 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                     // Conflict Check 2: Classroom Clash
                     if (selectedRoomName.isNotEmpty) {
                       final roomConflictingSlot = allSlots.where((slot) {
-                        if (isEditing && slot.id == existingSlot.id) return false;
+                        if (isEditing && slot.id == existingSlot.id)
+                          return false;
                         return slot.branchId == branchId &&
-                               slot.shiftName == _selectedShift &&
-                               slot.dayOfWeek == selectedDay &&
-                               slot.periodName == selectedPeriodName &&
-                               slot.roomNumber.toLowerCase() == selectedRoomName.toLowerCase();
+                            slot.shiftName == _selectedShift &&
+                            slot.dayOfWeek == selectedDay &&
+                            slot.periodName == selectedPeriodName &&
+                            slot.roomNumber.toLowerCase() ==
+                                selectedRoomName.toLowerCase();
                       }).firstOrNull;
 
                       if (roomConflictingSlot != null) {
-                        final confClass = classes.firstWhere((c) => c.id == roomConflictingSlot.classId, orElse: () => ClassEntity(id:'', branchId:'', departmentId:'', name:'Unknown Class', code:'', maxStudentsCapacity:0));
-                        final confSec = sections.firstWhere((s) => s.id == roomConflictingSlot.sectionId, orElse: () => SectionEntity(id:'', classId:'', name:'A', roomNumber:'', classTeacher:'', maxStudentsCapacity:0));
+                        final confClass = classes.firstWhere(
+                          (c) => c.id == roomConflictingSlot.classId,
+                          orElse: () => ClassEntity(
+                            id: '',
+                            branchId: '',
+                            departmentId: '',
+                            name: 'Unknown Class',
+                            code: '',
+                            maxStudentsCapacity: 0,
+                          ),
+                        );
+                        final confSec = sections.firstWhere(
+                          (s) => s.id == roomConflictingSlot.sectionId,
+                          orElse: () => SectionEntity(
+                            id: '',
+                            classId: '',
+                            name: 'A',
+                            roomNumber: '',
+                            classTeacher: '',
+                            maxStudentsCapacity: 0,
+                          ),
+                        );
                         setDialogState(() {
-                          _conflictError = 'Classroom Clash: Room $selectedRoomName is already occupied by Class ${confClass.name} - Section ${confSec.name} during $selectedPeriodName on $selectedDay.';
+                          _conflictError =
+                              'Classroom Clash: Room $selectedRoomName is already occupied by Class ${confClass.name} - Section ${confSec.name} during $selectedPeriodName on $selectedDay.';
                         });
                         return;
                       }
@@ -3134,53 +5148,100 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                     // Conflict Check 3: Resource Clash
                     for (final resId in selectedResourceIds) {
                       final resourceConflictingSlot = allSlots.where((slot) {
-                        if (isEditing && slot.id == existingSlot.id) return false;
+                        if (isEditing && slot.id == existingSlot.id)
+                          return false;
                         return slot.branchId == branchId &&
-                               slot.dayOfWeek == selectedDay &&
-                               slot.periodName == selectedPeriodName &&
-                               slot.shiftName == _selectedShift &&
-                               slot.allocatedResourceIds.contains(resId);
+                            slot.dayOfWeek == selectedDay &&
+                            slot.periodName == selectedPeriodName &&
+                            slot.shiftName == _selectedShift &&
+                            slot.allocatedResourceIds.contains(resId);
                       }).firstOrNull;
 
                       if (resourceConflictingSlot != null) {
-                        final confClass = classes.firstWhere((c) => c.id == resourceConflictingSlot.classId, orElse: () => ClassEntity(id:'', branchId:'', departmentId:'', name:'Unknown Class', code:'', maxStudentsCapacity:0));
-                        final confSec = sections.firstWhere((s) => s.id == resourceConflictingSlot.sectionId, orElse: () => SectionEntity(id:'', classId:'', name:'A', roomNumber:'', classTeacher:'', maxStudentsCapacity:0));
-                        final targetResName = resources.firstWhere((r) => r.id == resId, orElse: () => BranchResourceEntity(id: '', branchId: '', name: 'Resource', type: '')).name;
+                        final confClass = classes.firstWhere(
+                          (c) => c.id == resourceConflictingSlot.classId,
+                          orElse: () => ClassEntity(
+                            id: '',
+                            branchId: '',
+                            departmentId: '',
+                            name: 'Unknown Class',
+                            code: '',
+                            maxStudentsCapacity: 0,
+                          ),
+                        );
+                        final confSec = sections.firstWhere(
+                          (s) => s.id == resourceConflictingSlot.sectionId,
+                          orElse: () => SectionEntity(
+                            id: '',
+                            classId: '',
+                            name: 'A',
+                            roomNumber: '',
+                            classTeacher: '',
+                            maxStudentsCapacity: 0,
+                          ),
+                        );
+                        final targetResName = resources
+                            .firstWhere(
+                              (r) => r.id == resId,
+                              orElse: () => BranchResourceEntity(
+                                id: '',
+                                branchId: '',
+                                name: 'Resource',
+                                type: '',
+                              ),
+                            )
+                            .name;
                         setDialogState(() {
-                          _conflictError = 'Resource Clash: "$targetResName" is already allocated to Class ${confClass.name} - Section ${confSec.name} during $selectedPeriodName on $selectedDay.';
+                          _conflictError =
+                              'Resource Clash: "$targetResName" is already allocated to Class ${confClass.name} - Section ${confSec.name} during $selectedPeriodName on $selectedDay.';
                         });
                         return;
                       }
                     }
 
                     if (isEditing) {
-                      ref.read(timetableSlotsProvider.notifier).removeSlot(existingSlot.id);
+                      ref
+                          .read(timetableSlotsProvider.notifier)
+                          .removeSlot(existingSlot.id);
                     }
 
-                    ref.read(timetableSlotsProvider.notifier).addSlot(
-                      branchId: branchId,
-                      classId: targetClass,
-                      sectionId: targetSection,
-                      dayOfWeek: selectedDay,
-                      periodName: selectedPeriodName,
-                      startTime: matchedTime.startTime,
-                      endTime: matchedTime.endTime,
-                      subjectName: subject,
-                      teacherName: selectedTeacherName!,
-                      roomNumber: selectedRoomName,
-                      isLabSession: isLabSession,
-                      isDoublePeriod: isDoublePeriod,
-                      shiftName: _selectedShift,
-                      allocatedResourceIds: selectedResourceIds,
-                    );
+                    ref
+                        .read(timetableSlotsProvider.notifier)
+                        .addSlot(
+                          branchId: branchId,
+                          classId: targetClass,
+                          sectionId: targetSection,
+                          dayOfWeek: selectedDay,
+                          periodName: selectedPeriodName,
+                          startTime: matchedTime.startTime,
+                          endTime: matchedTime.endTime,
+                          subjectName: subject,
+                          teacherName: selectedTeacherName!,
+                          roomNumber: selectedRoomName,
+                          isLabSession: isLabSession,
+                          isDoublePeriod: isDoublePeriod,
+                          shiftName: _selectedShift,
+                          allocatedResourceIds: selectedResourceIds,
+                        );
 
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(isEditing ? 'Schedule updated.' : 'Lecture scheduled successfully.')),
+                      SnackBar(
+                        content: Text(
+                          isEditing
+                              ? 'Schedule updated.'
+                              : 'Lecture scheduled successfully.',
+                        ),
+                      ),
                     );
                     Navigator.pop(ctx);
                   },
-                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
-                  child: Text(isEditing ? 'Update Schedule' : 'Confirm Schedule', style: const TextStyle(fontSize: 11, color: Colors.white)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                  ),
+                  child: Text(
+                    isEditing ? 'Update Schedule' : 'Confirm Schedule',
+                    style: const TextStyle(fontSize: 11, color: Colors.white),
+                  ),
                 ),
               ],
             );
@@ -3206,43 +5267,75 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
               onTap: () => _showExportDialog(context, isDark, branchId),
               borderRadius: BorderRadius.circular(8),
               child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 10,
+                  horizontal: 8,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.primary.withValues(alpha: 0.08),
-                  border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+                  border: Border.all(
+                    color: AppColors.primary.withValues(alpha: 0.2),
+                  ),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.picture_as_pdf_rounded, size: 14, color: AppColors.primary),
+                    const Icon(
+                      Icons.picture_as_pdf_rounded,
+                      size: 14,
+                      color: AppColors.primary,
+                    ),
                     const SizedBox(width: 6),
-                    Text('Export PDF/Excel', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: isDark ? Colors.white : AppColors.primary)),
+                    Text(
+                      'Export PDF/Excel',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white : AppColors.primary,
+                      ),
+                    ),
                   ],
                 ),
               ),
             ),
           ),
           const SizedBox(width: 8),
-          
+
           // Share Button
           Expanded(
             child: InkWell(
               onTap: () => _showShareDialog(context, isDark, branchId),
               borderRadius: BorderRadius.circular(8),
               child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 10,
+                  horizontal: 8,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.green.withValues(alpha: 0.08),
-                  border: Border.all(color: Colors.green.withValues(alpha: 0.2)),
+                  border: Border.all(
+                    color: Colors.green.withValues(alpha: 0.2),
+                  ),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.share_rounded, size: 14, color: Colors.green),
+                    const Icon(
+                      Icons.share_rounded,
+                      size: 14,
+                      color: Colors.green,
+                    ),
                     const SizedBox(width: 6),
-                    Text('Share Schedule', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.green)),
+                    Text(
+                      'Share Schedule',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white : Colors.green,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -3256,7 +5349,10 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
               onTap: () => _showCalendarSyncDialog(context, isDark, branchId),
               borderRadius: BorderRadius.circular(8),
               child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 10,
+                  horizontal: 8,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.blue.withValues(alpha: 0.08),
                   border: Border.all(color: Colors.blue.withValues(alpha: 0.2)),
@@ -3265,9 +5361,20 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.calendar_month_rounded, size: 14, color: Colors.blue),
+                    const Icon(
+                      Icons.calendar_month_rounded,
+                      size: 14,
+                      color: Colors.blue,
+                    ),
                     const SizedBox(width: 6),
-                    Text('Calendar Sync', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.blue)),
+                    Text(
+                      'Calendar Sync',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white : Colors.blue,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -3281,18 +5388,34 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
               onTap: () => _showDailyAlertsDialog(context, isDark, branchId),
               borderRadius: BorderRadius.circular(8),
               child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 10,
+                  horizontal: 8,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.purple.withValues(alpha: 0.08),
-                  border: Border.all(color: Colors.purple.withValues(alpha: 0.2)),
+                  border: Border.all(
+                    color: Colors.purple.withValues(alpha: 0.2),
+                  ),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.notifications_active_rounded, size: 14, color: Colors.purple),
+                    const Icon(
+                      Icons.notifications_active_rounded,
+                      size: 14,
+                      color: Colors.purple,
+                    ),
                     const SizedBox(width: 6),
-                    Text('Daily Alerts', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.purple)),
+                    Text(
+                      'Daily Alerts',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white : Colors.purple,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -3321,7 +5444,10 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                 children: [
                   Icon(Icons.download_rounded, color: AppColors.primary),
                   SizedBox(width: 8),
-                  Text('Export Branch Timetable', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                  Text(
+                    'Export Branch Timetable',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                  ),
                 ],
               ),
               content: SingleChildScrollView(
@@ -3337,49 +5463,97 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
 
                     DropdownButtonFormField<String>(
                       initialValue: selectedScope,
-                      style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 11),
-                      decoration: const InputDecoration(labelText: 'Export Scope', isDense: true),
-                      dropdownColor: isDark ? AppColors.darkSurface : Colors.white,
+                      style: TextStyle(
+                        color: isDark ? Colors.white : Colors.black,
+                        fontSize: 11,
+                      ),
+                      decoration: const InputDecoration(
+                        labelText: 'Export Scope',
+                        isDense: true,
+                      ),
+                      dropdownColor: isDark
+                          ? AppColors.darkSurface
+                          : Colors.white,
                       items: const [
-                        DropdownMenuItem(value: 'Class-Wise Schedule', child: Text('Class-Wise Schedule (Selected Class)')),
-                        DropdownMenuItem(value: 'Teacher-Wise Load', child: Text('Teacher-Wise Schedules (All Teachers)')),
-                        DropdownMenuItem(value: 'Branch Master Plan', child: Text('Branch Master Matrix Grid')),
+                        DropdownMenuItem(
+                          value: 'Class-Wise Schedule',
+                          child: Text('Class-Wise Schedule (Selected Class)'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'Teacher-Wise Load',
+                          child: Text('Teacher-Wise Schedules (All Teachers)'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'Branch Master Plan',
+                          child: Text('Branch Master Matrix Grid'),
+                        ),
                       ],
                       onChanged: (val) {
-                        if (val != null) setDialogState(() => selectedScope = val);
+                        if (val != null)
+                          setDialogState(() => selectedScope = val);
                       },
                     ),
                     const SizedBox(height: 12),
 
                     DropdownButtonFormField<String>(
                       initialValue: selectedFormat,
-                      style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 11),
-                      decoration: const InputDecoration(labelText: 'File Format', isDense: true),
-                      dropdownColor: isDark ? AppColors.darkSurface : Colors.white,
+                      style: TextStyle(
+                        color: isDark ? Colors.white : Colors.black,
+                        fontSize: 11,
+                      ),
+                      decoration: const InputDecoration(
+                        labelText: 'File Format',
+                        isDense: true,
+                      ),
+                      dropdownColor: isDark
+                          ? AppColors.darkSurface
+                          : Colors.white,
                       items: const [
-                        DropdownMenuItem(value: 'PDF Document (.pdf)', child: Text('PDF Document (.pdf) - Print Ready')),
-                        DropdownMenuItem(value: 'Excel Spreadsheet (.xlsx)', child: Text('Excel Spreadsheet (.xlsx) - Data Plan')),
+                        DropdownMenuItem(
+                          value: 'PDF Document (.pdf)',
+                          child: Text('PDF Document (.pdf) - Print Ready'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'Excel Spreadsheet (.xlsx)',
+                          child: Text('Excel Spreadsheet (.xlsx) - Data Plan'),
+                        ),
                       ],
                       onChanged: (val) {
-                        if (val != null) setDialogState(() => selectedFormat = val);
+                        if (val != null)
+                          setDialogState(() => selectedFormat = val);
                       },
                     ),
                     const SizedBox(height: 16),
 
-                    const Text('Include Details:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10, color: Colors.grey)),
+                    const Text(
+                      'Include Details:',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 10,
+                        color: Colors.grey,
+                      ),
+                    ),
                     CheckboxListTile(
-                      title: const Text('Break Periods & Assemblies', style: TextStyle(fontSize: 11)),
+                      title: const Text(
+                        'Break Periods & Assemblies',
+                        style: TextStyle(fontSize: 11),
+                      ),
                       value: includeBreaks,
                       dense: true,
                       visualDensity: VisualDensity.compact,
-                      onChanged: (val) => setDialogState(() => includeBreaks = val ?? true),
+                      onChanged: (val) =>
+                          setDialogState(() => includeBreaks = val ?? true),
                     ),
                     CheckboxListTile(
-                      title: const Text('Classroom & Lab Room Names', style: TextStyle(fontSize: 11)),
+                      title: const Text(
+                        'Classroom & Lab Room Names',
+                        style: TextStyle(fontSize: 11),
+                      ),
                       value: includeRooms,
                       dense: true,
                       visualDensity: VisualDensity.compact,
-                      onChanged: (val) => setDialogState(() => includeRooms = val ?? true),
+                      onChanged: (val) =>
+                          setDialogState(() => includeRooms = val ?? true),
                     ),
                     const SizedBox(height: 12),
 
@@ -3389,7 +5563,13 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                           children: [
                             CircularProgressIndicator(strokeWidth: 2),
                             SizedBox(height: 8),
-                            Text('Compiling vector layout data...', style: TextStyle(fontSize: 10, color: Colors.grey)),
+                            Text(
+                              'Compiling vector layout data...',
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: Colors.grey,
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -3399,13 +5579,21 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                         decoration: BoxDecoration(
                           color: isDark ? AppColors.darkBg : Colors.grey[100],
                           borderRadius: BorderRadius.circular(6),
-                          border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.lightBorder),
+                          border: Border.all(
+                            color: isDark
+                                ? AppColors.darkBorder
+                                : AppColors.lightBorder,
+                          ),
                         ),
                         child: Row(
                           children: [
                             Icon(
-                              selectedFormat.contains('PDF') ? Icons.picture_as_pdf_rounded : Icons.table_chart_rounded,
-                              color: selectedFormat.contains('PDF') ? Colors.redAccent : Colors.green,
+                              selectedFormat.contains('PDF')
+                                  ? Icons.picture_as_pdf_rounded
+                                  : Icons.table_chart_rounded,
+                              color: selectedFormat.contains('PDF')
+                                  ? Colors.redAccent
+                                  : Colors.green,
                               size: 24,
                             ),
                             const SizedBox(width: 10),
@@ -3414,10 +5602,21 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    selectedFormat.contains('PDF') ? 'SMS_BR001_CLS_10_A.pdf' : 'SMS_BR001_CLS_10_A.xlsx',
-                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11),
+                                    selectedFormat.contains('PDF')
+                                        ? 'SMS_BR001_CLS_10_A.pdf'
+                                        : 'SMS_BR001_CLS_10_A.xlsx',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 11,
+                                    ),
                                   ),
-                                  const Text('Ready to build & download • 1.2 MB', style: TextStyle(fontSize: 9, color: Colors.grey)),
+                                  const Text(
+                                    'Ready to build & download • 1.2 MB',
+                                    style: TextStyle(
+                                      fontSize: 9,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
                                 ],
                               ),
                             ),
@@ -3429,7 +5628,10 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                 ),
               ),
               actions: [
-                TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel', style: TextStyle(fontSize: 11))),
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('Cancel', style: TextStyle(fontSize: 11)),
+                ),
                 ElevatedButton.icon(
                   onPressed: isGenerating
                       ? null
@@ -3441,15 +5643,26 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   backgroundColor: Colors.green[700],
-                                  content: Text('Downloaded $selectedScope successfully in $selectedFormat format!'),
+                                  content: Text(
+                                    'Downloaded $selectedScope successfully in $selectedFormat format!',
+                                  ),
                                 ),
                               );
                             }
                           });
                         },
-                  icon: const Icon(Icons.download_rounded, size: 14, color: Colors.white),
-                  label: const Text('Build & Download', style: TextStyle(fontSize: 11, color: Colors.white)),
-                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+                  icon: const Icon(
+                    Icons.download_rounded,
+                    size: 14,
+                    color: Colors.white,
+                  ),
+                  label: const Text(
+                    'Build & Download',
+                    style: TextStyle(fontSize: 11, color: Colors.white),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                  ),
                 ),
               ],
             );
@@ -3473,7 +5686,10 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                 children: [
                   Icon(Icons.share_rounded, color: Colors.green),
                   SizedBox(width: 8),
-                  Text('Share Branch Timetable', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                  Text(
+                    'Share Branch Timetable',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                  ),
                 ],
               ),
               content: SingleChildScrollView(
@@ -3488,10 +5704,20 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                     const SizedBox(height: 16),
 
                     // Copy Feed URL Section
-                    const Text('Live Calendar Subscription URL:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10, color: Colors.grey)),
+                    const Text(
+                      'Live Calendar Subscription URL:',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 10,
+                        color: Colors.grey,
+                      ),
+                    ),
                     const SizedBox(height: 4),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
                         color: isDark ? AppColors.darkBg : Colors.grey[200],
                         borderRadius: BorderRadius.circular(6),
@@ -3501,18 +5727,29 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                           Expanded(
                             child: Text(
                               'https://sms.symbosys.edu/shared/timetable/$branchId/c10a',
-                              style: const TextStyle(fontSize: 9, fontFamily: 'monospace'),
+                              style: const TextStyle(
+                                fontSize: 9,
+                                fontFamily: 'monospace',
+                              ),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
                           const SizedBox(width: 8),
                           IconButton(
-                            icon: const Icon(Icons.copy_all_rounded, size: 14, color: Colors.green),
+                            icon: const Icon(
+                              Icons.copy_all_rounded,
+                              size: 14,
+                              color: Colors.green,
+                            ),
                             padding: EdgeInsets.zero,
                             constraints: const BoxConstraints(),
                             onPressed: () {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Live share link copied to clipboard.')),
+                                const SnackBar(
+                                  content: Text(
+                                    'Live share link copied to clipboard.',
+                                  ),
+                                ),
                               );
                             },
                           ),
@@ -3522,10 +5759,23 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                     const SizedBox(height: 16),
 
                     // Portals Toggle Section
-                    const Text('Portal Broadcast Settings:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10, color: Colors.grey)),
+                    const Text(
+                      'Portal Broadcast Settings:',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 10,
+                        color: Colors.grey,
+                      ),
+                    ),
                     SwitchListTile(
-                      title: const Text('Publish on Student Portal Feed', style: TextStyle(fontSize: 11)),
-                      subtitle: const Text('Visible to students of BR-001 only', style: TextStyle(fontSize: 9)),
+                      title: const Text(
+                        'Publish on Student Portal Feed',
+                        style: TextStyle(fontSize: 11),
+                      ),
+                      subtitle: const Text(
+                        'Visible to students of BR-001 only',
+                        style: TextStyle(fontSize: 9),
+                      ),
                       value: _studentPortalShared,
                       dense: true,
                       activeThumbColor: Colors.green,
@@ -3536,8 +5786,14 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                       },
                     ),
                     SwitchListTile(
-                      title: const Text('Publish on Parent Portal Feed', style: TextStyle(fontSize: 11)),
-                      subtitle: const Text('Visible to parents of BR-001 only', style: TextStyle(fontSize: 9)),
+                      title: const Text(
+                        'Publish on Parent Portal Feed',
+                        style: TextStyle(fontSize: 11),
+                      ),
+                      subtitle: const Text(
+                        'Visible to parents of BR-001 only',
+                        style: TextStyle(fontSize: 9),
+                      ),
                       value: _parentPortalShared,
                       dense: true,
                       activeThumbColor: Colors.green,
@@ -3554,9 +5810,18 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                       const Center(
                         child: Column(
                           children: [
-                            CircularProgressIndicator(strokeWidth: 2, color: Colors.green),
+                            CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.green,
+                            ),
                             SizedBox(height: 8),
-                            Text('Sending SMS/Push notifications to branch users...', style: TextStyle(fontSize: 10, color: Colors.grey)),
+                            Text(
+                              'Sending SMS/Push notifications to branch users...',
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: Colors.grey,
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -3569,7 +5834,8 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                             Future.delayed(const Duration(milliseconds: 1000), () {
                               setState(() {
                                 _shareLogs.insert(0, {
-                                  'time': 'Aug 14, 2026 ${DateFormat('hh:mm a').format(DateTime.now())}',
+                                  'time':
+                                      'Aug 14, 2026 ${DateFormat('hh:mm a').format(DateTime.now())}',
                                   'channel': 'SMS & Email Alert',
                                   'scope': 'Class 10-A Students & Parents',
                                   'status': 'Broadcast Sent (80 alerts)',
@@ -3578,20 +5844,40 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                               if (ctx.mounted) {
                                 setDialogState(() => isBroadcasting = false);
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('Timetable broadcast alert sent to Class 10-A students & parents!')),
+                                  const SnackBar(
+                                    content: Text(
+                                      'Timetable broadcast alert sent to Class 10-A students & parents!',
+                                    ),
+                                  ),
                                 );
                               }
                             });
                           },
-                          icon: const Icon(Icons.notifications_active_rounded, size: 14),
-                          label: const Text('Broadcast Live Alert Now', style: TextStyle(fontSize: 11, color: Colors.white)),
-                          style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white),
+                          icon: const Icon(
+                            Icons.notifications_active_rounded,
+                            size: 14,
+                          ),
+                          label: const Text(
+                            'Broadcast Live Alert Now',
+                            style: TextStyle(fontSize: 11, color: Colors.white),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green,
+                            foregroundColor: Colors.white,
+                          ),
                         ),
                       ),
                     ],
                     const SizedBox(height: 16),
 
-                    const Text('Previous Sharing History Logs:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10, color: Colors.grey)),
+                    const Text(
+                      'Previous Sharing History Logs:',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 10,
+                        color: Colors.grey,
+                      ),
+                    ),
                     const SizedBox(height: 6),
                     Container(
                       constraints: const BoxConstraints(maxHeight: 100),
@@ -3606,14 +5892,39 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text('${log['time']} • ${log['channel']}', style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold)),
-                                    Text('Target: ${log['scope']}', style: const TextStyle(fontSize: 8, color: Colors.grey)),
+                                    Text(
+                                      '${log['time']} • ${log['channel']}',
+                                      style: const TextStyle(
+                                        fontSize: 9,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    Text(
+                                      'Target: ${log['scope']}',
+                                      style: const TextStyle(
+                                        fontSize: 8,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
                                   ],
                                 ),
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                                  decoration: BoxDecoration(color: Colors.green.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(4)),
-                                  child: Text(log['status']!, style: const TextStyle(fontSize: 8, color: Colors.green, fontWeight: FontWeight.bold)),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 4,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.green.withValues(alpha: 0.15),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Text(
+                                    log['status']!,
+                                    style: const TextStyle(
+                                      fontSize: 8,
+                                      color: Colors.green,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
                                 ),
                               ],
                             ),
@@ -3625,7 +5936,10 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                 ),
               ),
               actions: [
-                TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Close', style: TextStyle(fontSize: 11))),
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('Close', style: TextStyle(fontSize: 11)),
+                ),
               ],
             );
           },
@@ -3634,7 +5948,11 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
     );
   }
 
-  void _showCalendarSyncDialog(BuildContext context, bool isDark, String branchId) {
+  void _showCalendarSyncDialog(
+    BuildContext context,
+    bool isDark,
+    String branchId,
+  ) {
     bool isSyncing = false;
 
     showDialog(
@@ -3648,7 +5966,10 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                 children: [
                   Icon(Icons.sync_rounded, color: Colors.blue),
                   SizedBox(width: 8),
-                  Text('Calendar Integration', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                  Text(
+                    'Calendar Integration',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                  ),
                 ],
               ),
               content: SingleChildScrollView(
@@ -3663,8 +5984,14 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                     const SizedBox(height: 16),
 
                     SwitchListTile(
-                      title: const Text('Google Calendar Auto-Sync', style: TextStyle(fontSize: 11)),
-                      subtitle: const Text('Syncs lectures automatically on save', style: TextStyle(fontSize: 9)),
+                      title: const Text(
+                        'Google Calendar Auto-Sync',
+                        style: TextStyle(fontSize: 11),
+                      ),
+                      subtitle: const Text(
+                        'Syncs lectures automatically on save',
+                        style: TextStyle(fontSize: 9),
+                      ),
                       value: _googleSyncEnabled,
                       activeThumbColor: Colors.blue,
                       dense: true,
@@ -3675,8 +6002,14 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                       },
                     ),
                     SwitchListTile(
-                      title: const Text('Outlook Calendar Sync', style: TextStyle(fontSize: 11)),
-                      subtitle: const Text('Syncs with Office 365 Exchange account', style: TextStyle(fontSize: 9)),
+                      title: const Text(
+                        'Outlook Calendar Sync',
+                        style: TextStyle(fontSize: 11),
+                      ),
+                      subtitle: const Text(
+                        'Syncs with Office 365 Exchange account',
+                        style: TextStyle(fontSize: 9),
+                      ),
                       value: _outlookSyncEnabled,
                       activeThumbColor: Colors.blue,
                       dense: true,
@@ -3688,10 +6021,20 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                     ),
                     const SizedBox(height: 16),
 
-                    const Text('iCal Subscriptions Address (Apple/Google):', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10, color: Colors.grey)),
+                    const Text(
+                      'iCal Subscriptions Address (Apple/Google):',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 10,
+                        color: Colors.grey,
+                      ),
+                    ),
                     const SizedBox(height: 6),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
                         color: isDark ? AppColors.darkBg : Colors.grey[200],
                         borderRadius: BorderRadius.circular(6),
@@ -3701,18 +6044,29 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                           Expanded(
                             child: Text(
                               'webcal://sms.symbosys.edu/feeds/$branchId/c10a.ics',
-                              style: const TextStyle(fontSize: 9, fontFamily: 'monospace'),
+                              style: const TextStyle(
+                                fontSize: 9,
+                                fontFamily: 'monospace',
+                              ),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
                           const SizedBox(width: 8),
                           IconButton(
-                            icon: const Icon(Icons.copy_all_rounded, size: 14, color: Colors.blue),
+                            icon: const Icon(
+                              Icons.copy_all_rounded,
+                              size: 14,
+                              color: Colors.blue,
+                            ),
                             padding: EdgeInsets.zero,
                             constraints: const BoxConstraints(),
                             onPressed: () {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('iCalendar subscription feed link copied.')),
+                                const SnackBar(
+                                  content: Text(
+                                    'iCalendar subscription feed link copied.',
+                                  ),
+                                ),
                               );
                             },
                           ),
@@ -3725,9 +6079,18 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                       const Center(
                         child: Column(
                           children: [
-                            CircularProgressIndicator(strokeWidth: 2, color: Colors.blue),
+                            CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.blue,
+                            ),
                             SizedBox(height: 8),
-                            Text('Re-pushing 42 calendar events...', style: TextStyle(fontSize: 10, color: Colors.grey)),
+                            Text(
+                              'Re-pushing 42 calendar events...',
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: Colors.grey,
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -3737,18 +6100,31 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                         child: ElevatedButton.icon(
                           onPressed: () {
                             setDialogState(() => isSyncing = true);
-                            Future.delayed(const Duration(milliseconds: 1000), () {
-                              if (ctx.mounted) {
-                                setDialogState(() => isSyncing = false);
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('Sync completed successfully! 42 events updated in external accounts.')),
-                                );
-                              }
-                            });
+                            Future.delayed(
+                              const Duration(milliseconds: 1000),
+                              () {
+                                if (ctx.mounted) {
+                                  setDialogState(() => isSyncing = false);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        'Sync completed successfully! 42 events updated in external accounts.',
+                                      ),
+                                    ),
+                                  );
+                                }
+                              },
+                            );
                           },
                           icon: const Icon(Icons.sync_rounded, size: 14),
-                          label: const Text('Force Manual Re-Sync Now', style: TextStyle(fontSize: 11, color: Colors.white)),
-                          style: ElevatedButton.styleFrom(backgroundColor: Colors.blue, foregroundColor: Colors.white),
+                          label: const Text(
+                            'Force Manual Re-Sync Now',
+                            style: TextStyle(fontSize: 11, color: Colors.white),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.blue,
+                            foregroundColor: Colors.white,
+                          ),
                         ),
                       ),
                     ],
@@ -3756,7 +6132,10 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                 ),
               ),
               actions: [
-                TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Dismiss', style: TextStyle(fontSize: 11))),
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('Dismiss', style: TextStyle(fontSize: 11)),
+                ),
               ],
             );
           },
@@ -3765,7 +6144,9 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
     );
   }
 
-  List<Map<String, dynamic>> _calculateClashes(List<TimetableSlotEntity> slots) {
+  List<Map<String, dynamic>> _calculateClashes(
+    List<TimetableSlotEntity> slots,
+  ) {
     final List<Map<String, dynamic>> clashes = [];
 
     for (int i = 0; i < slots.length; i++) {
@@ -3780,20 +6161,24 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
         }
 
         // Clash 1: Teacher double booking
-        if (s1.teacherName.toLowerCase() == s2.teacherName.toLowerCase() && s1.teacherName.trim().isNotEmpty) {
+        if (s1.teacherName.toLowerCase() == s2.teacherName.toLowerCase() &&
+            s1.teacherName.trim().isNotEmpty) {
           clashes.add({
             'type': 'Teacher Double-Booking',
-            'detail': 'Teacher "${s1.teacherName}" is scheduled for both "${s1.subjectName}" (Class ID: ${s1.classId}) and "${s2.subjectName}" (Class ID: ${s2.classId}) at the same time.',
+            'detail':
+                'Teacher "${s1.teacherName}" is scheduled for both "${s1.subjectName}" (Class ID: ${s1.classId}) and "${s2.subjectName}" (Class ID: ${s2.classId}) at the same time.',
             'slot1': s1,
             'slot2': s2,
           });
         }
 
         // Clash 2: Room clash
-        if (s1.roomNumber.toLowerCase() == s2.roomNumber.toLowerCase() && s1.roomNumber.trim().isNotEmpty) {
+        if (s1.roomNumber.toLowerCase() == s2.roomNumber.toLowerCase() &&
+            s1.roomNumber.trim().isNotEmpty) {
           clashes.add({
             'type': 'Room Clash',
-            'detail': 'Room "${s1.roomNumber}" is allocated to both Class ID: ${s1.classId} and Class ID: ${s2.classId} at the same time.',
+            'detail':
+                'Room "${s1.roomNumber}" is allocated to both Class ID: ${s1.classId} and Class ID: ${s2.classId} at the same time.',
             'slot1': s1,
             'slot2': s2,
           });
@@ -3804,7 +6189,8 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
           if (s2.allocatedResourceIds.contains(resId)) {
             clashes.add({
               'type': 'Resource Clash',
-              'detail': 'Resource ID "$resId" is allocated to both Class ID: ${s1.classId} and Class ID: ${s2.classId} at the same time.',
+              'detail':
+                  'Resource ID "$resId" is allocated to both Class ID: ${s1.classId} and Class ID: ${s2.classId} at the same time.',
               'slot1': s1,
               'slot2': s2,
             });
@@ -3815,7 +6201,11 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
     return clashes;
   }
 
-  void _showClashesReportDialog(BuildContext context, bool isDark, List<Map<String, dynamic>> clashes) {
+  void _showClashesReportDialog(
+    BuildContext context,
+    bool isDark,
+    List<Map<String, dynamic>> clashes,
+  ) {
     showDialog(
       context: context,
       builder: (ctx) {
@@ -3824,13 +6214,20 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
           title: Row(
             children: [
               Icon(
-                clashes.isNotEmpty ? Icons.warning_amber_rounded : Icons.check_circle_outline_rounded,
+                clashes.isNotEmpty
+                    ? Icons.warning_amber_rounded
+                    : Icons.check_circle_outline_rounded,
                 color: clashes.isNotEmpty ? Colors.redAccent : Colors.green,
               ),
               const SizedBox(width: 8),
               Text(
-                clashes.isNotEmpty ? 'Timetable Clash Report (${clashes.length})' : 'Timetable Clash Report',
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                clashes.isNotEmpty
+                    ? 'Timetable Clash Report (${clashes.length})'
+                    : 'Timetable Clash Report',
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ],
           ),
@@ -3854,9 +6251,20 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                       padding: const EdgeInsets.symmetric(vertical: 24),
                       child: Column(
                         children: [
-                          Icon(Icons.verified_rounded, size: 48, color: Colors.green.withValues(alpha: 0.2)),
+                          Icon(
+                            Icons.verified_rounded,
+                            size: 48,
+                            color: Colors.green.withValues(alpha: 0.2),
+                          ),
                           const SizedBox(height: 12),
-                          const Text('No double-bookings or room clashes found.', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.green)),
+                          const Text(
+                            'No double-bookings or room clashes found.',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.green,
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -3875,18 +6283,28 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                           decoration: BoxDecoration(
                             color: Colors.redAccent.withValues(alpha: 0.05),
                             borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: Colors.redAccent.withValues(alpha: 0.2)),
+                            border: Border.all(
+                              color: Colors.redAccent.withValues(alpha: 0.2),
+                            ),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Row(
                                 children: [
-                                  const Icon(Icons.error_outline_rounded, color: Colors.redAccent, size: 14),
+                                  const Icon(
+                                    Icons.error_outline_rounded,
+                                    color: Colors.redAccent,
+                                    size: 14,
+                                  ),
                                   const SizedBox(width: 6),
                                   Text(
                                     clash['type'] as String,
-                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: Colors.redAccent),
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 11,
+                                      color: Colors.redAccent,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -3933,7 +6351,9 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
     final List<Map<String, dynamic>> listData = [];
 
     for (final t in branchTeachers) {
-      final count = branchSlots.where((s) => s.teacherName.toLowerCase() == t.name.toLowerCase()).length;
+      final count = branchSlots
+          .where((s) => s.teacherName.toLowerCase() == t.name.toLowerCase())
+          .length;
       String status = 'Optimal';
       Color color = Colors.blue;
       if (count >= 20) {
@@ -3967,7 +6387,10 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
             children: const [
               Icon(Icons.bar_chart_rounded, color: AppColors.primary),
               SizedBox(width: 8),
-              Text('Teacher Workload & Periods Analysis', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+              Text(
+                'Teacher Workload & Periods Analysis',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+              ),
             ],
           ),
           content: SizedBox(
@@ -3993,8 +6416,18 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                         ),
                         child: Column(
                           children: [
-                            Text('${avgLoad.toStringAsFixed(1)} p/w', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.primary)),
-                            const Text('Avg Workload', style: TextStyle(fontSize: 8, color: Colors.grey)),
+                            Text(
+                              '${avgLoad.toStringAsFixed(1)} p/w',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                            const Text(
+                              'Avg Workload',
+                              style: TextStyle(fontSize: 8, color: Colors.grey),
+                            ),
                           ],
                         ),
                       ),
@@ -4009,8 +6442,18 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                         ),
                         child: Column(
                           children: [
-                            Text('$optimalCount', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.blue)),
-                            const Text('Optimal (10-19)', style: TextStyle(fontSize: 8, color: Colors.grey)),
+                            Text(
+                              '$optimalCount',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                                color: Colors.blue,
+                              ),
+                            ),
+                            const Text(
+                              'Optimal (10-19)',
+                              style: TextStyle(fontSize: 8, color: Colors.grey),
+                            ),
                           ],
                         ),
                       ),
@@ -4025,8 +6468,18 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                         ),
                         child: Column(
                           children: [
-                            Text('$overloadedCount', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.redAccent)),
-                            const Text('Overloaded (>=20)', style: TextStyle(fontSize: 8, color: Colors.grey)),
+                            Text(
+                              '$overloadedCount',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                                color: Colors.redAccent,
+                              ),
+                            ),
+                            const Text(
+                              'Overloaded (>=20)',
+                              style: TextStyle(fontSize: 8, color: Colors.grey),
+                            ),
                           ],
                         ),
                       ),
@@ -4041,8 +6494,18 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                         ),
                         child: Column(
                           children: [
-                            Text('$underallocatedCount', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.orange)),
-                            const Text('Under-allocated (<10)', style: TextStyle(fontSize: 8, color: Colors.grey)),
+                            Text(
+                              '$underallocatedCount',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                                color: Colors.orange,
+                              ),
+                            ),
+                            const Text(
+                              'Under-allocated (<10)',
+                              style: TextStyle(fontSize: 8, color: Colors.grey),
+                            ),
                           ],
                         ),
                       ),
@@ -4051,7 +6514,14 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                 ),
                 const SizedBox(height: 16),
 
-                const Text('Teacher Workload List:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: Colors.grey)),
+                const Text(
+                  'Teacher Workload List:',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 11,
+                    color: Colors.grey,
+                  ),
+                ),
                 const SizedBox(height: 8),
 
                 Container(
@@ -4075,8 +6545,21 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text('${t.name} (${t.designation})', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 10)),
-                                Text('$count / 25 periods', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10, color: color)),
+                                Text(
+                                  '${t.name} (${t.designation})',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 10,
+                                  ),
+                                ),
+                                Text(
+                                  '$count / 25 periods',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 10,
+                                    color: color,
+                                  ),
+                                ),
                               ],
                             ),
                             const SizedBox(height: 4),
@@ -4087,20 +6570,34 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                                     borderRadius: BorderRadius.circular(4),
                                     child: LinearProgressIndicator(
                                       value: percent,
-                                      backgroundColor: isDark ? Colors.grey[800] : Colors.grey[200],
-                                      valueColor: AlwaysStoppedAnimation<Color>(color),
+                                      backgroundColor: isDark
+                                          ? Colors.grey[800]
+                                          : Colors.grey[200],
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        color,
+                                      ),
                                       minHeight: 6,
                                     ),
                                   ),
                                 ),
                                 const SizedBox(width: 12),
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 5,
+                                    vertical: 2,
+                                  ),
                                   decoration: BoxDecoration(
                                     color: color.withValues(alpha: 0.15),
                                     borderRadius: BorderRadius.circular(4),
                                   ),
-                                  child: Text(status, style: TextStyle(fontSize: 7, fontWeight: FontWeight.bold, color: color)),
+                                  child: Text(
+                                    status,
+                                    style: TextStyle(
+                                      fontSize: 7,
+                                      fontWeight: FontWeight.bold,
+                                      color: color,
+                                    ),
+                                  ),
                                 ),
                               ],
                             ),
@@ -4144,7 +6641,9 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
     }
     final startCtrl = TextEditingController(text: '09:00 AM');
     final endCtrl = TextEditingController(text: '12:00 PM');
-    final examOrActivityCtrl = TextEditingController(text: 'Science Exam / Event Panel');
+    final examOrActivityCtrl = TextEditingController(
+      text: 'Science Exam / Event Panel',
+    );
     final roomCtrl = TextEditingController(text: 'Main Hall');
     final supervisorCtrl = TextEditingController(text: 'Nisha Mehta');
 
@@ -4153,7 +6652,9 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
       builder: (ctx) {
         return StatefulBuilder(
           builder: (context, setDialogState) {
-            final classSections = sections.where((s) => s.classId == selectedClassId).toList();
+            final classSections = sections
+                .where((s) => s.classId == selectedClassId)
+                .toList();
 
             return AlertDialog(
               backgroundColor: isDark ? AppColors.darkSurface : Colors.white,
@@ -4161,7 +6662,10 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                 children: [
                   Icon(Icons.event_note_rounded, color: AppColors.primary),
                   SizedBox(width: 8),
-                  Text('Add Special Day Timetable', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                  Text(
+                    'Add Special Day Timetable',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                  ),
                 ],
               ),
               content: SizedBox(
@@ -4171,49 +6675,100 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      TextField(controller: nameCtrl, style: const TextStyle(fontSize: 11), decoration: const InputDecoration(labelText: 'Special Day Name (e.g. Science Fair)', isDense: true)),
+                      TextField(
+                        controller: nameCtrl,
+                        style: const TextStyle(fontSize: 11),
+                        decoration: const InputDecoration(
+                          labelText: 'Special Day Name (e.g. Science Fair)',
+                          isDense: true,
+                        ),
+                      ),
                       const SizedBox(height: 12),
-                      TextField(controller: descCtrl, style: const TextStyle(fontSize: 11), decoration: const InputDecoration(labelText: 'Description / Remarks', isDense: true)),
+                      TextField(
+                        controller: descCtrl,
+                        style: const TextStyle(fontSize: 11),
+                        decoration: const InputDecoration(
+                          labelText: 'Description / Remarks',
+                          isDense: true,
+                        ),
+                      ),
                       const SizedBox(height: 12),
                       DropdownButtonFormField<String>(
                         initialValue: type,
-                        style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 11),
-                        decoration: const InputDecoration(labelText: 'Schedule Type', isDense: true),
-                        dropdownColor: isDark ? AppColors.darkSurface : Colors.white,
+                        style: TextStyle(
+                          color: isDark ? Colors.white : Colors.black,
+                          fontSize: 11,
+                        ),
+                        decoration: const InputDecoration(
+                          labelText: 'Schedule Type',
+                          isDense: true,
+                        ),
+                        dropdownColor: isDark
+                            ? AppColors.darkSurface
+                            : Colors.white,
                         items: const [
-                          DropdownMenuItem(value: 'Exam Day', child: Text('Exam Day')),
-                          DropdownMenuItem(value: 'Event Day', child: Text('Event Day')),
-                          DropdownMenuItem(value: 'Other', child: Text('Other Special Day')),
+                          DropdownMenuItem(
+                            value: 'Exam Day',
+                            child: Text('Exam Day'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'Event Day',
+                            child: Text('Event Day'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'Other',
+                            child: Text('Other Special Day'),
+                          ),
                         ],
                         onChanged: (val) {
                           if (val != null) type = val;
                         },
                       ),
                       const SizedBox(height: 12),
-                      
+
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text('Date: ${DateFormat('yyyy-MM-dd').format(selectedDate)}', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                          Text(
+                            'Date: ${DateFormat('yyyy-MM-dd').format(selectedDate)}',
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                           TextButton(
                             onPressed: () async {
                               final dt = await showDatePicker(
                                 context: context,
                                 initialDate: selectedDate,
-                                firstDate: DateTime.now().subtract(const Duration(days: 30)),
-                                lastDate: DateTime.now().add(const Duration(days: 365)),
+                                firstDate: DateTime.now().subtract(
+                                  const Duration(days: 30),
+                                ),
+                                lastDate: DateTime.now().add(
+                                  const Duration(days: 365),
+                                ),
                               );
                               if (dt != null) {
                                 setDialogState(() => selectedDate = dt);
                               }
                             },
-                            child: const Text('Select Date', style: TextStyle(fontSize: 11)),
+                            child: const Text(
+                              'Select Date',
+                              style: TextStyle(fontSize: 11),
+                            ),
                           ),
                         ],
                       ),
                       const Divider(height: 16),
 
-                      const Text('Add Initial Slot / Exam:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10, color: Colors.grey)),
+                      const Text(
+                        'Add Initial Slot / Exam:',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 10,
+                          color: Colors.grey,
+                        ),
+                      ),
                       const SizedBox(height: 8),
 
                       Row(
@@ -4221,15 +6776,34 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                           Expanded(
                             child: DropdownButtonFormField<String>(
                               initialValue: selectedClassId,
-                              style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 10),
-                              decoration: const InputDecoration(labelText: 'Class', isDense: true),
-                              dropdownColor: isDark ? AppColors.darkSurface : Colors.white,
-                              items: classes.map((c) => DropdownMenuItem(value: c.id, child: Text(c.name))).toList(),
+                              style: TextStyle(
+                                color: isDark ? Colors.white : Colors.black,
+                                fontSize: 10,
+                              ),
+                              decoration: const InputDecoration(
+                                labelText: 'Class',
+                                isDense: true,
+                              ),
+                              dropdownColor: isDark
+                                  ? AppColors.darkSurface
+                                  : Colors.white,
+                              items: classes
+                                  .map(
+                                    (c) => DropdownMenuItem(
+                                      value: c.id,
+                                      child: Text(c.name),
+                                    ),
+                                  )
+                                  .toList(),
                               onChanged: (val) {
                                 setDialogState(() {
                                   selectedClassId = val;
-                                  final list = sections.where((s) => s.classId == val).toList();
-                                  selectedSectionId = list.isNotEmpty ? list.first.id : null;
+                                  final list = sections
+                                      .where((s) => s.classId == val)
+                                      .toList();
+                                  selectedSectionId = list.isNotEmpty
+                                      ? list.first.id
+                                      : null;
                                 });
                               },
                             ),
@@ -4238,10 +6812,25 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                           Expanded(
                             child: DropdownButtonFormField<String>(
                               initialValue: selectedSectionId,
-                              style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 10),
-                              decoration: const InputDecoration(labelText: 'Section', isDense: true),
-                              dropdownColor: isDark ? AppColors.darkSurface : Colors.white,
-                              items: classSections.map((s) => DropdownMenuItem(value: s.id, child: Text('Section ${s.name}'))).toList(),
+                              style: TextStyle(
+                                color: isDark ? Colors.white : Colors.black,
+                                fontSize: 10,
+                              ),
+                              decoration: const InputDecoration(
+                                labelText: 'Section',
+                                isDense: true,
+                              ),
+                              dropdownColor: isDark
+                                  ? AppColors.darkSurface
+                                  : Colors.white,
+                              items: classSections
+                                  .map(
+                                    (s) => DropdownMenuItem(
+                                      value: s.id,
+                                      child: Text('Section ${s.name}'),
+                                    ),
+                                  )
+                                  .toList(),
                               onChanged: (val) {
                                 setDialogState(() => selectedSectionId = val);
                               },
@@ -4253,21 +6842,64 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
 
                       Row(
                         children: [
-                          Expanded(child: TextField(controller: startCtrl, style: const TextStyle(fontSize: 11), decoration: const InputDecoration(labelText: 'Start Time', isDense: true))),
+                          Expanded(
+                            child: TextField(
+                              controller: startCtrl,
+                              style: const TextStyle(fontSize: 11),
+                              decoration: const InputDecoration(
+                                labelText: 'Start Time',
+                                isDense: true,
+                              ),
+                            ),
+                          ),
                           const SizedBox(width: 8),
-                          Expanded(child: TextField(controller: endCtrl, style: const TextStyle(fontSize: 11), decoration: const InputDecoration(labelText: 'End Time', isDense: true))),
+                          Expanded(
+                            child: TextField(
+                              controller: endCtrl,
+                              style: const TextStyle(fontSize: 11),
+                              decoration: const InputDecoration(
+                                labelText: 'End Time',
+                                isDense: true,
+                              ),
+                            ),
+                          ),
                         ],
                       ),
                       const SizedBox(height: 8),
 
-                      TextField(controller: examOrActivityCtrl, style: const TextStyle(fontSize: 11), decoration: const InputDecoration(labelText: 'Exam/Activity Title', isDense: true)),
+                      TextField(
+                        controller: examOrActivityCtrl,
+                        style: const TextStyle(fontSize: 11),
+                        decoration: const InputDecoration(
+                          labelText: 'Exam/Activity Title',
+                          isDense: true,
+                        ),
+                      ),
                       const SizedBox(height: 8),
 
                       Row(
                         children: [
-                          Expanded(child: TextField(controller: roomCtrl, style: const TextStyle(fontSize: 11), decoration: const InputDecoration(labelText: 'Room', isDense: true))),
+                          Expanded(
+                            child: TextField(
+                              controller: roomCtrl,
+                              style: const TextStyle(fontSize: 11),
+                              decoration: const InputDecoration(
+                                labelText: 'Room',
+                                isDense: true,
+                              ),
+                            ),
+                          ),
                           const SizedBox(width: 8),
-                          Expanded(child: TextField(controller: supervisorCtrl, style: const TextStyle(fontSize: 11), decoration: const InputDecoration(labelText: 'Supervisor/Instructor', isDense: true))),
+                          Expanded(
+                            child: TextField(
+                              controller: supervisorCtrl,
+                              style: const TextStyle(fontSize: 11),
+                              decoration: const InputDecoration(
+                                labelText: 'Supervisor/Instructor',
+                                isDense: true,
+                              ),
+                            ),
+                          ),
                         ],
                       ),
                     ],
@@ -4275,17 +6907,24 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                 ),
               ),
               actions: [
-                TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel', style: TextStyle(fontSize: 11))),
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('Cancel', style: TextStyle(fontSize: 11)),
+                ),
                 ElevatedButton(
                   onPressed: () {
-                    if (nameCtrl.text.trim().isNotEmpty && selectedClassId != null && selectedSectionId != null) {
+                    if (nameCtrl.text.trim().isNotEmpty &&
+                        selectedClassId != null &&
+                        selectedSectionId != null) {
                       final newSd = SpecialDayTimetableEntity(
                         id: 'SD-${DateTime.now().millisecondsSinceEpoch}',
                         branchId: branchId,
                         date: selectedDate,
                         name: nameCtrl.text.trim(),
                         type: type,
-                        description: descCtrl.text.trim().isNotEmpty ? descCtrl.text.trim() : 'Special Schedule Day',
+                        description: descCtrl.text.trim().isNotEmpty
+                            ? descCtrl.text.trim()
+                            : 'Special Schedule Day',
                         slots: [
                           SpecialDaySlotEntity(
                             id: 'SDS-${DateTime.now().millisecondsSinceEpoch}',
@@ -4299,13 +6938,26 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                           ),
                         ],
                       );
-                      ref.read(specialDayTimetableProvider.notifier).addSpecialDay(newSd);
+                      ref
+                          .read(specialDayTimetableProvider.notifier)
+                          .addSpecialDay(newSd);
                       Navigator.pop(ctx);
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Special day timetable saved successfully.')));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'Special day timetable saved successfully.',
+                          ),
+                        ),
+                      );
                     }
                   },
-                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
-                  child: const Text('Save Special Day', style: TextStyle(fontSize: 11, color: Colors.white)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                  ),
+                  child: const Text(
+                    'Save Special Day',
+                    style: TextStyle(fontSize: 11, color: Colors.white),
+                  ),
                 ),
               ],
             );
@@ -4315,7 +6967,11 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
     );
   }
 
-  void _showAddCoCurricularDialog(BuildContext context, bool isDark, String branchId) {
+  void _showAddCoCurricularDialog(
+    BuildContext context,
+    bool isDark,
+    String branchId,
+  ) {
     final nameCtrl = TextEditingController();
     final instCtrl = TextEditingController();
     final timeCtrl = TextEditingController(text: '02:00 PM - 03:30 PM');
@@ -4332,50 +6988,122 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
               backgroundColor: isDark ? AppColors.darkSurface : Colors.white,
               title: const Row(
                 children: [
-                  Icon(Icons.sports_basketball_rounded, color: AppColors.primary),
+                  Icon(
+                    Icons.sports_basketball_rounded,
+                    color: AppColors.primary,
+                  ),
                   SizedBox(width: 8),
-                  Text('Schedule Co-Curricular Activity', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                  Text(
+                    'Schedule Co-Curricular Activity',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                  ),
                 ],
               ),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    TextField(controller: nameCtrl, style: const TextStyle(fontSize: 11), decoration: const InputDecoration(labelText: 'Activity Name (e.g. Coding Club)', isDense: true)),
+                    TextField(
+                      controller: nameCtrl,
+                      style: const TextStyle(fontSize: 11),
+                      decoration: const InputDecoration(
+                        labelText: 'Activity Name (e.g. Coding Club)',
+                        isDense: true,
+                      ),
+                    ),
                     const SizedBox(height: 12),
-                    TextField(controller: instCtrl, style: const TextStyle(fontSize: 11), decoration: const InputDecoration(labelText: 'Instructor Name', isDense: true)),
+                    TextField(
+                      controller: instCtrl,
+                      style: const TextStyle(fontSize: 11),
+                      decoration: const InputDecoration(
+                        labelText: 'Instructor Name',
+                        isDense: true,
+                      ),
+                    ),
                     const SizedBox(height: 12),
                     DropdownButtonFormField<String>(
                       initialValue: day,
-                      style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 11),
-                      decoration: const InputDecoration(labelText: 'Weekly Day', isDense: true),
-                      dropdownColor: isDark ? AppColors.darkSurface : Colors.white,
+                      style: TextStyle(
+                        color: isDark ? Colors.white : Colors.black,
+                        fontSize: 11,
+                      ),
+                      decoration: const InputDecoration(
+                        labelText: 'Weekly Day',
+                        isDense: true,
+                      ),
+                      dropdownColor: isDark
+                          ? AppColors.darkSurface
+                          : Colors.white,
                       items: const [
-                        DropdownMenuItem(value: 'Monday', child: Text('Monday')),
-                        DropdownMenuItem(value: 'Tuesday', child: Text('Tuesday')),
-                        DropdownMenuItem(value: 'Wednesday', child: Text('Wednesday')),
-                        DropdownMenuItem(value: 'Thursday', child: Text('Thursday')),
-                        DropdownMenuItem(value: 'Friday', child: Text('Friday')),
-                        DropdownMenuItem(value: 'Saturday', child: Text('Saturday')),
+                        DropdownMenuItem(
+                          value: 'Monday',
+                          child: Text('Monday'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'Tuesday',
+                          child: Text('Tuesday'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'Wednesday',
+                          child: Text('Wednesday'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'Thursday',
+                          child: Text('Thursday'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'Friday',
+                          child: Text('Friday'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'Saturday',
+                          child: Text('Saturday'),
+                        ),
                       ],
                       onChanged: (val) {
                         if (val != null) day = val;
                       },
                     ),
                     const SizedBox(height: 12),
-                    TextField(controller: timeCtrl, style: const TextStyle(fontSize: 11), decoration: const InputDecoration(labelText: 'Time Slot (e.g. 02:00 PM - 03:30 PM)', isDense: true)),
+                    TextField(
+                      controller: timeCtrl,
+                      style: const TextStyle(fontSize: 11),
+                      decoration: const InputDecoration(
+                        labelText: 'Time Slot (e.g. 02:00 PM - 03:30 PM)',
+                        isDense: true,
+                      ),
+                    ),
                     const SizedBox(height: 12),
-                    TextField(controller: venueCtrl, style: const TextStyle(fontSize: 11), decoration: const InputDecoration(labelText: 'Venue / room', isDense: true)),
+                    TextField(
+                      controller: venueCtrl,
+                      style: const TextStyle(fontSize: 11),
+                      decoration: const InputDecoration(
+                        labelText: 'Venue / room',
+                        isDense: true,
+                      ),
+                    ),
                     const SizedBox(height: 12),
-                    TextField(controller: capCtrl, keyboardType: TextInputType.number, style: const TextStyle(fontSize: 11), decoration: const InputDecoration(labelText: 'Max Capacity', isDense: true)),
+                    TextField(
+                      controller: capCtrl,
+                      keyboardType: TextInputType.number,
+                      style: const TextStyle(fontSize: 11),
+                      decoration: const InputDecoration(
+                        labelText: 'Max Capacity',
+                        isDense: true,
+                      ),
+                    ),
                   ],
                 ),
               ),
               actions: [
-                TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel', style: TextStyle(fontSize: 11))),
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('Cancel', style: TextStyle(fontSize: 11)),
+                ),
                 ElevatedButton(
                   onPressed: () {
-                    if (nameCtrl.text.trim().isNotEmpty && instCtrl.text.trim().isNotEmpty) {
+                    if (nameCtrl.text.trim().isNotEmpty &&
+                        instCtrl.text.trim().isNotEmpty) {
                       final newAct = CoCurricularActivityEntity(
                         id: 'CC-${DateTime.now().millisecondsSinceEpoch}',
                         branchId: branchId,
@@ -4386,13 +7114,26 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                         venue: venueCtrl.text.trim(),
                         maxCapacity: int.tryParse(capCtrl.text) ?? 30,
                       );
-                      ref.read(coCurricularActivitiesProvider.notifier).addActivity(newAct);
+                      ref
+                          .read(coCurricularActivitiesProvider.notifier)
+                          .addActivity(newAct);
                       Navigator.pop(ctx);
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Co-curricular activity scheduled successfully.')));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'Co-curricular activity scheduled successfully.',
+                          ),
+                        ),
+                      );
                     }
                   },
-                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
-                  child: const Text('Schedule Activity', style: TextStyle(fontSize: 11, color: Colors.white)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                  ),
+                  child: const Text(
+                    'Schedule Activity',
+                    style: TextStyle(fontSize: 11, color: Colors.white),
+                  ),
                 ),
               ],
             );
@@ -4402,7 +7143,11 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
     );
   }
 
-  void _showDailyAlertsDialog(BuildContext context, bool isDark, String branchId) {
+  void _showDailyAlertsDialog(
+    BuildContext context,
+    bool isDark,
+    String branchId,
+  ) {
     showDialog(
       context: context,
       builder: (ctx) {
@@ -4412,9 +7157,15 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
               backgroundColor: isDark ? AppColors.darkSurface : Colors.white,
               title: const Row(
                 children: [
-                  Icon(Icons.notifications_active_rounded, color: Colors.purple),
+                  Icon(
+                    Icons.notifications_active_rounded,
+                    color: Colors.purple,
+                  ),
                   SizedBox(width: 8),
-                  Text('Daily Agenda Alerts', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                  Text(
+                    'Daily Agenda Alerts',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                  ),
                 ],
               ),
               content: SingleChildScrollView(
@@ -4429,7 +7180,10 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                     const SizedBox(height: 16),
 
                     SwitchListTile(
-                      title: const Text('Enable Daily Morning Notifications', style: TextStyle(fontSize: 11)),
+                      title: const Text(
+                        'Enable Daily Morning Notifications',
+                        style: TextStyle(fontSize: 11),
+                      ),
                       value: _dailyAlertsEnabled,
                       activeThumbColor: Colors.purple,
                       dense: true,
@@ -4444,19 +7198,42 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                     if (_dailyAlertsEnabled) ...[
                       Row(
                         children: [
-                          const Expanded(flex: 5, child: Text('Target Delivery Time:', style: TextStyle(fontSize: 11))),
+                          const Expanded(
+                            flex: 5,
+                            child: Text(
+                              'Target Delivery Time:',
+                              style: TextStyle(fontSize: 11),
+                            ),
+                          ),
                           Expanded(
                             flex: 5,
                             child: DropdownButtonFormField<String>(
                               initialValue: _dailyAlertTime,
-                              style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 11),
+                              style: TextStyle(
+                                color: isDark ? Colors.white : Colors.black,
+                                fontSize: 11,
+                              ),
                               decoration: const InputDecoration(isDense: true),
-                              dropdownColor: isDark ? AppColors.darkSurface : Colors.white,
+                              dropdownColor: isDark
+                                  ? AppColors.darkSurface
+                                  : Colors.white,
                               items: const [
-                                DropdownMenuItem(value: '07:00 AM', child: Text('07:00 AM')),
-                                DropdownMenuItem(value: '07:30 AM', child: Text('07:30 AM')),
-                                DropdownMenuItem(value: '08:00 AM', child: Text('08:00 AM')),
-                                DropdownMenuItem(value: '08:30 AM', child: Text('08:30 AM')),
+                                DropdownMenuItem(
+                                  value: '07:00 AM',
+                                  child: Text('07:00 AM'),
+                                ),
+                                DropdownMenuItem(
+                                  value: '07:30 AM',
+                                  child: Text('07:30 AM'),
+                                ),
+                                DropdownMenuItem(
+                                  value: '08:00 AM',
+                                  child: Text('08:00 AM'),
+                                ),
+                                DropdownMenuItem(
+                                  value: '08:30 AM',
+                                  child: Text('08:30 AM'),
+                                ),
                               ],
                               onChanged: (val) {
                                 if (val != null) {
@@ -4469,35 +7246,64 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                       ),
                       const SizedBox(height: 16),
 
-                      const Text('Delivery Alert Channels:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10, color: Colors.grey)),
+                      const Text(
+                        'Delivery Alert Channels:',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 10,
+                          color: Colors.grey,
+                        ),
+                      ),
                       CheckboxListTile(
-                        title: const Text('Push Notification (Mobile App)', style: TextStyle(fontSize: 11)),
+                        title: const Text(
+                          'Push Notification (Mobile App)',
+                          style: TextStyle(fontSize: 11),
+                        ),
                         value: _alertPush,
                         dense: true,
                         activeColor: Colors.purple,
                         visualDensity: VisualDensity.compact,
-                        onChanged: (val) => setDialogState(() => setState(() => _alertPush = val ?? true)),
+                        onChanged: (val) => setDialogState(
+                          () => setState(() => _alertPush = val ?? true),
+                        ),
                       ),
                       CheckboxListTile(
-                        title: const Text('Email Notification Inbox', style: TextStyle(fontSize: 11)),
+                        title: const Text(
+                          'Email Notification Inbox',
+                          style: TextStyle(fontSize: 11),
+                        ),
                         value: _alertEmail,
                         dense: true,
                         activeColor: Colors.purple,
                         visualDensity: VisualDensity.compact,
-                        onChanged: (val) => setDialogState(() => setState(() => _alertEmail = val ?? true)),
+                        onChanged: (val) => setDialogState(
+                          () => setState(() => _alertEmail = val ?? true),
+                        ),
                       ),
                       CheckboxListTile(
-                        title: const Text('SMS / WhatsApp Alert', style: TextStyle(fontSize: 11)),
+                        title: const Text(
+                          'SMS / WhatsApp Alert',
+                          style: TextStyle(fontSize: 11),
+                        ),
                         value: _alertSms,
                         dense: true,
                         activeColor: Colors.purple,
                         visualDensity: VisualDensity.compact,
-                        onChanged: (val) => setDialogState(() => setState(() => _alertSms = val ?? false)),
+                        onChanged: (val) => setDialogState(
+                          () => setState(() => _alertSms = val ?? false),
+                        ),
                       ),
                       const SizedBox(height: 16),
                     ],
 
-                    const Text('Daily Notification Alert History Logs:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10, color: Colors.grey)),
+                    const Text(
+                      'Daily Notification Alert History Logs:',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 10,
+                        color: Colors.grey,
+                      ),
+                    ),
                     const SizedBox(height: 6),
                     Container(
                       constraints: const BoxConstraints(maxHeight: 120),
@@ -4512,14 +7318,39 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(log['time']!, style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold)),
-                                    Text('Recipients: ${log['sent']}', style: const TextStyle(fontSize: 8, color: Colors.grey)),
+                                    Text(
+                                      log['time']!,
+                                      style: const TextStyle(
+                                        fontSize: 9,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    Text(
+                                      'Recipients: ${log['sent']}',
+                                      style: const TextStyle(
+                                        fontSize: 8,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
                                   ],
                                 ),
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                                  decoration: BoxDecoration(color: Colors.green.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(4)),
-                                  child: const Text('SENT', style: TextStyle(fontSize: 8, color: Colors.green, fontWeight: FontWeight.bold)),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 4,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.green.withValues(alpha: 0.15),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: const Text(
+                                    'SENT',
+                                    style: TextStyle(
+                                      fontSize: 8,
+                                      color: Colors.green,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
                                 ),
                               ],
                             ),
@@ -4535,10 +7366,15 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                   onPressed: () {
                     Navigator.pop(ctx);
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Daily notifications settings updated.')),
+                      const SnackBar(
+                        content: Text('Daily notifications settings updated.'),
+                      ),
                     );
                   },
-                  child: const Text('Save Settings', style: TextStyle(fontSize: 11)),
+                  child: const Text(
+                    'Save Settings',
+                    style: TextStyle(fontSize: 11),
+                  ),
                 ),
               ],
             );
@@ -4548,8 +7384,15 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
     );
   }
 
-  void _showVersionHistoryDialog(BuildContext context, bool isDark, String branchId) {
-    final versions = ref.watch(timetableVersionsProvider).where((v) => v.branchId == branchId).toList();
+  void _showVersionHistoryDialog(
+    BuildContext context,
+    bool isDark,
+    String branchId,
+  ) {
+    final versions = ref
+        .watch(timetableVersionsProvider)
+        .where((v) => v.branchId == branchId)
+        .toList();
     final nameCtrl = TextEditingController();
     final descCtrl = TextEditingController();
 
@@ -4564,7 +7407,10 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                 children: [
                   Icon(Icons.history_rounded, color: AppColors.primary),
                   SizedBox(width: 8),
-                  Text('Timetable Version History & Snapshots', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                  Text(
+                    'Timetable Version History & Snapshots',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                  ),
                 ],
               ),
               content: SingleChildScrollView(
@@ -4584,39 +7430,89 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                       decoration: BoxDecoration(
                         color: AppColors.primary.withValues(alpha: 0.06),
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+                        border: Border.all(
+                          color: AppColors.primary.withValues(alpha: 0.2),
+                        ),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('Create New Version Snapshot:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: AppColors.primary)),
+                          const Text(
+                            'Create New Version Snapshot:',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 11,
+                              color: AppColors.primary,
+                            ),
+                          ),
                           const SizedBox(height: 8),
-                          TextField(controller: nameCtrl, style: const TextStyle(fontSize: 11), decoration: const InputDecoration(labelText: 'Version Tag (e.g. v1.2 - Lab Revision)', isDense: true)),
+                          TextField(
+                            controller: nameCtrl,
+                            style: const TextStyle(fontSize: 11),
+                            decoration: const InputDecoration(
+                              labelText:
+                                  'Version Tag (e.g. v1.2 - Lab Revision)',
+                              isDense: true,
+                            ),
+                          ),
                           const SizedBox(height: 8),
-                          TextField(controller: descCtrl, style: const TextStyle(fontSize: 11), decoration: const InputDecoration(labelText: 'Revision Summary / Notes', isDense: true)),
+                          TextField(
+                            controller: descCtrl,
+                            style: const TextStyle(fontSize: 11),
+                            decoration: const InputDecoration(
+                              labelText: 'Revision Summary / Notes',
+                              isDense: true,
+                            ),
+                          ),
                           const SizedBox(height: 10),
                           SizedBox(
                             width: double.infinity,
                             child: ElevatedButton.icon(
                               onPressed: () {
                                 if (nameCtrl.text.trim().isNotEmpty) {
-                                  final currentSlots = ref.read(timetableSlotsProvider).where((s) => s.branchId == branchId).toList();
-                                  ref.read(timetableVersionsProvider.notifier).createSnapshot(
-                                    branchId: branchId,
-                                    versionName: nameCtrl.text.trim(),
-                                    description: descCtrl.text.trim().isNotEmpty ? descCtrl.text.trim() : 'Manual snapshot backup',
-                                    createdBy: 'Branch Admin',
-                                    currentSlots: currentSlots,
-                                  );
+                                  final currentSlots = ref
+                                      .read(timetableSlotsProvider)
+                                      .where((s) => s.branchId == branchId)
+                                      .toList();
+                                  ref
+                                      .read(timetableVersionsProvider.notifier)
+                                      .createSnapshot(
+                                        branchId: branchId,
+                                        versionName: nameCtrl.text.trim(),
+                                        description:
+                                            descCtrl.text.trim().isNotEmpty
+                                            ? descCtrl.text.trim()
+                                            : 'Manual snapshot backup',
+                                        createdBy: 'Branch Admin',
+                                        currentSlots: currentSlots,
+                                      );
                                   nameCtrl.clear();
                                   descCtrl.clear();
                                   setDialogState(() {});
-                                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Timetable snapshot created.')));
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        'Timetable snapshot created.',
+                                      ),
+                                    ),
+                                  );
                                 }
                               },
-                              icon: const Icon(Icons.add_a_photo_rounded, size: 14, color: Colors.white),
-                              label: const Text('Save Active Timetable Snapshot', style: TextStyle(fontSize: 11, color: Colors.white)),
-                              style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+                              icon: const Icon(
+                                Icons.add_a_photo_rounded,
+                                size: 14,
+                                color: Colors.white,
+                              ),
+                              label: const Text(
+                                'Save Active Timetable Snapshot',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.primary,
+                              ),
                             ),
                           ),
                         ],
@@ -4624,49 +7520,103 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                     ),
                     const SizedBox(height: 16),
 
-                    const Text('Saved Historical Snapshots:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: Colors.grey)),
+                    const Text(
+                      'Saved Historical Snapshots:',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 11,
+                        color: Colors.grey,
+                      ),
+                    ),
                     const SizedBox(height: 8),
                     if (versions.isEmpty)
-                      const Text('No saved snapshots found for this branch.', style: TextStyle(fontSize: 10, color: Colors.grey))
+                      const Text(
+                        'No saved snapshots found for this branch.',
+                        style: TextStyle(fontSize: 10, color: Colors.grey),
+                      )
                     else
                       Container(
                         constraints: const BoxConstraints(maxHeight: 180),
                         child: ListView.separated(
                           shrinkWrap: true,
                           itemCount: versions.length,
-                          separatorBuilder: (ctx, idx) => const Divider(height: 1),
+                          separatorBuilder: (ctx, idx) =>
+                              const Divider(height: 1),
                           itemBuilder: (ctx, idx) {
                             final v = versions[idx];
                             return Padding(
                               padding: const EdgeInsets.symmetric(vertical: 8),
                               child: Row(
                                 children: [
-                                  const Icon(Icons.bookmark_border_rounded, size: 18, color: AppColors.primary),
+                                  const Icon(
+                                    Icons.bookmark_border_rounded,
+                                    size: 18,
+                                    color: AppColors.primary,
+                                  ),
                                   const SizedBox(width: 8),
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
-                                        Text(v.versionName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
-                                        Text('${v.description} • ${v.slotsData.length} slots', style: const TextStyle(fontSize: 9, color: Colors.grey)),
-                                        Text('Saved: ${DateFormat('yyyy-MM-dd hh:mm a').format(v.createdAt)} by ${v.createdBy}', style: const TextStyle(fontSize: 8, color: Colors.grey)),
+                                        Text(
+                                          v.versionName,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 11,
+                                          ),
+                                        ),
+                                        Text(
+                                          '${v.description} • ${v.slotsData.length} slots',
+                                          style: const TextStyle(
+                                            fontSize: 9,
+                                            color: Colors.grey,
+                                          ),
+                                        ),
+                                        Text(
+                                          'Saved: ${DateFormat('yyyy-MM-dd hh:mm a').format(v.createdAt)} by ${v.createdBy}',
+                                          style: const TextStyle(
+                                            fontSize: 8,
+                                            color: Colors.grey,
+                                          ),
+                                        ),
                                       ],
                                     ),
                                   ),
                                   ElevatedButton(
                                     onPressed: () {
-                                      ref.read(timetableSlotsProvider.notifier).replaceBranchSlots(branchId, v.slotsData);
+                                      ref
+                                          .read(timetableSlotsProvider.notifier)
+                                          .replaceBranchSlots(
+                                            branchId,
+                                            v.slotsData,
+                                          );
                                       Navigator.pop(ctx);
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(content: Text('Restored timetable slots from version ${v.versionName}')),
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            'Restored timetable slots from version ${v.versionName}',
+                                          ),
+                                        ),
                                       );
                                     },
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: Colors.green,
-                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 6,
+                                      ),
                                       visualDensity: VisualDensity.compact,
                                     ),
-                                    child: const Text('Restore', style: TextStyle(fontSize: 10, color: Colors.white)),
+                                    child: const Text(
+                                      'Restore',
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        color: Colors.white,
+                                      ),
+                                    ),
                                   ),
                                 ],
                               ),
@@ -4678,7 +7628,10 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                 ),
               ),
               actions: [
-                TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Close', style: TextStyle(fontSize: 11))),
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('Close', style: TextStyle(fontSize: 11)),
+                ),
               ],
             );
           },
@@ -4687,7 +7640,12 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
     );
   }
 
-  void _showOrgTemplatesDialog(BuildContext context, bool isDark, String branchId, bool isReadOnly) {
+  void _showOrgTemplatesDialog(
+    BuildContext context,
+    bool isDark,
+    String branchId,
+    bool isReadOnly,
+  ) {
     final templates = ref.watch(orgTimetableTemplatesProvider);
     final nameCtrl = TextEditingController();
     final descCtrl = TextEditingController();
@@ -4703,7 +7661,10 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                 children: [
                   Icon(Icons.grid_view_rounded, color: AppColors.primary),
                   SizedBox(width: 8),
-                  Text('Organization Master Timetable Templates', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                  Text(
+                    'Organization Master Timetable Templates',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                  ),
                 ],
               ),
               content: SingleChildScrollView(
@@ -4724,37 +7685,90 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                         decoration: BoxDecoration(
                           color: Colors.purple.withValues(alpha: 0.06),
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.purple.withValues(alpha: 0.2)),
+                          border: Border.all(
+                            color: Colors.purple.withValues(alpha: 0.2),
+                          ),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text('Save Active Schedule as Global Template:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: Colors.purple)),
+                            const Text(
+                              'Save Active Schedule as Global Template:',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 11,
+                                color: Colors.purple,
+                              ),
+                            ),
                             const SizedBox(height: 8),
-                            TextField(controller: nameCtrl, style: const TextStyle(fontSize: 11), decoration: const InputDecoration(labelText: 'Template Title (e.g. CBSE 8-Period Model)', isDense: true)),
+                            TextField(
+                              controller: nameCtrl,
+                              style: const TextStyle(fontSize: 11),
+                              decoration: const InputDecoration(
+                                labelText:
+                                    'Template Title (e.g. CBSE 8-Period Model)',
+                                isDense: true,
+                              ),
+                            ),
                             const SizedBox(height: 8),
-                            TextField(controller: descCtrl, style: const TextStyle(fontSize: 11), decoration: const InputDecoration(labelText: 'Template Description', isDense: true)),
+                            TextField(
+                              controller: descCtrl,
+                              style: const TextStyle(fontSize: 11),
+                              decoration: const InputDecoration(
+                                labelText: 'Template Description',
+                                isDense: true,
+                              ),
+                            ),
                             const SizedBox(height: 10),
                             SizedBox(
                               width: double.infinity,
                               child: ElevatedButton.icon(
                                 onPressed: () {
                                   if (nameCtrl.text.trim().isNotEmpty) {
-                                    final currentSlots = ref.read(timetableSlotsProvider).where((s) => s.branchId == branchId).toList();
-                                    ref.read(orgTimetableTemplatesProvider.notifier).createTemplate(
-                                      name: nameCtrl.text.trim(),
-                                      description: descCtrl.text.trim().isNotEmpty ? descCtrl.text.trim() : 'Master Organization Template',
-                                      slots: currentSlots,
-                                    );
+                                    final currentSlots = ref
+                                        .read(timetableSlotsProvider)
+                                        .where((s) => s.branchId == branchId)
+                                        .toList();
+                                    ref
+                                        .read(
+                                          orgTimetableTemplatesProvider
+                                              .notifier,
+                                        )
+                                        .createTemplate(
+                                          name: nameCtrl.text.trim(),
+                                          description:
+                                              descCtrl.text.trim().isNotEmpty
+                                              ? descCtrl.text.trim()
+                                              : 'Master Organization Template',
+                                          slots: currentSlots,
+                                        );
                                     nameCtrl.clear();
                                     descCtrl.clear();
                                     setDialogState(() {});
-                                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Master organization template saved.')));
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          'Master organization template saved.',
+                                        ),
+                                      ),
+                                    );
                                   }
                                 },
-                                icon: const Icon(Icons.save_rounded, size: 14, color: Colors.white),
-                                label: const Text('Save Master Template', style: TextStyle(fontSize: 11, color: Colors.white)),
-                                style: ElevatedButton.styleFrom(backgroundColor: Colors.purple),
+                                icon: const Icon(
+                                  Icons.save_rounded,
+                                  size: 14,
+                                  color: Colors.white,
+                                ),
+                                label: const Text(
+                                  'Save Master Template',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.purple,
+                                ),
                               ),
                             ),
                           ],
@@ -4763,50 +7777,113 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                       const SizedBox(height: 16),
                     ],
 
-                    const Text('Available Global Organization Templates:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: Colors.grey)),
+                    const Text(
+                      'Available Global Organization Templates:',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 11,
+                        color: Colors.grey,
+                      ),
+                    ),
                     const SizedBox(height: 8),
                     if (templates.isEmpty)
-                      const Text('No organization templates created yet.', style: TextStyle(fontSize: 10, color: Colors.grey))
+                      const Text(
+                        'No organization templates created yet.',
+                        style: TextStyle(fontSize: 10, color: Colors.grey),
+                      )
                     else
                       Container(
                         constraints: const BoxConstraints(maxHeight: 180),
                         child: ListView.separated(
                           shrinkWrap: true,
                           itemCount: templates.length,
-                          separatorBuilder: (ctx, idx) => const Divider(height: 1),
+                          separatorBuilder: (ctx, idx) =>
+                              const Divider(height: 1),
                           itemBuilder: (ctx, idx) {
                             final tmpl = templates[idx];
                             return Padding(
                               padding: const EdgeInsets.symmetric(vertical: 8),
                               child: Row(
                                 children: [
-                                  const Icon(Icons.dashboard_outlined, size: 18, color: Colors.purple),
+                                  const Icon(
+                                    Icons.dashboard_outlined,
+                                    size: 18,
+                                    color: Colors.purple,
+                                  ),
                                   const SizedBox(width: 8),
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
-                                        Text(tmpl.templateName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
-                                        Text('${tmpl.description} • ${tmpl.templateSlots.length} slots', style: const TextStyle(fontSize: 9, color: Colors.grey)),
-                                        Text('Applied Branches: ${tmpl.appliedBranchIds.length}', style: const TextStyle(fontSize: 8, color: Colors.purple, fontWeight: FontWeight.bold)),
+                                        Text(
+                                          tmpl.templateName,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 11,
+                                          ),
+                                        ),
+                                        Text(
+                                          '${tmpl.description} • ${tmpl.templateSlots.length} slots',
+                                          style: const TextStyle(
+                                            fontSize: 9,
+                                            color: Colors.grey,
+                                          ),
+                                        ),
+                                        Text(
+                                          'Applied Branches: ${tmpl.appliedBranchIds.length}',
+                                          style: const TextStyle(
+                                            fontSize: 8,
+                                            color: Colors.purple,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
                                       ],
                                     ),
                                   ),
                                   ElevatedButton(
                                     onPressed: () {
-                                      ref.read(timetableSlotsProvider.notifier).replaceBranchSlots(branchId, tmpl.templateSlots);
-                                      ref.read(orgTimetableTemplatesProvider.notifier).markPushedToBranch(tmpl.id, branchId);
+                                      ref
+                                          .read(timetableSlotsProvider.notifier)
+                                          .replaceBranchSlots(
+                                            branchId,
+                                            tmpl.templateSlots,
+                                          );
+                                      ref
+                                          .read(
+                                            orgTimetableTemplatesProvider
+                                                .notifier,
+                                          )
+                                          .markPushedToBranch(
+                                            tmpl.id,
+                                            branchId,
+                                          );
                                       Navigator.pop(ctx);
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(content: Text('Applied master template "${tmpl.templateName}" to branch.')),
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            'Applied master template "${tmpl.templateName}" to branch.',
+                                          ),
+                                        ),
                                       );
                                     },
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: AppColors.primary,
-                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 6,
+                                      ),
                                       visualDensity: VisualDensity.compact,
                                     ),
-                                    child: const Text('Apply Template', style: TextStyle(fontSize: 10, color: Colors.white)),
+                                    child: const Text(
+                                      'Apply Template',
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        color: Colors.white,
+                                      ),
+                                    ),
                                   ),
                                 ],
                               ),
@@ -4818,7 +7895,10 @@ class _TimetableManagementPageState extends ConsumerState<TimetableManagementPag
                 ),
               ),
               actions: [
-                TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Close', style: TextStyle(fontSize: 11))),
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('Close', style: TextStyle(fontSize: 11)),
+                ),
               ],
             );
           },

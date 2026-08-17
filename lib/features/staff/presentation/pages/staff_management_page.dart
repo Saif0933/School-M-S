@@ -4,7 +4,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../shared/widgets/cards/glass_card.dart';
 import '../../../auth/providers.dart';
 import '../../../organization/providers.dart';
-import '../../../academic/providers.dart';
+import '../../../academic/providers.dart' hide staffAttendanceProvider;
 import '../../providers.dart';
 
 /// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

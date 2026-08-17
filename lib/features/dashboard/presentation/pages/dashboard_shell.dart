@@ -17,6 +17,10 @@ import '../../../academic/presentation/pages/department_class_section_page.dart'
 import '../../../academic/presentation/pages/timetable_management_page.dart';
 import '../../../student/presentation/pages/student_management_page.dart';
 import '../../../staff/presentation/pages/staff_management_page.dart';
+import '../../../academic/presentation/pages/attendance_management_page.dart';
+import '../../../academic/presentation/pages/exam_management_page.dart';
+import '../../../finance/presentation/pages/fees_management_page.dart';
+import '../../../library/presentation/pages/library_management_page.dart';
 
 /// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 /// Dashboard Shell — Main app shell after login
@@ -123,6 +127,14 @@ class _DashboardShellState extends ConsumerState<DashboardShell> {
         return const SubscriptionManagementPage(key: ValueKey('subscription'));
       case 'timetable':
         return const TimetableManagementPage(key: ValueKey('timetable'));
+      case 'attendance':
+        return const AttendanceManagementPage(key: ValueKey('attendance'));
+      case 'fees':
+        return const FeesManagementPage(key: ValueKey('fees'));
+      case 'examinations':
+        return const ExamManagementPage(key: ValueKey('examinations'));
+      case 'library':
+        return const LibraryManagementPage(key: ValueKey('library'));
       default:
         return _ModulePlaceholder(
           key: ValueKey(_selectedNavId),
@@ -191,6 +203,12 @@ class _DashboardShellState extends ConsumerState<DashboardShell> {
             label: 'Examinations',
             icon: Icons.assignment_outlined,
             activeIcon: Icons.assignment_rounded,
+          ),
+          const SidebarItem(
+            id: 'library',
+            label: 'Library Catalog',
+            icon: Icons.local_library_outlined,
+            activeIcon: Icons.local_library_rounded,
           ),
           const SidebarItem(
             id: 'homework',
@@ -416,6 +434,14 @@ class _DashboardOverview extends StatelessWidget {
           _buildStatCards(context, isMobile),
           const SizedBox(height: 24),
 
+          // ─── Organization Cross-Branch Analytics ───
+          if (user.role.isOrgLevel) ...[
+            _buildOrgComparisonRow(context, isDark, isMobile),
+            const SizedBox(height: 24),
+            _buildOrgFinanceRow(context, isDark, isMobile),
+            const SizedBox(height: 24),
+          ],
+
           // ─── Charts Row ────────────────────────
           _buildChartsRow(context, isDark, isMobile),
           const SizedBox(height: 24),
@@ -583,6 +609,281 @@ class _DashboardOverview extends StatelessWidget {
         const SizedBox(width: 16),
         Expanded(flex: 2, child: _buildFeeCollectionChart(isDark)),
       ],
+    );
+  }
+
+  Widget _buildOrgComparisonRow(BuildContext context, bool isDark, bool isMobile) {
+    if (isMobile) {
+      return Column(
+        children: [
+          _buildBranchComparisonChart(isDark),
+          const SizedBox(height: 16),
+          _buildBranchAttendanceHeatMap(isDark),
+        ],
+      );
+    }
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(flex: 3, child: _buildBranchComparisonChart(isDark)),
+        const SizedBox(width: 16),
+        Expanded(flex: 2, child: _buildBranchAttendanceHeatMap(isDark)),
+      ],
+    );
+  }
+
+  Widget _buildBranchComparisonChart(bool isDark) {
+    final titleColor = isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
+
+    return GlassCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Cross-Branch Attendance Comparison',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: titleColor),
+          ),
+          const SizedBox(height: 16),
+          _buildBranchComparisonBar('Branch Delhi (DL-01)', 0.942, AppColors.secondary, isDark),
+          _buildBranchComparisonBar('Branch Bangalore (BL-02)', 0.918, AppColors.primary, isDark),
+          _buildBranchComparisonBar('Branch Mumbai (MB-03)', 0.895, AppColors.warning, isDark),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBranchComparisonBar(String name, double value, Color color, bool isDark) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(name, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: isDark ? Colors.white70 : Colors.black87)),
+              Text('${(value * 100).toStringAsFixed(1)}%', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: color)),
+            ],
+          ),
+          const SizedBox(height: 6),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: value,
+              minHeight: 8,
+              color: color,
+              backgroundColor: isDark ? Colors.white10 : Colors.black12,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBranchAttendanceHeatMap(bool isDark) {
+    final titleColor = isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
+    final textSec = isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+
+    return GlassCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Branch Attendance Heat Map',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: titleColor),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              const SizedBox(width: 80),
+              ...['M', 'T', 'W', 'T', 'F'].map((day) => Expanded(
+                    child: Text(
+                      day,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: textSec),
+                    ),
+                  )),
+            ],
+          ),
+          const SizedBox(height: 8),
+          _buildHeatMapRow('Delhi', [0.95, 0.94, 0.96, 0.93, 0.91], isDark),
+          _buildHeatMapRow('Bangalore', [0.92, 0.90, 0.93, 0.92, 0.88], isDark),
+          _buildHeatMapRow('Mumbai', [0.89, 0.88, 0.90, 0.87, 0.84], isDark),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeatMapRow(String branch, List<double> values, bool isDark) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 80,
+            child: Text(
+              branch,
+              style: TextStyle(fontSize: 11, color: isDark ? Colors.white70 : Colors.black87),
+            ),
+          ),
+          ...values.map((v) {
+            final color = _getHeatMapColor(v);
+            return Expanded(
+              child: AspectRatio(
+                aspectRatio: 1,
+                child: Container(
+                  margin: const EdgeInsets.all(2),
+                  decoration: BoxDecoration(
+                    color: color,
+                    borderRadius: BorderRadius.circular(4),
+                    border: Border.all(color: Colors.white10),
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    '${(v * 100).toInt()}',
+                    style: const TextStyle(fontSize: 9, color: Colors.white, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
+  Color _getHeatMapColor(double val) {
+    if (val >= 0.94) {
+      return const Color(0xFF1E88E5); // High - Blue
+    } else if (val >= 0.90) {
+      return const Color(0xFF43A047); // Moderate - Green
+    } else if (val >= 0.85) {
+      return const Color(0xFFFFB300); // Fair - Amber
+    } else {
+      return const Color(0xFFE53935); // Low - Red
+    }
+  }
+
+  Widget _buildOrgFinanceRow(BuildContext context, bool isDark, bool isMobile) {
+    if (isMobile) {
+      return Column(
+        children: [
+          _buildOrgConsolidatedFeeDashboard(isDark),
+          const SizedBox(height: 16),
+          _buildBranchRevenueRanking(isDark),
+        ],
+      );
+    }
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(flex: 3, child: _buildOrgConsolidatedFeeDashboard(isDark)),
+        const SizedBox(width: 16),
+        Expanded(flex: 2, child: _buildBranchRevenueRanking(isDark)),
+      ],
+    );
+  }
+
+  Widget _buildOrgConsolidatedFeeDashboard(bool isDark) {
+    final titleColor = isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
+    final textSec = isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+
+    return GlassCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Consolidated Fee Collection Dashboard',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: titleColor),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildFinanceKpi('Total Collected', '₹5,55,000', AppColors.secondary, isDark),
+              _buildFinanceKpi('Total Outstanding', '₹1,25,000', AppColors.error, isDark),
+              _buildFinanceKpi('Collection Efficiency', '81.6%', AppColors.primary, isDark),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Collections vs Target (Branch comparison)',
+            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: textSec),
+          ),
+          const SizedBox(height: 8),
+          _buildBranchComparisonBar('Branch Delhi (Target: 3.0L)', 0.833, AppColors.secondary, isDark),
+          _buildBranchComparisonBar('Branch Bangalore (Target: 2.2L)', 0.841, AppColors.primary, isDark),
+          _buildBranchComparisonBar('Branch Mumbai (Target: 1.5L)', 0.800, AppColors.warning, isDark),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFinanceKpi(String label, String value, Color color, bool isDark) {
+    final textSec = isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+    return Column(
+      children: [
+        Text(value, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: color)),
+        const SizedBox(height: 4),
+        Text(label, style: TextStyle(fontSize: 10, color: textSec)),
+      ],
+    );
+  }
+
+  Widget _buildBranchRevenueRanking(bool isDark) {
+    final titleColor = isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
+
+    return GlassCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Branch-wise Revenue Ranking',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: titleColor),
+          ),
+          const SizedBox(height: 16),
+          _buildRankTile('Delhi Branch (DL-01)', '₹2,50,000', '1st', Colors.amber, isDark),
+          _buildRankTile('Bangalore Branch (BL-02)', '₹1,85,000', '2nd', const Color(0xFFC0C0C0), isDark),
+          _buildRankTile('Mumbai Branch (MB-03)', '₹1,20,000', '3rd', const Color(0xFFCD7F32), isDark),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRankTile(String name, String revenue, String rank, Color rankColor, bool isDark) {
+    final textPri = isDark ? Colors.white : Colors.black87;
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 6),
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.white10 : Colors.black.withOpacity(0.04),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            backgroundColor: rankColor,
+            radius: 12,
+            child: Text(
+              rank[0],
+              style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              name,
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: textPri),
+            ),
+          ),
+          Text(
+            revenue,
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.secondary),
+          ),
+        ],
+      ),
     );
   }
 
