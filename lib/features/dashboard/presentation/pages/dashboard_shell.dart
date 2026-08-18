@@ -25,6 +25,7 @@ import '../../../transport/presentation/pages/transport_management_page.dart';
 import '../../../hostel/presentation/pages/hostel_management_page.dart';
 import '../../../communication/presentation/pages/communication_management_page.dart';
 import '../../../parent/presentation/pages/parent_portal_page.dart';
+import '../../../student/presentation/pages/admissions_page.dart';
 import '../../../academic/providers.dart';
 import '../../../organization/providers.dart';
 import '../../../library/providers.dart';
@@ -153,6 +154,8 @@ class _DashboardShellState extends ConsumerState<DashboardShell> {
         return const HostelManagementPage(key: ValueKey('hostel'));
       case 'communication':
         return const CommunicationManagementPage(key: ValueKey('communication'));
+      case 'admissions':
+        return const AdmissionsManagementPage(key: ValueKey('admissions'));
       default:
         return _ModulePlaceholder(
           key: ValueKey(_selectedNavId),
