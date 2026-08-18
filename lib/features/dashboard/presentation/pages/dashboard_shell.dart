@@ -27,6 +27,7 @@ import '../../../communication/presentation/pages/communication_management_page.
 import '../../../parent/presentation/pages/parent_portal_page.dart';
 import '../../../student/presentation/pages/admissions_page.dart';
 import '../../../staff/presentation/pages/hr_payroll_page.dart';
+import '../../../inventory/presentation/pages/inventory_page.dart';
 import '../../../academic/providers.dart';
 import '../../../organization/providers.dart';
 import '../../../library/providers.dart';
@@ -159,6 +160,8 @@ class _DashboardShellState extends ConsumerState<DashboardShell> {
         return const AdmissionsManagementPage(key: ValueKey('admissions'));
       case 'hr_payroll':
         return const HRPayrollPage(key: ValueKey('hr_payroll'));
+      case 'inventory':
+        return const InventoryManagementPage(key: ValueKey('inventory'));
       default:
         return _ModulePlaceholder(
           key: ValueKey(_selectedNavId),
