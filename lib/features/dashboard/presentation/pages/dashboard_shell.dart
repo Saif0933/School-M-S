@@ -24,6 +24,7 @@ import '../../../library/presentation/pages/library_management_page.dart';
 import '../../../transport/presentation/pages/transport_management_page.dart';
 import '../../../hostel/presentation/pages/hostel_management_page.dart';
 import '../../../communication/presentation/pages/communication_management_page.dart';
+import '../../../parent/presentation/pages/parent_portal_page.dart';
 import '../../../academic/providers.dart';
 import '../../../organization/providers.dart';
 import '../../../library/providers.dart';
@@ -118,7 +119,12 @@ class _DashboardShellState extends ConsumerState<DashboardShell> {
   Widget _buildSelectedPage(UserEntity user) {
     switch (_selectedNavId) {
       case 'dashboard':
+        if (user.role == UserRole.parent) {
+          return const ParentPortalPage(key: ValueKey('parent_portal'));
+        }
         return _DashboardOverview(key: const ValueKey('dashboard'), user: user);
+      case 'parent_portal':
+        return const ParentPortalPage(key: ValueKey('parent_portal'));
       case 'organization':
         return const OrganizationManagementPage(key: ValueKey('organization'));
       case 'branches':
@@ -157,6 +163,24 @@ class _DashboardShellState extends ConsumerState<DashboardShell> {
   }
 
   List<SidebarItem> _buildSidebarItems(UserRole role) {
+    if (role == UserRole.parent) {
+      return const [
+        SidebarItem(
+          id: 'dashboard',
+          label: 'Parent Portal',
+          icon: Icons.family_restroom_outlined,
+          activeIcon: Icons.family_restroom_rounded,
+        ),
+        SidebarItem(
+          id: 'communication',
+          label: 'School Chat',
+          icon: Icons.chat_bubble_outline,
+          activeIcon: Icons.chat_bubble_rounded,
+          badge: '2',
+        ),
+      ];
+    }
+
     final items = <SidebarItem>[
       const SidebarItem(
         id: 'dashboard',

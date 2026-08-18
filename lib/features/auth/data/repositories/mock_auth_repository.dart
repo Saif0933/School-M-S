@@ -122,6 +122,7 @@ class MockAuthRepository {
       organizationName: 'Sunrise Education Trust',
       branchAccess: const [
         BranchAccess(branchId: 'BR-001', branchName: 'Sunrise International School - Delhi', branchCode: 'SIS-DEL', role: UserRole.parent),
+        BranchAccess(branchId: 'BR-002', branchName: 'Sunrise Public School - Mumbai', branchCode: 'SPS-MUM', role: UserRole.parent),
       ],
       activeBranchId: 'BR-001',
       createdAt: DateTime(2025, 1, 10),

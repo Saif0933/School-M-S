@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'domain/entities/user_entity.dart';
+
 import 'data/repositories/mock_auth_repository.dart';
+import 'domain/entities/user_entity.dart';
 
 /// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 /// Auth Providers — Riverpod state management
@@ -12,9 +13,10 @@ final authRepositoryProvider = Provider<MockAuthRepository>(
 );
 
 /// Current authenticated user
-final authStateProvider = StateNotifierProvider<AuthNotifier, AsyncValue<UserEntity?>>(
-  (ref) => AuthNotifier(ref.read(authRepositoryProvider)),
-);
+final authStateProvider =
+    StateNotifierProvider<AuthNotifier, AsyncValue<UserEntity?>>(
+      (ref) => AuthNotifier(ref.read(authRepositoryProvider)),
+    );
 
 /// Convenience provider: is user logged in?
 final isLoggedInProvider = Provider<bool>(
@@ -27,12 +29,10 @@ final currentUserProvider = Provider<UserEntity?>(
 );
 
 /// Active branch ID
-final activeBranchIdProvider = StateProvider<String?>(
-  (ref) {
-    final user = ref.watch(currentUserProvider);
-    return user?.activeBranchId;
-  },
-);
+final activeBranchIdProvider = StateProvider<String?>((ref) {
+  final user = ref.watch(currentUserProvider);
+  return user?.activeBranchId;
+});
 
 /// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 /// Auth State Notifier
