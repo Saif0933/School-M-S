@@ -30,6 +30,8 @@ import '../../../staff/presentation/pages/hr_payroll_page.dart';
 import '../../../inventory/presentation/pages/inventory_page.dart';
 import '../../../reports/presentation/pages/reports_page.dart';
 import '../../../mobile/presentation/pages/mobile_page.dart';
+import '../../../lms/presentation/pages/lms_page.dart';
+import '../../../certificates/presentation/pages/certificates_page.dart';
 import '../../../academic/providers.dart';
 import '../../../organization/providers.dart';
 import '../../../library/providers.dart';
@@ -168,6 +170,10 @@ class _DashboardShellState extends ConsumerState<DashboardShell> {
         return const ReportsAnalyticsPage(key: ValueKey('reports'));
       case 'mobile':
         return const MobileFeaturesPage(key: ValueKey('mobile'));
+      case 'lms':
+        return const LMSManagementPage(key: ValueKey('lms'));
+      case 'certificates':
+        return const CertificatesPage(key: ValueKey('certificates'));
       default:
         return _ModulePlaceholder(
           key: ValueKey(_selectedNavId),
