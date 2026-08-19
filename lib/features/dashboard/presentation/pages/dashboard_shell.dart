@@ -32,6 +32,11 @@ import '../../../reports/presentation/pages/reports_page.dart';
 import '../../../mobile/presentation/pages/mobile_page.dart';
 import '../../../lms/presentation/pages/lms_page.dart';
 import '../../../certificates/presentation/pages/certificates_page.dart';
+import '../../../events/presentation/pages/events_page.dart';
+import '../../../homework/presentation/pages/homework_page.dart';
+import '../../../notices/presentation/pages/notices_page.dart';
+import '../../../security/presentation/pages/security_page.dart';
+import '../../../leave/presentation/pages/leave_page.dart';
 import '../../../academic/providers.dart';
 import '../../../organization/providers.dart';
 import '../../../library/providers.dart';
@@ -174,6 +179,16 @@ class _DashboardShellState extends ConsumerState<DashboardShell> {
         return const LMSManagementPage(key: ValueKey('lms'));
       case 'certificates':
         return const CertificatesPage(key: ValueKey('certificates'));
+      case 'events':
+        return const EventsCalendarPage(key: ValueKey('events'));
+      case 'homework':
+        return const HomeworkManagementPage(key: ValueKey('homework'));
+      case 'notices':
+        return const NoticeBoardPage(key: ValueKey('notices'));
+      case 'security':
+        return const VisitorSecurityPage(key: ValueKey('security'));
+      case 'leave':
+        return const LeaveManagementPage(key: ValueKey('leave'));
       default:
         return _ModulePlaceholder(
           key: ValueKey(_selectedNavId),
