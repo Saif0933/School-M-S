@@ -12,7 +12,6 @@ import '../../../auth/domain/entities/user_entity.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../organization/presentation/pages/organization_management_page.dart';
 import '../../../branch/presentation/pages/branch_management_page.dart';
-import '../../../subscription/presentation/pages/subscription_management_page.dart';
 import '../../../academic/presentation/pages/department_class_section_page.dart';
 import '../../../academic/presentation/pages/timetable_management_page.dart';
 import '../../../student/presentation/pages/student_management_page.dart';
@@ -37,6 +36,11 @@ import '../../../homework/presentation/pages/homework_page.dart';
 import '../../../notices/presentation/pages/notices_page.dart';
 import '../../../security/presentation/pages/security_page.dart';
 import '../../../leave/presentation/pages/leave_page.dart';
+import '../../../canteen/presentation/pages/canteen_page.dart';
+import '../../../alumni/presentation/pages/alumni_page.dart';
+import '../../../health/presentation/pages/health_page.dart';
+import '../../../subscription/presentation/pages/subscription_page.dart';
+import '../../../settings/presentation/pages/settings_page.dart';
 import '../../../academic/providers.dart';
 import '../../../organization/providers.dart';
 import '../../../library/providers.dart';
@@ -148,7 +152,7 @@ class _DashboardShellState extends ConsumerState<DashboardShell> {
       case 'staff':
         return const StaffManagementPage(key: ValueKey('staff'));
       case 'subscription':
-        return const SubscriptionManagementPage(key: ValueKey('subscription'));
+        return const SubscriptionBillingPage(key: ValueKey('subscription'));
       case 'timetable':
         return const TimetableManagementPage(key: ValueKey('timetable'));
       case 'attendance':
@@ -189,6 +193,14 @@ class _DashboardShellState extends ConsumerState<DashboardShell> {
         return const VisitorSecurityPage(key: ValueKey('security'));
       case 'leave':
         return const LeaveManagementPage(key: ValueKey('leave'));
+      case 'canteen':
+        return const CanteenManagementPage(key: ValueKey('canteen'));
+      case 'alumni':
+        return const AlumniManagementPage(key: ValueKey('alumni'));
+      case 'health':
+        return const HealthMedicalPage(key: ValueKey('health'));
+      case 'settings':
+        return const SecuritySettingsPage(key: ValueKey('settings'));
       default:
         return _ModulePlaceholder(
           key: ValueKey(_selectedNavId),
