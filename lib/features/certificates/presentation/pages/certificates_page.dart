@@ -58,46 +58,64 @@ class _CertificatesPageState extends ConsumerState<CertificatesPage>
       body: Column(
         children: [
           // Sub Header
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            color: isDark ? Colors.white10 : Colors.grey.withValues(alpha: 0.05),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Certificate & ID Card Generation: $branchName',
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                      ),
-                      Text(
-                        'Branch Address & Seal Scoping | Total Issued Certificates: ${issuedCerts.length}',
-                        style: const TextStyle(fontSize: 11, color: Colors.grey),
-                      ),
-                    ],
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isMobile = constraints.maxWidth < 650;
+              final titleWidget = Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Certificate & ID Card Generation: $branchName',
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                   ),
-                ),
-                Row(
-                  children: [
-                    ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
-                      onPressed: () => _triggerBulkIDCardGeneration(context, students),
-                      icon: const Icon(Icons.badge_rounded, color: Colors.white, size: 16),
-                      label: const Text('Bulk ID Cards print', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
-                    ),
-                    const SizedBox(width: 8),
-                    ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(backgroundColor: Colors.teal),
-                      onPressed: () => _showVerificationSearch(context, activeBranchId),
-                      icon: const Icon(Icons.qr_code_scanner_rounded, color: Colors.white, size: 16),
-                      label: const Text('Verify QR Certificate', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+                  Text(
+                    'Branch Address & Seal Scoping | Total Issued Certificates: ${issuedCerts.length}',
+                    style: const TextStyle(fontSize: 11, color: Colors.grey),
+                  ),
+                ],
+              );
+
+              final actionButtons = Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+                    onPressed: () => _triggerBulkIDCardGeneration(context, students),
+                    icon: const Icon(Icons.badge_rounded, color: Colors.white, size: 16),
+                    label: const Text('Bulk ID Cards print', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+                  ),
+                  ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(backgroundColor: Colors.teal),
+                    onPressed: () => _showVerificationSearch(context, activeBranchId),
+                    icon: const Icon(Icons.qr_code_scanner_rounded, color: Colors.white, size: 16),
+                    label: const Text('Verify QR Certificate', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+                  ),
+                ],
+              );
+
+              return Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                color: isDark ? Colors.white10 : Colors.grey.withValues(alpha: 0.05),
+                child: isMobile
+                    ? Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          titleWidget,
+                          const SizedBox(height: 12),
+                          actionButtons,
+                        ],
+                      )
+                    : Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(child: titleWidget),
+                          const SizedBox(width: 16),
+                          actionButtons,
+                        ],
+                      ),
+              );
+            },
           ),
 
           // Tab Bar
@@ -106,6 +124,7 @@ class _CertificatesPageState extends ConsumerState<CertificatesPage>
             child: TabBar(
               controller: _tabController,
               isScrollable: true,
+              tabAlignment: TabAlignment.start,
               indicatorColor: AppColors.primary,
               labelColor: AppColors.primary,
               unselectedLabelColor: isDark ? Colors.white70 : Colors.black87,
@@ -237,131 +256,142 @@ class _IDCardDesignerTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final design = ref.watch(idCardDesignerProvider);
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Left side: designer controls
-          Expanded(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isMobile = constraints.maxWidth < 768;
+
+        final controlsSection = Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('🎨 Template Layout Designer Controls', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+            const SizedBox(height: 12),
+            DropdownButtonFormField<String>(
+              initialValue: design.layoutStyle,
+              decoration: const InputDecoration(labelText: 'Card Orientation Layout'),
+              items: const [
+                DropdownMenuItem(value: 'Vertical', child: Text('Vertical Orientation')),
+                DropdownMenuItem(value: 'Horizontal', child: Text('Horizontal Orientation')),
+              ],
+              onChanged: (val) => ref.read(idCardDesignerProvider.notifier).updateConfig(layoutStyle: val),
+            ),
+            const SizedBox(height: 12),
+            DropdownButtonFormField<String>(
+              initialValue: design.cardColorTheme,
+              decoration: const InputDecoration(labelText: 'Card Color Background Theme'),
+              items: const [
+                DropdownMenuItem(value: 'Ocean Blue', child: Text('Ocean Blue (SIS Custom)')),
+                DropdownMenuItem(value: 'Charcoal', child: Text('Modern Charcoal')),
+                DropdownMenuItem(value: 'Forest Green', child: Text('Forest Green')),
+              ],
+              onChanged: (val) => ref.read(idCardDesignerProvider.notifier).updateConfig(cardColorTheme: val),
+            ),
+            const SizedBox(height: 16),
+            SwitchListTile(
+              dense: true,
+              title: const Text('Render barcode tag', style: TextStyle(fontSize: 11)),
+              value: design.showBarcode,
+              onChanged: (val) => ref.read(idCardDesignerProvider.notifier).updateConfig(showBarcode: val),
+            ),
+            SwitchListTile(
+              dense: true,
+              title: const Text('Render verification QR stamp', style: TextStyle(fontSize: 11)),
+              value: design.showQrCode,
+              onChanged: (val) => ref.read(idCardDesignerProvider.notifier).updateConfig(showQrCode: val),
+            ),
+          ],
+        );
+
+        final previewSection = Center(
+          child: Container(
+            width: design.layoutStyle == 'Vertical' ? 220 : 320,
+            height: design.layoutStyle == 'Vertical' ? 340 : 220,
+            decoration: BoxDecoration(
+              color: design.cardColorTheme == 'Ocean Blue'
+                  ? Colors.indigo.shade900
+                  : (design.cardColorTheme == 'Charcoal' ? Colors.grey.shade900 : Colors.green.shade900),
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: const [
+                BoxShadow(color: Colors.black26, blurRadius: 10, offset: Offset(0, 4)),
+              ],
+            ),
+            padding: const EdgeInsets.all(12),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('🎨 Template Layout Designer Controls', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                const SizedBox(height: 12),
-                DropdownButtonFormField<String>(
-                  initialValue: design.layoutStyle,
-                  decoration: const InputDecoration(labelText: 'Card Orientation Layout'),
-                  items: const [
-                    DropdownMenuItem(value: 'Vertical', child: Text('Vertical Orientation')),
-                    DropdownMenuItem(value: 'Horizontal', child: Text('Horizontal Orientation')),
+                // Header with branch name
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.school_rounded, color: Colors.white, size: 14),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: Text(
+                        branchName.toUpperCase(),
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.bold, letterSpacing: 0.8),
+                      ),
+                    ),
                   ],
-                  onChanged: (val) => ref.read(idCardDesignerProvider.notifier).updateConfig(layoutStyle: val),
                 ),
-                const SizedBox(height: 12),
-                DropdownButtonFormField<String>(
-                  initialValue: design.cardColorTheme,
-                  decoration: const InputDecoration(labelText: 'Card Color Background Theme'),
-                  items: const [
-                    DropdownMenuItem(value: 'Ocean Blue', child: Text('Ocean Blue (SIS Custom)')),
-                    DropdownMenuItem(value: 'Charcoal', child: Text('Modern Charcoal')),
-                    DropdownMenuItem(value: 'Forest Green', child: Text('Forest Green')),
+                const Divider(color: Colors.white24, height: 12),
+
+                // Profile Photo
+                const Spacer(),
+                const CircleAvatar(
+                  radius: 28,
+                  backgroundColor: Colors.white24,
+                  child: Icon(Icons.person_rounded, size: 36, color: Colors.white70),
+                ),
+                const SizedBox(height: 8),
+
+                // Student Details
+                const Text('AARAV SHARMA', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
+                const Text('Class: 11 Science | Adm No: ADM-DEL-101', style: TextStyle(color: Colors.white70, fontSize: 8)),
+                const Text('Blood Group: B+ | Emergency: +91 9999988888', style: TextStyle(color: Colors.white54, fontSize: 8)),
+                const Spacer(),
+
+                // Barcode & QR Code stamps
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    if (design.showBarcode)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        color: Colors.white,
+                        child: const Text('|||| BARCODE ||||', style: TextStyle(color: Colors.black, fontSize: 6, fontWeight: FontWeight.bold)),
+                      )
+                    else
+                      const SizedBox.shrink(),
+                    if (design.showQrCode)
+                      const Icon(Icons.qr_code_2_rounded, color: Colors.white, size: 24)
+                    else
+                      const SizedBox.shrink(),
                   ],
-                  onChanged: (val) => ref.read(idCardDesignerProvider.notifier).updateConfig(cardColorTheme: val),
-                ),
-                const SizedBox(height: 16),
-                SwitchListTile(
-                  dense: true,
-                  title: const Text('Render barcode tag', style: TextStyle(fontSize: 11)),
-                  value: design.showBarcode,
-                  onChanged: (val) => ref.read(idCardDesignerProvider.notifier).updateConfig(showBarcode: val),
-                ),
-                SwitchListTile(
-                  dense: true,
-                  title: const Text('Render verification QR stamp', style: TextStyle(fontSize: 11)),
-                  value: design.showQrCode,
-                  onChanged: (val) => ref.read(idCardDesignerProvider.notifier).updateConfig(showQrCode: val),
                 ),
               ],
             ),
           ),
-          const SizedBox(width: 24),
+        );
 
-          // Right side: interactive mockup card preview
-          Expanded(
-            child: Center(
-              child: Container(
-                width: design.layoutStyle == 'Vertical' ? 220 : 320,
-                height: design.layoutStyle == 'Vertical' ? 340 : 220,
-                decoration: BoxDecoration(
-                  color: design.cardColorTheme == 'Ocean Blue'
-                      ? Colors.indigo.shade900
-                      : (design.cardColorTheme == 'Charcoal' ? Colors.grey.shade900 : Colors.green.shade900),
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: const [
-                    BoxShadow(color: Colors.black26, blurRadius: 10, offset: Offset(0, 4)),
-                  ],
-                ),
-                padding: const EdgeInsets.all(12),
-                child: Column(
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: isMobile
+              ? Column(
                   children: [
-                    // Header with branch name
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.school_rounded, color: Colors.white, size: 14),
-                        const SizedBox(width: 4),
-                        Expanded(
-                          child: Text(
-                            branchName.toUpperCase(),
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.bold, letterSpacing: 0.8),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const Divider(color: Colors.white24, height: 12),
-
-                    // Profile Photo
-                    const Spacer(),
-                    const CircleAvatar(
-                      radius: 28,
-                      backgroundColor: Colors.white24,
-                      child: Icon(Icons.person_rounded, size: 36, color: Colors.white70),
-                    ),
-                    const SizedBox(height: 8),
-
-                    // Student Details
-                    const Text('AARAV SHARMA', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
-                    const Text('Class: 11 Science | Adm No: ADM-DEL-101', style: TextStyle(color: Colors.white70, fontSize: 8)),
-                    const Text('Blood Group: B+ | Emergency: +91 9999988888', style: TextStyle(color: Colors.white54, fontSize: 8)),
-                    const Spacer(),
-
-                    // Barcode & QR Code stamps
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        if (design.showBarcode)
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                            color: Colors.white,
-                            child: const Text('|||| BARCODE ||||', style: TextStyle(color: Colors.black, fontSize: 6, fontWeight: FontWeight.bold)),
-                          )
-                        else
-                          const SizedBox.shrink(),
-                        if (design.showQrCode)
-                          const Icon(Icons.qr_code_2_rounded, color: Colors.white, size: 24)
-                        else
-                          const SizedBox.shrink(),
-                      ],
-                    ),
+                    previewSection,
+                    const SizedBox(height: 24),
+                    controlsSection,
+                  ],
+                )
+              : Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(child: controlsSection),
+                    const SizedBox(width: 24),
+                    Expanded(child: previewSection),
                   ],
                 ),
-              ),
-            ),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
@@ -580,17 +610,47 @@ class _TemplatesTab extends StatelessWidget {
           padding: const EdgeInsets.all(12),
           child: Card(
             color: Colors.blue.withValues(alpha: 0.05),
-            child: ListTile(
-              leading: const Icon(Icons.cloud_upload_rounded, color: Colors.blue),
-              title: const Text('Upload Custom Certificate Layout Template', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
-              subtitle: const Text('Import branch SVG/PNG templates scoped only to this branch.'),
-              trailing: ElevatedButton(
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('✓ Selecting local template graphic file... Custom upload successful.')),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final isMobile = constraints.maxWidth < 600;
+                  final contentWidget = Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: const [
+                      Text('Upload Custom Certificate Layout Template', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
+                      SizedBox(height: 4),
+                      Text('Import branch SVG/PNG templates scoped only to this branch.', style: TextStyle(fontSize: 10, color: Colors.grey)),
+                    ],
                   );
+
+                  final buttonWidget = ElevatedButton(
+                    onPressed: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('✓ Selecting local template graphic file... Custom upload successful.')),
+                      );
+                    },
+                    child: const Text('Upload file', style: TextStyle(fontSize: 9)),
+                  );
+
+                  return isMobile
+                      ? Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            contentWidget,
+                            const SizedBox(height: 12),
+                            SizedBox(width: double.infinity, child: buttonWidget),
+                          ],
+                        )
+                      : Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(child: contentWidget),
+                            const SizedBox(width: 12),
+                            buttonWidget,
+                          ],
+                        );
                 },
-                child: const Text('Upload file', style: TextStyle(fontSize: 9)),
               ),
             ),
           ),
@@ -639,32 +699,72 @@ class _ReissuesTab extends ConsumerWidget {
       itemBuilder: (context, index) {
         final c = issuedCerts[index];
         return Card(
-          child: ListTile(
-            title: Text('${c.studentName} — ${c.certificateType}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-            subtitle: Text('Serial: ${c.serialNumber}\nIssued Date: ${c.issuedDate}'),
-            trailing: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Chip(
-                  label: Text(c.status, style: const TextStyle(fontSize: 9, color: Colors.white)),
-                  backgroundColor: c.status == 'Active' ? Colors.green : Colors.orange,
-                ),
-                if (c.status == 'Active')
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.teal,
-                      minimumSize: const Size(60, 24),
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final isMobile = constraints.maxWidth < 600;
+
+                final details = Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${c.studentName} — ${c.certificateType}',
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
                     ),
-                    onPressed: () {
-                      ref.read(generatedCertificatesProvider.notifier).reissueCertificate(c.id);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('✓ Reissue certificate requested! Generated new serial stamp.')),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Serial: ${c.serialNumber}\nIssued Date: ${c.issuedDate}',
+                      style: const TextStyle(fontSize: 11, color: Colors.grey),
+                    ),
+                  ],
+                );
+
+                final statusActions = Column(
+                  crossAxisAlignment: isMobile ? CrossAxisAlignment.start : CrossAxisAlignment.end,
+                  children: [
+                    Chip(
+                      label: Text(c.status, style: const TextStyle(fontSize: 9, color: Colors.white)),
+                      backgroundColor: c.status == 'Active' ? Colors.green : Colors.orange,
+                    ),
+                    if (c.status == 'Active') ...[
+                      const SizedBox(height: 8),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.teal,
+                          minimumSize: const Size(80, 28),
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                        ),
+                        onPressed: () {
+                          ref.read(generatedCertificatesProvider.notifier).reissueCertificate(c.id);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('✓ Reissue certificate requested! Generated new serial stamp.')),
+                          );
+                        },
+                        child: const Text('Reissue Cert', style: TextStyle(fontSize: 8, color: Colors.white)),
+                      ),
+                    ],
+                  ],
+                );
+
+                return isMobile
+                    ? Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          details,
+                          const SizedBox(height: 12),
+                          statusActions,
+                        ],
+                      )
+                    : Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(child: details),
+                          const SizedBox(width: 12),
+                          statusActions,
+                        ],
                       );
-                    },
-                    child: const Text('Reissue Cert', style: TextStyle(fontSize: 8, color: Colors.white)),
-                  ),
-              ],
+              },
             ),
           ),
         );

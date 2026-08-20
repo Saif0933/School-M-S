@@ -99,6 +99,7 @@ class _ReportsAnalyticsPageState extends ConsumerState<ReportsAnalyticsPage>
             child: TabBar(
               controller: _tabController,
               isScrollable: true,
+              tabAlignment: TabAlignment.start,
               indicatorColor: AppColors.primary,
               labelColor: AppColors.primary,
               unselectedLabelColor: isDark ? Colors.white70 : Colors.black87,
@@ -220,7 +221,7 @@ class _KPIsTab extends ConsumerWidget {
             physics: const NeverScrollableScrollPhysics(),
             mainAxisSpacing: 12,
             crossAxisSpacing: 12,
-            childAspectRatio: 1.5,
+            childAspectRatio: MediaQuery.of(context).size.width < 450 ? 1.2 : 1.5,
             children: [
               _kpiCard('Enrollments', '${students.length}', Colors.blue),
               _kpiCard('Attendance Rate', '93.5%', Colors.green),
@@ -236,18 +237,35 @@ class _KPIsTab extends ConsumerWidget {
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
           ),
           const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(child: _heatCard('Class 1 Delhi', '96%', Colors.green)),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _heatCard('Class 10 Mumbai', '88%', Colors.orange),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _heatCard('Class 12 Commerce', '72%', Colors.red),
-              ),
-            ],
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isHeatMobile = constraints.maxWidth < 550;
+              final cards = [
+                _heatCard('Class 1 Delhi', '96%', Colors.green),
+                _heatCard('Class 10 Mumbai', '88%', Colors.orange),
+                _heatCard('Class 12 Commerce', '72%', Colors.red),
+              ];
+
+              return isHeatMobile
+                  ? Column(
+                      children: cards
+                          .map((c) => Padding(
+                                padding: const EdgeInsets.only(bottom: 8),
+                                child: SizedBox(width: double.infinity, child: c),
+                              ))
+                          .toList(),
+                    )
+                  : Row(
+                      children: cards
+                          .map((c) => Expanded(
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                                  child: c,
+                                ),
+                              ))
+                          .toList(),
+                    );
+            },
           ),
 
           const SizedBox(height: 24),
@@ -463,50 +481,63 @@ class _OrgConsolidatedTab extends ConsumerWidget {
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
           ),
           const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: GlassCard(
-                  child: Column(
-                    children: [
-                      const Text(
-                        'Total Students Enrolled',
-                        style: TextStyle(fontSize: 11, color: Colors.grey),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isCardsMobile = constraints.maxWidth < 550;
+              final enrolledCard = GlassCard(
+                child: Column(
+                  children: [
+                    const Text(
+                      'Total Students Enrolled',
+                      style: TextStyle(fontSize: 11, color: Colors.grey),
+                    ),
+                    Text(
+                      '${allStudents.length}',
+                      style: const TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.indigo,
                       ),
-                      Text(
-                        '${allStudents.length}',
-                        style: const TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.indigo,
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: GlassCard(
-                  child: Column(
-                    children: [
-                      const Text(
-                        'Consolidated Revenue Dues',
-                        style: TextStyle(fontSize: 11, color: Colors.grey),
+              );
+
+              final revenueCard = GlassCard(
+                child: Column(
+                  children: [
+                    const Text(
+                      'Consolidated Revenue Dues',
+                      style: TextStyle(fontSize: 11, color: Colors.grey),
+                    ),
+                    const Text(
+                      '₹5,00,000',
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.green,
                       ),
-                      const Text(
-                        '₹5,00,000',
-                        style: TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.green,
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-              ),
-            ],
+              );
+
+              return isCardsMobile
+                  ? Column(
+                      children: [
+                        enrolledCard,
+                        const SizedBox(height: 12),
+                        revenueCard,
+                      ],
+                    )
+                  : Row(
+                      children: [
+                        Expanded(child: enrolledCard),
+                        const SizedBox(width: 16),
+                        Expanded(child: revenueCard),
+                      ],
+                    );
+            },
           ),
           const SizedBox(height: 24),
 
@@ -828,43 +859,72 @@ class _TemplatesTab extends ConsumerWidget {
       itemBuilder: (context, index) {
         final t = templates[index];
         return Card(
-          child: ListTile(
-            dense: true,
-            title: Text(
-              t.name,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
-            ),
-            subtitle: Text(
-              'Category: ${t.category}\n${t.description}',
-              style: const TextStyle(fontSize: 10, color: Colors.grey),
-            ),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                  icon: Icon(
-                    t.isBookmarked
-                        ? Icons.star_rounded
-                        : Icons.star_border_rounded,
-                    color: t.isBookmarked ? Colors.amber : Colors.grey,
-                  ),
-                  onPressed: () => ref
-                      .read(reportTemplatesProvider.notifier)
-                      .toggleBookmark(t.id),
-                ),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    minimumSize: const Size(60, 24),
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                  ),
-                  onPressed: () => _runTemplate(context, t.name),
-                  child: const Text(
-                    'Run',
-                    style: TextStyle(fontSize: 10, color: Colors.white),
-                  ),
-                ),
-              ],
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final isCardMobile = constraints.maxWidth < 450;
+                final textColumn = Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      t.name,
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Category: ${t.category}\n${t.description}',
+                      style: const TextStyle(fontSize: 10, color: Colors.grey),
+                    ),
+                  ],
+                );
+
+                final actionRow = Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: Icon(
+                        t.isBookmarked
+                            ? Icons.star_rounded
+                            : Icons.star_border_rounded,
+                        color: t.isBookmarked ? Colors.amber : Colors.grey,
+                      ),
+                      onPressed: () => ref
+                          .read(reportTemplatesProvider.notifier)
+                          .toggleBookmark(t.id),
+                    ),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        minimumSize: const Size(60, 24),
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                      ),
+                      onPressed: () => _runTemplate(context, t.name),
+                      child: const Text(
+                        'Run',
+                        style: TextStyle(fontSize: 10, color: Colors.white),
+                      ),
+                    ),
+                  ],
+                );
+
+                return isCardMobile
+                    ? Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          textColumn,
+                          const SizedBox(height: 8),
+                          Align(alignment: Alignment.centerRight, child: actionRow),
+                        ],
+                      )
+                    : Row(
+                        children: [
+                          Expanded(child: textColumn),
+                          const SizedBox(width: 16),
+                          actionRow,
+                        ],
+                      );
+              },
             ),
           ),
         );
@@ -1065,19 +1125,22 @@ class _DrillDownTab extends ConsumerWidget {
           const SizedBox(height: 20),
 
           // Hierarchy Selection Indicators
-          Row(
+          Wrap(
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 6,
+            runSpacing: 6,
             children: [
               _levelChip('Campus Branch', drillBranchId ?? 'Select', () {
                 onBranchSelected(null);
                 onClassSelected(null);
                 onSectionSelected(null);
               }),
-              const Icon(Icons.chevron_right_rounded, color: Colors.grey),
+              const Icon(Icons.chevron_right_rounded, color: Colors.grey, size: 16),
               _levelChip('Class level', drillClassId ?? 'Select', () {
                 onClassSelected(null);
                 onSectionSelected(null);
               }),
-              const Icon(Icons.chevron_right_rounded, color: Colors.grey),
+              const Icon(Icons.chevron_right_rounded, color: Colors.grey, size: 16),
               _levelChip('Section', drillSectionId ?? 'Select', () {
                 onSectionSelected(null);
               }),

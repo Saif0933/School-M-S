@@ -47,131 +47,178 @@ class _SubscriptionManagementPageState
   }
 
   Widget _buildPlatformHeader(bool isDark) {
-    return GlassCard(
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              gradient: AppColors.primaryGradient,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: const Icon(
-              Icons.stars_rounded,
-              color: Colors.white,
-              size: 32,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isMobile = constraints.maxWidth < 800;
+
+        final iconWidget = Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            gradient: AppColors.primaryGradient,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: const Icon(
+            Icons.stars_rounded,
+            color: Colors.white,
+            size: 32,
+          ),
+        );
+
+        final titleWidget = Text(
+          'SaaS Subscription & Billing Master',
+          style: TextStyle(
+            fontSize: isMobile ? 18 : 22,
+            fontWeight: FontWeight.w700,
+            color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+          ),
+        );
+
+        final chipWidget = Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          decoration: BoxDecoration(
+            color: AppColors.secondary.withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: const Text(
+            'System Active • Auto-Renewal On',
+            style: TextStyle(
+              color: AppColors.secondary,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(width: 16),
-          Expanded(
+        );
+
+        final descriptionWidget = Text(
+          'Manage organization plans, track Monthly Recurring Revenue (MRR), and view automated billing invoices.',
+          style: TextStyle(
+            fontSize: 13,
+            color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+          ),
+        );
+
+        final actionButton = ElevatedButton.icon(
+          onPressed: () {},
+          icon: const Icon(Icons.add_card_rounded, size: 18),
+          label: const Text('Upgrade Plan'),
+        );
+
+        if (isMobile) {
+          return GlassCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
-                    Text(
-                      'SaaS Subscription & Billing Master',
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w700,
-                        color: isDark
-                            ? AppColors.darkTextPrimary
-                            : AppColors.lightTextPrimary,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: AppColors.secondary.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: const Text(
-                        'System Active • Auto-Renewal On',
-                        style: TextStyle(
-                          color: AppColors.secondary,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                        ),
+                    iconWidget,
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          titleWidget,
+                          const SizedBox(height: 6),
+                          chipWidget,
+                        ],
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  'Manage organization plans, track Monthly Recurring Revenue (MRR), and view automated billing invoices.',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: isDark
-                        ? AppColors.darkTextSecondary
-                        : AppColors.lightTextSecondary,
-                  ),
+                const SizedBox(height: 12),
+                descriptionWidget,
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: actionButton,
                 ),
               ],
             ),
+          );
+        }
+
+        return GlassCard(
+          child: Row(
+            children: [
+              iconWidget,
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Flexible(child: titleWidget),
+                        const SizedBox(width: 10),
+                        chipWidget,
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    descriptionWidget,
+                  ],
+                ),
+              ),
+              const SizedBox(width: 16),
+              actionButton,
+            ],
           ),
-          ElevatedButton.icon(
-            onPressed: () {},
-            icon: const Icon(Icons.add_card_rounded, size: 18),
-            label: const Text('Upgrade Plan'),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
   Widget _buildMetricCards(bool isDark) {
-    return Row(
-      children: [
-        Expanded(
-          child: StatCard(
-            label: 'Monthly Recurring Revenue',
-            value: '₹14.2L',
-            subtitle: '+18.5% from last month',
-            icon: Icons.trending_up_rounded,
-            gradient: AppColors.statRevenue,
-            trend: '+18.5%',
-            trendUp: true,
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: StatCard(
-            label: 'Active Organizations',
-            value: '42 Trusts',
-            subtitle: '128 total branches',
-            icon: Icons.business_rounded,
-            gradient: AppColors.statStudents,
-            trend: '+4 New',
-            trendUp: true,
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: StatCard(
-            label: 'Licensed User Seats',
-            value: '84,500',
-            subtitle: '89.2% capacity filled',
-            icon: Icons.groups_rounded,
-            gradient: AppColors.statStaff,
-            trend: '+5.2%',
-            trendUp: true,
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: StatCard(
-            label: 'Platform Health & SLA',
-            value: '99.98%',
-            subtitle: 'Zero downtime past 90 days',
-            icon: Icons.verified_user_rounded,
-            gradient: AppColors.statAttendance,
-            trend: 'Optimal',
-            trendUp: true,
-          ),
-        ),
-      ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        final crossAxisCount = width < 600 ? 1 : (width < 1000 ? 2 : 4);
+
+        return GridView.count(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisCount: crossAxisCount,
+          crossAxisSpacing: 16,
+          mainAxisSpacing: 16,
+          childAspectRatio: width < 600 ? 3.2 : (width < 1000 ? 2.5 : 2.0),
+          children: [
+            StatCard(
+              label: 'Monthly Recurring Revenue',
+              value: '₹14.2L',
+              subtitle: '+18.5% from last month',
+              icon: Icons.trending_up_rounded,
+              gradient: AppColors.statRevenue,
+              trend: '+18.5%',
+              trendUp: true,
+            ),
+            StatCard(
+              label: 'Active Organizations',
+              value: '42 Trusts',
+              subtitle: '128 total branches',
+              icon: Icons.business_rounded,
+              gradient: AppColors.statStudents,
+              trend: '+4 New',
+              trendUp: true,
+            ),
+            StatCard(
+              label: 'Licensed User Seats',
+              value: '84,500',
+              subtitle: '89.2% capacity filled',
+              icon: Icons.groups_rounded,
+              gradient: AppColors.statStaff,
+              trend: '+5.2%',
+              trendUp: true,
+            ),
+            StatCard(
+              label: 'Platform Health & SLA',
+              value: '99.98%',
+              subtitle: 'Zero downtime past 90 days',
+              icon: Icons.verified_user_rounded,
+              gradient: AppColors.statAttendance,
+              trend: 'Optimal',
+              trendUp: true,
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -195,20 +242,31 @@ class _SubscriptionManagementPageState
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w600,
-            color: isDark
-                ? AppColors.darkTextPrimary
-                : AppColors.lightTextPrimary,
+            color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
           ),
         ),
         const SizedBox(height: 14),
-        Row(
-          children: plans.map((plan) {
-            return Expanded(
-              child: Padding(
-                padding: const EdgeInsets.only(right: 12),
-                child: GlassCard(
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final width = constraints.maxWidth;
+            final crossAxisCount = width < 600 ? 1 : (width < 1000 ? 2 : 4);
+
+            return GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: plans.length,
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: crossAxisCount,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+                childAspectRatio: width < 600 ? 2.5 : 1.3,
+              ),
+              itemBuilder: (context, index) {
+                final plan = plans[index];
+                return GlassCard(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -222,8 +280,7 @@ class _SubscriptionManagementPageState
                             ),
                           ),
                           Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 2),
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                             decoration: BoxDecoration(
                               color: plan.color.withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(10),
@@ -245,9 +302,7 @@ class _SubscriptionManagementPageState
                         style: TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.w800,
-                          color: isDark
-                              ? AppColors.darkTextPrimary
-                              : AppColors.lightTextPrimary,
+                          color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -255,27 +310,27 @@ class _SubscriptionManagementPageState
                         '• ${plan.branches}',
                         style: TextStyle(
                           fontSize: 12,
-                          color: isDark
-                              ? AppColors.darkTextSecondary
-                              : AppColors.lightTextSecondary,
+                          color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 4),
                       Text(
                         '• ${plan.students}',
                         style: TextStyle(
                           fontSize: 12,
-                          color: isDark
-                              ? AppColors.darkTextSecondary
-                              : AppColors.lightTextSecondary,
+                          color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),
-                ),
-              ),
+                );
+              },
             );
-          }).toList(),
+          },
         ),
       ],
     );
@@ -296,84 +351,115 @@ class _SubscriptionManagementPageState
     ];
 
     return GlassCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Recent Billing Invoices & Payouts',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: isDark
-                      ? AppColors.darkTextPrimary
-                      : AppColors.lightTextPrimary,
-                ),
-              ),
-              OutlinedButton.icon(
-                onPressed: () {},
-                icon: const Icon(Icons.download_rounded, size: 16),
-                label: const Text('Export GST Statement'),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: DataTable(
-              columns: const [
-                DataColumn(label: Text('Invoice ID')),
-                DataColumn(label: Text('Organization')),
-                DataColumn(label: Text('Plan Tier')),
-                DataColumn(label: Text('Amount')),
-                DataColumn(label: Text('Billing Date')),
-                DataColumn(label: Text('Payment Status')),
-                DataColumn(label: Text('Action')),
-              ],
-              rows: invoices.map((inv) {
-                return DataRow(
-                  cells: [
-                    DataCell(Text(inv.id,
-                        style: const TextStyle(fontWeight: FontWeight.w600))),
-                    DataCell(Text(inv.org)),
-                    DataCell(Text(inv.plan)),
-                    DataCell(Text(inv.amount,
-                        style: const TextStyle(fontWeight: FontWeight.w700))),
-                    DataCell(Text(inv.date)),
-                    DataCell(
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: inv.statusColor.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          inv.status,
-                          style: TextStyle(
-                            color: inv.statusColor,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final isMobile = constraints.maxWidth < 650;
+
+          final headerWidget = isMobile
+              ? Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Recent Billing Invoices & Payouts',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
                       ),
                     ),
-                    DataCell(
-                      IconButton(
-                        icon: const Icon(Icons.picture_as_pdf_rounded,
-                            size: 18, color: AppColors.primary),
+                    const SizedBox(height: 10),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
                         onPressed: () {},
-                        tooltip: 'Download Invoice PDF',
+                        icon: const Icon(Icons.download_rounded, size: 16),
+                        label: const Text('Export GST Statement'),
                       ),
                     ),
                   ],
+                )
+              : Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Recent Billing Invoices & Payouts',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                      ),
+                    ),
+                    OutlinedButton.icon(
+                      onPressed: () {},
+                      icon: const Icon(Icons.download_rounded, size: 16),
+                      label: const Text('Export GST Statement'),
+                    ),
+                  ],
                 );
-              }).toList(),
-            ),
-          ),
-        ],
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              headerWidget,
+              const SizedBox(height: 16),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    minWidth: isMobile ? 600 : constraints.maxWidth,
+                  ),
+                  child: DataTable(
+                    columnSpacing: 16,
+                    columns: const [
+                      DataColumn(label: Text('Invoice ID')),
+                      DataColumn(label: Text('Organization')),
+                      DataColumn(label: Text('Plan Tier')),
+                      DataColumn(label: Text('Amount')),
+                      DataColumn(label: Text('Billing Date')),
+                      DataColumn(label: Text('Payment Status')),
+                      DataColumn(label: Text('Action')),
+                    ],
+                    rows: invoices.map((inv) {
+                      return DataRow(
+                        cells: [
+                          DataCell(Text(inv.id, style: const TextStyle(fontWeight: FontWeight.w600))),
+                          DataCell(Text(inv.org)),
+                          DataCell(Text(inv.plan)),
+                          DataCell(Text(inv.amount, style: const TextStyle(fontWeight: FontWeight.w700))),
+                          DataCell(Text(inv.date)),
+                          DataCell(
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: inv.statusColor.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                inv.status,
+                                style: TextStyle(
+                                  color: inv.statusColor,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                          DataCell(
+                            IconButton(
+                              icon: const Icon(Icons.picture_as_pdf_rounded, size: 18, color: AppColors.primary),
+                              onPressed: () {},
+                              tooltip: 'Download Invoice PDF',
+                            ),
+                          ),
+                        ],
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }

@@ -59,6 +59,7 @@ class _FeesManagementPageState extends ConsumerState<FeesManagementPage>
           child: TabBar(
             controller: _tabController,
             isScrollable: true,
+            tabAlignment: TabAlignment.start,
             indicatorColor: AppColors.primary,
             labelColor: AppColors.primary,
             unselectedLabelColor: isDark
@@ -631,9 +632,9 @@ class _StudentFeeAssignmentsTab extends ConsumerWidget {
                       trailing: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
-                          color: _statusColor(assignment.status).withOpacity(0.12),
+                          color: _statusColor(assignment.status).withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(6),
-                          border: Border.all(color: _statusColor(assignment.status).withOpacity(0.3)),
+                          border: Border.all(color: _statusColor(assignment.status).withValues(alpha: 0.3)),
                         ),
                         child: Text(
                           assignment.status,
@@ -785,9 +786,9 @@ class _CollectFeesTabState extends ConsumerState<_CollectFeesTab> {
               padding: const EdgeInsets.all(12),
               margin: const EdgeInsets.only(bottom: 16),
               decoration: BoxDecoration(
-                color: AppColors.secondary.withOpacity(0.08),
+                color: AppColors.secondary.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: AppColors.secondary.withOpacity(0.3)),
+                border: Border.all(color: AppColors.secondary.withValues(alpha: 0.3)),
               ),
               child: Row(
                 children: [
@@ -839,9 +840,9 @@ class _CollectFeesTabState extends ConsumerState<_CollectFeesTab> {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                             decoration: BoxDecoration(
-                              color: _statusColor(fa.status).withOpacity(0.12),
+                              color: _statusColor(fa.status).withValues(alpha: 0.12),
                               borderRadius: BorderRadius.circular(6),
-                              border: Border.all(color: _statusColor(fa.status).withOpacity(0.3)),
+                              border: Border.all(color: _statusColor(fa.status).withValues(alpha: 0.3)),
                             ),
                             child: Text(
                               fa.status,
@@ -1202,7 +1203,7 @@ class _CollectFeesTabState extends ConsumerState<_CollectFeesTab> {
                         amount: amt,
                         paymentMode: _paymentMode,
                         studentName: fa.studentName,
-                        description: 'Receipt generated: $seriesNum' + (advancePaid > 0 ? ' (₹${advancePaid.toStringAsFixed(0)} excess credited to Advance)' : ''),
+                        description: 'Receipt generated: $seriesNum${advancePaid > 0 ? ' (₹${advancePaid.toStringAsFixed(0)} excess credited to Advance)' : ''}',
                       ),
                     );
 
@@ -1653,7 +1654,7 @@ class _ReceiptsDaybookTab extends ConsumerWidget {
                       ListTile(
                         contentPadding: EdgeInsets.zero,
                         leading: CircleAvatar(
-                          backgroundColor: isRefunded ? AppColors.error.withOpacity(0.12) : AppColors.secondary.withOpacity(0.12),
+                          backgroundColor: isRefunded ? AppColors.error.withValues(alpha: 0.12) : AppColors.secondary.withValues(alpha: 0.12),
                           child: Icon(isRefunded ? Icons.assignment_return_rounded : Icons.receipt_long_rounded, color: isRefunded ? AppColors.error : AppColors.secondary, size: 18),
                         ),
                         title: Row(
@@ -2052,7 +2053,7 @@ class _VoucherLedgerTabState extends ConsumerState<_VoucherLedgerTab> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
-                            color: vColor.withOpacity(0.12),
+                            color: vColor.withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(v.type, style: TextStyle(fontSize: 9, color: vColor, fontWeight: FontWeight.bold)),
@@ -2071,7 +2072,7 @@ class _VoucherLedgerTabState extends ConsumerState<_VoucherLedgerTab> {
                     const SizedBox(height: 4),
                     Text('Narration: ${v.narration}', style: TextStyle(fontSize: 11, fontStyle: FontStyle.italic, color: textSec)),
                     const SizedBox(height: 2),
-                    Text('Posted by: ${v.postedBy} • ${v.date.day}/${v.date.month}', style: TextStyle(fontSize: 10, color: textSec.withOpacity(0.7))),
+                    Text('Posted by: ${v.postedBy} • ${v.date.day}/${v.date.month}', style: TextStyle(fontSize: 10, color: textSec.withValues(alpha: 0.7))),
                   ],
                 ),
               ),
@@ -2134,7 +2135,7 @@ class _BankReconciliationTabState extends ConsumerState<_BankReconciliationTab> 
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                             decoration: BoxDecoration(
-                              color: r.isReconciled ? AppColors.secondary.withOpacity(0.12) : AppColors.error.withOpacity(0.12),
+                              color: r.isReconciled ? AppColors.secondary.withValues(alpha: 0.12) : AppColors.error.withValues(alpha: 0.12),
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
@@ -2810,7 +2811,7 @@ class _AccountingReportsTabState extends ConsumerState<_AccountingReportsTab> {
                               const SizedBox(width: 8),
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-                                decoration: BoxDecoration(color: AppColors.secondary.withOpacity(0.12), borderRadius: BorderRadius.circular(4)),
+                                decoration: BoxDecoration(color: AppColors.secondary.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(4)),
                                 child: const Text('Current', style: TextStyle(color: AppColors.secondary, fontSize: 9, fontWeight: FontWeight.bold)),
                               ),
                             ],

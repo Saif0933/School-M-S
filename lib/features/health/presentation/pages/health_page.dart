@@ -71,56 +71,69 @@ class _HealthMedicalPageState extends ConsumerState<HealthMedicalPage>
       body: Column(
         children: [
           // Subheader
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            color: isDark ? Colors.white10 : Colors.grey.withValues(alpha: 0.05),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Infirmary & Health Records: $branchName',
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                      ),
-                      Text(
-                        'Vision & Dental Logs | Emergency Contact ID integration: Active',
-                        style: const TextStyle(fontSize: 11, color: Colors.grey),
-                      ),
-                    ],
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isMobile = constraints.maxWidth < 650;
+              final titleWidget = Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Infirmary & Health Records: $branchName',
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                   ),
-                ),
-                Row(
-                  children: [
-                    ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                      onPressed: () {
-                        setState(() {
-                          _medicalAlertActive = !_medicalAlertActive;
-                        });
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            backgroundColor: _medicalAlertActive ? Colors.red : Colors.green,
-                            content: Text(
-                              _medicalAlertActive
-                                  ? '🚨 EMERGENCY ALERT: Campus ambulances notified! Gate entry clearance active.'
-                                  : '✓ Medical alert cleared.',
-                            ),
-                          ),
-                        );
-                      },
-                      icon: const Icon(Icons.emergency_rounded, color: Colors.white, size: 16),
-                      label: Text(
-                        _medicalAlertActive ? 'Clear Emergency' : 'Medical Emergency Alert',
-                        style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                  const Text(
+                    'Vision & Dental Logs | Emergency Contact ID integration: Active',
+                    style: TextStyle(fontSize: 11, color: Colors.grey),
+                  ),
+                ],
+              );
+
+              final alertButton = ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                onPressed: () {
+                  setState(() {
+                    _medicalAlertActive = !_medicalAlertActive;
+                  });
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      backgroundColor: _medicalAlertActive ? Colors.red : Colors.green,
+                      content: Text(
+                        _medicalAlertActive
+                            ? '🚨 EMERGENCY ALERT: Campus ambulances notified! Gate entry clearance active.'
+                            : '✓ Medical alert cleared.',
                       ),
                     ),
-                  ],
+                  );
+                },
+                icon: const Icon(Icons.emergency_rounded, color: Colors.white, size: 16),
+                label: Text(
+                  _medicalAlertActive ? 'Clear Emergency' : 'Medical Emergency Alert',
+                  style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
                 ),
-              ],
-            ),
+              );
+
+              return Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                color: isDark ? Colors.white10 : Colors.grey.withValues(alpha: 0.05),
+                child: isMobile
+                    ? Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          titleWidget,
+                          const SizedBox(height: 12),
+                          alertButton,
+                        ],
+                      )
+                    : Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(child: titleWidget),
+                          const SizedBox(width: 16),
+                          alertButton,
+                        ],
+                      ),
+              );
+            },
           ),
 
           // Medical emergency warning card
@@ -147,6 +160,7 @@ class _HealthMedicalPageState extends ConsumerState<HealthMedicalPage>
             child: TabBar(
               controller: _tabController,
               isScrollable: true,
+              tabAlignment: TabAlignment.start,
               indicatorColor: AppColors.primary,
               labelColor: AppColors.primary,
               unselectedLabelColor: isDark ? Colors.white70 : Colors.black87,
@@ -179,117 +193,127 @@ class _HealthMedicalPageState extends ConsumerState<HealthMedicalPage>
   // WIDGETS — Medical Records & Checkups Tab
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   Widget _buildRecordsTab(List<StudentHealthRecord> records) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Medical parameters editor form
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('✏️ Update Student Health Parameters', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                const SizedBox(height: 12),
-                DropdownButtonFormField<StudentHealthRecord>(
-                  value: _selectedRecord,
-                  hint: const Text('Choose Student Health Profile', style: TextStyle(fontSize: 11)),
-                  items: records.map((r) {
-                    return DropdownMenuItem<StudentHealthRecord>(
-                      value: r,
-                      child: Text(r.studentName, style: const TextStyle(fontSize: 11)),
-                    );
-                  }).toList(),
-                  onChanged: (val) {
-                    setState(() {
-                      _selectedRecord = val;
-                      if (val != null) {
-                        _heightCtrl.text = val.heightCm.toString();
-                        _weightCtrl.text = val.weightKg.toString();
-                        _visionCtrl.text = val.visionDetails;
-                        _dentalCtrl.text = val.dentalDetails;
-                      }
-                    });
-                  },
-                ),
-                const SizedBox(height: 12),
-                TextField(controller: _heightCtrl, decoration: const InputDecoration(labelText: 'Height (cm)')),
-                TextField(controller: _weightCtrl, decoration: const InputDecoration(labelText: 'Weight (kg)')),
-                TextField(controller: _visionCtrl, decoration: const InputDecoration(labelText: 'Vision (e.g. L: 6/6, R: 6/9)')),
-                TextField(controller: _dentalCtrl, decoration: const InputDecoration(labelText: 'Dental description')),
-                const SizedBox(height: 16),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
-                    onPressed: () {
-                      final h = double.tryParse(_heightCtrl.text) ?? 150.0;
-                      final w = double.tryParse(_weightCtrl.text) ?? 50.0;
-                      if (_selectedRecord != null) {
-                        final bmiVal = w / ((h / 100) * (h / 100));
-                        final updated = _selectedRecord!.copyWith(
-                          heightCm: h,
-                          weightKg: w,
-                          bmi: double.parse(bmiVal.toStringAsFixed(1)),
-                          visionDetails: _visionCtrl.text,
-                          dentalDetails: _dentalCtrl.text,
-                        );
-                        ref.read(studentHealthProvider.notifier).updateRecord(updated);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('✓ Student check-up parameters saved in medical file.')),
-                        );
-                      }
-                    },
-                    child: const Text('Save Examination Log', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 24),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isMobile = constraints.maxWidth < 768;
 
-          // Health records directories
-          Expanded(
-            flex: 2,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('📋 Student Infirmary Directory', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                const SizedBox(height: 12),
-                ...records.map((r) => Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+        final formWidget = Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('✏️ Update Student Health Parameters', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+            const SizedBox(height: 12),
+            DropdownButtonFormField<StudentHealthRecord>(
+              initialValue: _selectedRecord,
+              hint: const Text('Choose Student Health Profile', style: TextStyle(fontSize: 11)),
+              items: records.map((r) {
+                return DropdownMenuItem<StudentHealthRecord>(
+                  value: r,
+                  child: Text(r.studentName, style: const TextStyle(fontSize: 11)),
+                );
+              }).toList(),
+              onChanged: (val) {
+                setState(() {
+                  _selectedRecord = val;
+                  if (val != null) {
+                    _heightCtrl.text = val.heightCm.toString();
+                    _weightCtrl.text = val.weightKg.toString();
+                    _visionCtrl.text = val.visionDetails;
+                    _dentalCtrl.text = val.dentalDetails;
+                  }
+                });
+              },
+            ),
+            const SizedBox(height: 12),
+            TextField(controller: _heightCtrl, decoration: const InputDecoration(labelText: 'Height (cm)')),
+            TextField(controller: _weightCtrl, decoration: const InputDecoration(labelText: 'Weight (kg)')),
+            TextField(controller: _visionCtrl, decoration: const InputDecoration(labelText: 'Vision (e.g. L: 6/6, R: 6/9)')),
+            TextField(controller: _dentalCtrl, decoration: const InputDecoration(labelText: 'Dental description')),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+                onPressed: () {
+                  final h = double.tryParse(_heightCtrl.text) ?? 150.0;
+                  final w = double.tryParse(_weightCtrl.text) ?? 50.0;
+                  if (_selectedRecord != null) {
+                    final bmiVal = w / ((h / 100) * (h / 100));
+                    final updated = _selectedRecord!.copyWith(
+                      heightCm: h,
+                      weightKg: w,
+                      bmi: double.parse(bmiVal.toStringAsFixed(1)),
+                      visionDetails: _visionCtrl.text,
+                      dentalDetails: _dentalCtrl.text,
+                    );
+                    ref.read(studentHealthProvider.notifier).updateRecord(updated);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('✓ Student check-up parameters saved in medical file.')),
+                    );
+                  }
+                },
+                child: const Text('Save Examination Log', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              ),
+            ),
+          ],
+        );
+
+        final listWidget = Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('📋 Student Infirmary Directory', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+            const SizedBox(height: 12),
+            ...records.map((r) => Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(r.studentName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-                                Text('BMI: ${r.bmi} (Height: ${r.heightCm}cm, Weight: ${r.weightKg}kg)', style: const TextStyle(fontSize: 10, color: Colors.indigo)),
-                              ],
-                            ),
-                            const Divider(height: 12),
-                            Text('Allergies: ${r.allergies}', style: const TextStyle(fontSize: 10, color: Colors.red)),
-                            Text('Vaccinations: ${r.vaccinations}', style: const TextStyle(fontSize: 10)),
-                            Text('Vision: ${r.visionDetails} | Dental: ${r.dentalDetails}', style: const TextStyle(fontSize: 10, color: Colors.grey)),
-                            const SizedBox(height: 6),
-                            Row(
-                              children: [
-                                const Icon(Icons.contact_phone_rounded, size: 12, color: Colors.teal),
-                                const SizedBox(width: 4),
-                                Text('Emergency Contact ID Integration: ${r.emergencyContact}', style: const TextStyle(fontSize: 9, color: Colors.teal)),
-                              ],
-                            ),
+                            Text(r.studentName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                            Text('BMI: ${r.bmi} (Height: ${r.heightCm}cm, Weight: ${r.weightKg}kg)', style: const TextStyle(fontSize: 10, color: Colors.indigo)),
                           ],
                         ),
-                      ),
-                    )),
-              ],
-            ),
-          ),
-        ],
-      ),
+                        const Divider(height: 12),
+                        Text('Allergies: ${r.allergies}', style: const TextStyle(fontSize: 10, color: Colors.red)),
+                        Text('Vaccinations: ${r.vaccinations}', style: const TextStyle(fontSize: 10)),
+                        Text('Vision: ${r.visionDetails} | Dental: ${r.dentalDetails}', style: const TextStyle(fontSize: 10, color: Colors.grey)),
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            const Icon(Icons.contact_phone_rounded, size: 12, color: Colors.teal),
+                            const SizedBox(width: 4),
+                            Text('Emergency Contact ID Integration: ${r.emergencyContact}', style: const TextStyle(fontSize: 9, color: Colors.teal)),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                )),
+          ],
+        );
+
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: isMobile
+              ? Column(
+                  children: [
+                    formWidget,
+                    const SizedBox(height: 32),
+                    listWidget,
+                  ],
+                )
+              : Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(child: formWidget),
+                    const SizedBox(width: 24),
+                    Expanded(flex: 2, child: listWidget),
+                  ],
+                ),
+        );
+      },
     );
   }
 
@@ -302,85 +326,96 @@ class _HealthMedicalPageState extends ConsumerState<HealthMedicalPage>
       {'name': 'Vikram Malhotra (Staff)', 'med': 'BP Metoprolol 25mg', 'time': '09:00 AM'},
     ];
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // First aid logger Form
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('✏️ Log First Aid Treatment', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                const SizedBox(height: 12),
-                TextField(controller: _firstAidStudentCtrl, decoration: const InputDecoration(labelText: 'Student / User Name')),
-                TextField(controller: _incidentCtrl, decoration: const InputDecoration(labelText: 'Incident Description (e.g. cut, fall)')),
-                TextField(controller: _treatmentCtrl, decoration: const InputDecoration(labelText: 'Treatment Given (First aid medicine)')),
-                const SizedBox(height: 16),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
-                    onPressed: () {
-                      if (_firstAidStudentCtrl.text.isNotEmpty && _incidentCtrl.text.isNotEmpty) {
-                        ref.read(firstAidProvider.notifier).logFirstAid(
-                          FirstAidLog(
-                            id: 'AID-${DateTime.now().millisecondsSinceEpoch}',
-                            branchId: 'BR-001',
-                            studentName: _firstAidStudentCtrl.text,
-                            incident: _incidentCtrl.text,
-                            treatment: _treatmentCtrl.text,
-                            timestamp: '2026-08-19 12:45 PM',
-                          ),
-                        );
-                        _firstAidStudentCtrl.clear();
-                        _incidentCtrl.clear();
-                        _treatmentCtrl.clear();
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('✓ First Aid log created. Parent alert notification sent.')),
-                        );
-                      }
-                    },
-                    child: const Text('Add Log Entry', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isMobile = constraints.maxWidth < 768;
+
+        final formWidget = Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('✏️ Log First Aid Treatment', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+            const SizedBox(height: 12),
+            TextField(controller: _firstAidStudentCtrl, decoration: const InputDecoration(labelText: 'Student / User Name')),
+            TextField(controller: _incidentCtrl, decoration: const InputDecoration(labelText: 'Incident Description (e.g. cut, fall)')),
+            TextField(controller: _treatmentCtrl, decoration: const InputDecoration(labelText: 'Treatment Given (First aid medicine)')),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+                onPressed: () {
+                  if (_firstAidStudentCtrl.text.isNotEmpty && _incidentCtrl.text.isNotEmpty) {
+                    ref.read(firstAidProvider.notifier).logFirstAid(
+                      FirstAidLog(
+                        id: 'AID-${DateTime.now().millisecondsSinceEpoch}',
+                        branchId: 'BR-001',
+                        studentName: _firstAidStudentCtrl.text,
+                        incident: _incidentCtrl.text,
+                        treatment: _treatmentCtrl.text,
+                        timestamp: '2026-08-19 12:45 PM',
+                      ),
+                    );
+                    _firstAidStudentCtrl.clear();
+                    _incidentCtrl.clear();
+                    _treatmentCtrl.clear();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('✓ First Aid log created. Parent alert notification sent.')),
+                    );
+                  }
+                },
+                child: const Text('Add Log Entry', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              ),
+            ),
+            const Divider(height: 36),
+
+            // Medication schedule
+            const Text('📋 Daily Roster Medication Schedules', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+            const SizedBox(height: 8),
+            ...dailyMedications.map((m) => Card(
+                  child: ListTile(
+                    leading: const Icon(Icons.watch_later_rounded, color: Colors.amber),
+                    title: Text(m['name']!, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
+                    subtitle: Text('Medication: ${m["med"]} | Time: ${m["time"]}'),
                   ),
+                )),
+          ],
+        );
+
+        final listWidget = Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('📋 First Aid Log Ledger', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+            const SizedBox(height: 12),
+            ...logs.map((l) => Card(
+                  child: ListTile(
+                    leading: const Icon(Icons.healing_rounded, color: Colors.red),
+                    title: Text(l.studentName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
+                    subtitle: Text('Incident: ${l.incident}\nTreatment: ${l.treatment}\nTime: ${l.timestamp}'),
+                  ),
+                )),
+          ],
+        );
+
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: isMobile
+              ? Column(
+                  children: [
+                    formWidget,
+                    const SizedBox(height: 32),
+                    listWidget,
+                  ],
+                )
+              : Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(child: formWidget),
+                    const SizedBox(width: 24),
+                    Expanded(child: listWidget),
+                  ],
                 ),
-                const Divider(height: 36),
-
-                // Medication schedule
-                const Text('📋 Daily Roster Medication Schedules', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                const SizedBox(height: 8),
-                ...dailyMedications.map((m) => Card(
-                      child: ListTile(
-                        leading: const Icon(Icons.watch_later_rounded, color: Colors.amber),
-                        title: Text(m['name']!, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
-                        subtitle: Text('Medication: ${m["med"]} | Time: ${m["time"]}'),
-                      ),
-                    )),
-              ],
-            ),
-          ),
-          const SizedBox(width: 24),
-
-          // First Aid lists history
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('📋 First Aid Log Ledger', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                const SizedBox(height: 12),
-                ...logs.map((l) => Card(
-                      child: ListTile(
-                        leading: const Icon(Icons.healing_rounded, color: Colors.red),
-                        title: Text(l.studentName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
-                        subtitle: Text('Incident: ${l.incident}\nTreatment: ${l.treatment}\nTime: ${l.timestamp}'),
-                      ),
-                    )),
-              ],
-            ),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -388,111 +423,122 @@ class _HealthMedicalPageState extends ConsumerState<HealthMedicalPage>
   // WIDGETS — Infirmary Pharmacy & Epidemic Alerts
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   Widget _buildEpidemicTab(List<MedicalStock> stocks, List<DiseaseCase> diseases) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Infirmary Stock ledger
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('📋 Infirmary Stock Registry', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                const SizedBox(height: 12),
-                DropdownButtonFormField<String>(
-                  value: _selectedStockId,
-                  hint: const Text('Select Medical Item to Restock', style: TextStyle(fontSize: 11)),
-                  items: stocks.map((s) {
-                    return DropdownMenuItem<String>(
-                      value: s.id,
-                      child: Text('${s.name} (Available: ${s.qty})', style: const TextStyle(fontSize: 11)),
-                    );
-                  }).toList(),
-                  onChanged: (val) => setState(() => _selectedStockId = val),
-                ),
-                const SizedBox(height: 12),
-                TextField(controller: _restockQtyCtrl, decoration: const InputDecoration(labelText: 'Restock Quantity')),
-                const SizedBox(height: 12),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.teal),
-                    onPressed: () {
-                      final add = int.tryParse(_restockQtyCtrl.text) ?? 0;
-                      if (_selectedStockId != null && add > 0) {
-                        ref.read(medicalStockProvider.notifier).restock(_selectedStockId!, add);
-                        _restockQtyCtrl.clear();
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('✓ Pharmacy stock ledger restocked.')),
-                        );
-                      }
-                    },
-                    child: const Text('Confirm Restock', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                  ),
-                ),
-                const SizedBox(height: 24),
-                ...stocks.map((s) => Card(
-                      child: ListTile(
-                        leading: const Icon(Icons.medical_information_rounded, color: Colors.teal),
-                        title: Text(s.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
-                        subtitle: Text('Qty: ${s.qty} units | Expiry: ${s.expDate}'),
-                      ),
-                    )),
-              ],
-            ),
-          ),
-          const SizedBox(width: 24),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isMobile = constraints.maxWidth < 768;
 
-          // Epidemic tracker
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('🦟 Active Epidemic Isolation tracking', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                const SizedBox(height: 12),
-                ...diseases.map((d) => Card(
-                      color: d.activeCases > 0 ? Colors.orange.withValues(alpha: 0.05) : null,
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+        final stockWidget = Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('📋 Infirmary Stock Registry', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+            const SizedBox(height: 12),
+            DropdownButtonFormField<String>(
+              initialValue: _selectedStockId,
+              hint: const Text('Select Medical Item to Restock', style: TextStyle(fontSize: 11)),
+              items: stocks.map((s) {
+                return DropdownMenuItem<String>(
+                  value: s.id,
+                  child: Text('${s.name} (Available: ${s.qty})', style: const TextStyle(fontSize: 11)),
+                );
+              }).toList(),
+              onChanged: (val) => setState(() => _selectedStockId = val),
+            ),
+            const SizedBox(height: 12),
+            TextField(controller: _restockQtyCtrl, decoration: const InputDecoration(labelText: 'Restock Quantity')),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.teal),
+                onPressed: () {
+                  final add = int.tryParse(_restockQtyCtrl.text) ?? 0;
+                  if (_selectedStockId != null && add > 0) {
+                    ref.read(medicalStockProvider.notifier).restock(_selectedStockId!, add);
+                    _restockQtyCtrl.clear();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('✓ Pharmacy stock ledger restocked.')),
+                    );
+                  }
+                },
+                child: const Text('Confirm Restock', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              ),
+            ),
+            const SizedBox(height: 24),
+            ...stocks.map((s) => Card(
+                  child: ListTile(
+                    leading: const Icon(Icons.medical_information_rounded, color: Colors.teal),
+                    title: Text(s.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
+                    subtitle: Text('Qty: ${s.qty} units | Expiry: ${s.expDate}'),
+                  ),
+                )),
+          ],
+        );
+
+        final epidemicWidget = Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('🦟 Active Epidemic Isolation tracking', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+            const SizedBox(height: 12),
+            ...diseases.map((d) => Card(
+                  color: d.activeCases > 0 ? Colors.orange.withValues(alpha: 0.05) : null,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(d.diseaseName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
-                                Chip(
-                                  label: Text('${d.activeCases} active cases', style: const TextStyle(fontSize: 8, color: Colors.white)),
-                                  backgroundColor: d.activeCases > 0 ? Colors.orange : Colors.grey,
-                                ),
-                              ],
+                            Text(d.diseaseName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
+                            Chip(
+                              label: Text('${d.activeCases} active cases', style: const TextStyle(fontSize: 8, color: Colors.white)),
+                              backgroundColor: d.activeCases > 0 ? Colors.orange : Colors.grey,
                             ),
-                            const SizedBox(height: 4),
-                            Text('Isolation Protocol: ${d.protocol}', style: const TextStyle(fontSize: 10, color: Colors.grey)),
                           ],
                         ),
-                      ),
-                    )),
-                const Divider(height: 24),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.teal),
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('✓ Starting branch medical checkup statistics download...')),
-                      );
-                    },
-                    icon: const Icon(Icons.download_rounded, color: Colors.white),
-                    label: const Text('Export Infirmary Health Report', style: TextStyle(color: Colors.white, fontSize: 11)),
+                        const SizedBox(height: 4),
+                        Text('Isolation Protocol: ${d.protocol}', style: const TextStyle(fontSize: 10, color: Colors.grey)),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                )),
+            const Divider(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.teal),
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('✓ Starting branch medical checkup statistics download...')),
+                  );
+                },
+                icon: const Icon(Icons.download_rounded, color: Colors.white),
+                label: const Text('Export Infirmary Health Report', style: TextStyle(color: Colors.white, fontSize: 11)),
+              ),
             ),
-          ),
-        ],
-      ),
+          ],
+        );
+
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: isMobile
+              ? Column(
+                  children: [
+                    stockWidget,
+                    const SizedBox(height: 32),
+                    epidemicWidget,
+                  ],
+                )
+              : Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(child: stockWidget),
+                    const SizedBox(width: 24),
+                    Expanded(child: epidemicWidget),
+                  ],
+                ),
+        );
+      },
     );
   }
 }

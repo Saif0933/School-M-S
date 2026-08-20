@@ -51,10 +51,10 @@ class _BranchManagementPageState extends State<BranchManagementPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // ─── Header ───────────────────────────
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isMobile = constraints.maxWidth < 600;
+              final titleWidget = Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
@@ -78,13 +78,32 @@ class _BranchManagementPageState extends State<BranchManagementPage> {
                     ),
                   ),
                 ],
-              ),
-              ElevatedButton.icon(
+              );
+
+              final addBtn = ElevatedButton.icon(
                 onPressed: () {},
                 icon: const Icon(Icons.add_location_alt_rounded, size: 18),
                 label: const Text('Add Branch'),
-              ),
-            ],
+              );
+
+              return isMobile
+                  ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        titleWidget,
+                        const SizedBox(height: 12),
+                        addBtn,
+                      ],
+                    )
+                  : Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(child: titleWidget),
+                        const SizedBox(width: 16),
+                        addBtn,
+                      ],
+                    );
+            },
           ),
           const SizedBox(height: 24),
 
@@ -94,7 +113,7 @@ class _BranchManagementPageState extends State<BranchManagementPage> {
               crossAxisCount: context.responsive(mobile: 1, desktop: 3),
               crossAxisSpacing: 16,
               mainAxisSpacing: 16,
-              childAspectRatio: context.responsive(mobile: 1.2, desktop: 1.1),
+              childAspectRatio: context.responsive(mobile: 0.85, desktop: 1.15),
             ),
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
@@ -256,14 +275,20 @@ class _BranchManagementPageState extends State<BranchManagementPage> {
                 : AppColors.lightTextTertiary,
           ),
         ),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-            color: isDark
-                ? AppColors.darkTextPrimary
-                : AppColors.lightTextPrimary,
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            value,
+            textAlign: TextAlign.right,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: isDark
+                  ? AppColors.darkTextPrimary
+                  : AppColors.lightTextPrimary,
+            ),
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
           ),
         ),
       ],

@@ -41,6 +41,9 @@ import '../../../alumni/presentation/pages/alumni_page.dart';
 import '../../../health/presentation/pages/health_page.dart';
 import '../../../subscription/presentation/pages/subscription_page.dart';
 import '../../../settings/presentation/pages/settings_page.dart';
+import '../../../ai/presentation/pages/ai_page.dart';
+import '../../../whitelabel/presentation/pages/whitelabel_page.dart';
+import '../../../architecture/presentation/pages/architecture_page.dart';
 import '../../../academic/providers.dart';
 import '../../../organization/providers.dart';
 import '../../../library/providers.dart';
@@ -119,6 +122,9 @@ class _DashboardShellState extends ConsumerState<DashboardShell> {
       'health': 'Health & Medical',
       'subscription': 'Subscription & Billing',
       'settings': 'Settings',
+      'ai': 'AI Advanced Features',
+      'whitelabel': 'White-Label Branding',
+      'architecture': 'Technical Architecture',
     };
     return titles[_selectedNavId] ?? 'Dashboard';
   }
@@ -201,6 +207,12 @@ class _DashboardShellState extends ConsumerState<DashboardShell> {
         return const HealthMedicalPage(key: ValueKey('health'));
       case 'settings':
         return const SecuritySettingsPage(key: ValueKey('settings'));
+      case 'ai':
+        return const AIFeaturesPage(key: ValueKey('ai'));
+      case 'whitelabel':
+        return const WhiteLabelPage(key: ValueKey('whitelabel'));
+      case 'architecture':
+        return const TechnicalArchitecturePage(key: ValueKey('architecture'));
       default:
         return _ModulePlaceholder(
           key: ValueKey(_selectedNavId),
@@ -485,6 +497,24 @@ class _DashboardShellState extends ConsumerState<DashboardShell> {
         label: 'Mobile Apps Simulation',
         icon: Icons.phone_android_outlined,
         activeIcon: Icons.phone_android_rounded,
+      ),
+      const SidebarItem(
+        id: 'ai',
+        label: 'AI Advanced Features',
+        icon: Icons.auto_awesome_outlined,
+        activeIcon: Icons.auto_awesome_rounded,
+      ),
+      const SidebarItem(
+        id: 'whitelabel',
+        label: 'White-Label Overrides',
+        icon: Icons.palette_outlined,
+        activeIcon: Icons.palette_rounded,
+      ),
+      const SidebarItem(
+        id: 'architecture',
+        label: 'Technical Architecture',
+        icon: Icons.lan_outlined,
+        activeIcon: Icons.lan_rounded,
       ),
       const SidebarItem(
         id: 'settings',
@@ -973,8 +1003,10 @@ class _DashboardOverview extends ConsumerWidget {
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: titleColor),
           ),
           const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            alignment: WrapAlignment.spaceAround,
             children: [
               _buildFinanceKpi('Total Collected', '₹${totalCollected.toStringAsFixed(0)}', AppColors.secondary, isDark),
               _buildFinanceKpi('Total Outstanding', '₹${totalOutstanding.toStringAsFixed(0)}', AppColors.error, isDark),
@@ -1106,8 +1138,10 @@ class _DashboardOverview extends ConsumerWidget {
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: titleColor),
           ),
           const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            alignment: WrapAlignment.spaceAround,
             children: [
               _buildFinanceKpi('Total Books', '$totalBooksCount items', AppColors.secondary, isDark),
               _buildFinanceKpi('Active Issues', '$activeIssuedCount books', AppColors.warning, isDark),
@@ -1193,7 +1227,7 @@ class _DashboardOverview extends ConsumerWidget {
       margin: const EdgeInsets.symmetric(vertical: 6),
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: isDark ? Colors.white10 : Colors.black.withOpacity(0.04),
+        color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.04),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(

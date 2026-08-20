@@ -72,6 +72,7 @@ class _OrganizationManagementPageState
             child: TabBar(
               controller: _tabController,
               isScrollable: true,
+              tabAlignment: TabAlignment.start,
               indicatorColor: AppColors.primary,
               indicatorWeight: 3,
               labelColor: AppColors.primary,
@@ -144,86 +145,95 @@ class _OrganizationManagementPageState
       ),
       child: SafeArea(
         bottom: false,
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                gradient: AppColors.primaryGradient,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.primary.withValues(alpha: 0.3),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: const Text(
-                'SET',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w900,
-                  fontSize: 22,
-                ),
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
-                    children: [
-                      Text(
-                        org.name,
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w800,
-                          color: isDark
-                              ? AppColors.darkTextPrimary
-                              : AppColors.lightTextPrimary,
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: AppColors.secondary.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: AppColors.secondary),
-                        ),
-                        child: Text(
-                          org.subscriptionPlan.toUpperCase(),
-                          style: const TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w800,
-                            color: AppColors.secondary,
-                          ),
-                        ),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final isMobile = constraints.maxWidth < 950;
+
+            final logoAndDetails = Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    gradient: AppColors.primaryGradient,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.primary.withValues(alpha: 0.3),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Reg No: ${org.registrationNumber} • Tax ID: ${org.taxRegistrationNumber} • ${org.subdomain}',
+                  child: const Text(
+                    'SET',
                     style: TextStyle(
-                      fontSize: 11,
-                      color: isDark
-                          ? AppColors.darkTextSecondary
-                          : AppColors.lightTextSecondary,
+                      color: Colors.white,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 22,
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                   ),
-                ],
-              ),
-            ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              org.name,
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w800,
+                                color: isDark
+                                    ? AppColors.darkTextPrimary
+                                    : AppColors.lightTextPrimary,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: AppColors.secondary.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: AppColors.secondary),
+                            ),
+                            child: Text(
+                              org.subscriptionPlan.toUpperCase(),
+                              style: const TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w800,
+                                color: AppColors.secondary,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Reg No: ${org.registrationNumber} • Tax ID: ${org.taxRegistrationNumber} • ${org.subdomain}',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: isDark
+                              ? AppColors.darkTextSecondary
+                              : AppColors.lightTextSecondary,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            );
 
-            // Action Triggers
-            Row(
+            final actionButtons = Wrap(
+              spacing: 8,
+              runSpacing: 8,
               children: [
                 OutlinedButton.icon(
                   onPressed: () {
@@ -237,7 +247,6 @@ class _OrganizationManagementPageState
                       color: AppColors.primary, size: 16),
                   label: const Text('Export Report'),
                 ),
-                const SizedBox(width: 8),
                 OutlinedButton.icon(
                   onPressed: () {
                     showDialog(
@@ -249,7 +258,6 @@ class _OrganizationManagementPageState
                       color: AppColors.secondary, size: 16),
                   label: const Text('Broadcast'),
                 ),
-                const SizedBox(width: 8),
                 OutlinedButton.icon(
                   onPressed: () {
                     showDialog(
@@ -260,7 +268,6 @@ class _OrganizationManagementPageState
                   icon: const Icon(Icons.person_add_rounded, size: 16),
                   label: const Text('+ Create Org Admin'),
                 ),
-                const SizedBox(width: 8),
                 ElevatedButton.icon(
                   onPressed: () {
                     showDialog(
@@ -285,8 +292,25 @@ class _OrganizationManagementPageState
                   ),
                 ),
               ],
-            ),
-          ],
+            );
+
+            return isMobile
+                ? Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      logoAndDetails,
+                      const SizedBox(height: 16),
+                      actionButtons,
+                    ],
+                  )
+                : Row(
+                    children: [
+                      Expanded(child: logoAndDetails),
+                      const SizedBox(width: 24),
+                      actionButtons,
+                    ],
+                  );
+          },
         ),
       ),
     );

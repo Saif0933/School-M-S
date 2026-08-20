@@ -69,46 +69,64 @@ class _LMSManagementPageState extends ConsumerState<LMSManagementPage>
       body: Column(
         children: [
           // Subheader
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            color: isDark ? Colors.white10 : Colors.grey.withValues(alpha: 0.05),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Online Classes & LMS portal: ${user?.activeBranch?.branchName ?? "Primary Campus"}',
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                      ),
-                      Text(
-                        'Branch Learning Database | Sync Status: Connected',
-                        style: const TextStyle(fontSize: 11, color: Colors.grey),
-                      ),
-                    ],
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isMobile = constraints.maxWidth < 750;
+              final titleWidget = Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Online Classes & LMS portal: ${user?.activeBranch?.branchName ?? "Primary Campus"}',
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                   ),
-                ),
-                Row(
-                  children: [
-                    ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
-                      onPressed: () => _showScheduleClassDialog(context, activeBranchId),
-                      icon: const Icon(Icons.add_to_queue_rounded, color: Colors.white, size: 16),
-                      label: const Text('Schedule Class', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
-                    ),
-                    const SizedBox(width: 8),
-                    ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(backgroundColor: Colors.teal),
-                      onPressed: () => _showUploadMaterialDialog(context, activeBranchId),
-                      icon: const Icon(Icons.upload_file_rounded, color: Colors.white, size: 16),
-                      label: const Text('Upload Study File', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+                  const Text(
+                    'Branch Learning Database | Sync Status: Connected',
+                    style: TextStyle(fontSize: 11, color: Colors.grey),
+                  ),
+                ],
+              );
+
+              final actionButtons = Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+                    onPressed: () => _showScheduleClassDialog(context, activeBranchId),
+                    icon: const Icon(Icons.add_to_queue_rounded, color: Colors.white, size: 16),
+                    label: const Text('Schedule Class', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+                  ),
+                  ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(backgroundColor: Colors.teal),
+                    onPressed: () => _showUploadMaterialDialog(context, activeBranchId),
+                    icon: const Icon(Icons.upload_file_rounded, color: Colors.white, size: 16),
+                    label: const Text('Upload Study File', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+                  ),
+                ],
+              );
+
+              return Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                color: isDark ? Colors.white10 : Colors.grey.withValues(alpha: 0.05),
+                child: isMobile
+                    ? Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          titleWidget,
+                          const SizedBox(height: 12),
+                          actionButtons,
+                        ],
+                      )
+                    : Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(child: titleWidget),
+                          const SizedBox(width: 16),
+                          actionButtons,
+                        ],
+                      ),
+              );
+            },
           ),
 
           // Tab Bar
@@ -117,6 +135,7 @@ class _LMSManagementPageState extends ConsumerState<LMSManagementPage>
             child: TabBar(
               controller: _tabController,
               isScrollable: true,
+              tabAlignment: TabAlignment.start,
               indicatorColor: AppColors.primary,
               labelColor: AppColors.primary,
               unselectedLabelColor: isDark ? Colors.white70 : Colors.black87,
@@ -384,82 +403,80 @@ class _InPlatformConferenceDialogState extends State<_InPlatformConferenceDialog
           ),
 
           Expanded(
-            child: Row(
-              children: [
-                // Video Screen Area
-                Expanded(
-                  flex: 3,
-                  child: Container(
-                    margin: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(12)),
-                    child: Stack(
-                      children: [
-                        if (_showWhiteboard)
-                          GestureDetector(
-                            onPanUpdate: (details) {
-                              widget.whiteboardPoints.add(details.localPosition);
-                              widget.onWhiteboardUpdated();
-                              setState(() {});
-                            },
-                            child: CustomPaint(
-                              painter: _WhiteboardPainter(widget.whiteboardPoints),
-                              size: Size.infinite,
-                            ),
-                          )
-                        else if (!_cameraMuted)
-                          const Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.videocam_rounded, size: 64, color: Colors.grey),
-                                SizedBox(height: 12),
-                                Text('[Simulated Live Webcam Feed]', style: TextStyle(color: Colors.white70, fontSize: 12)),
-                              ],
-                            ),
-                          )
-                        else
-                          const Center(
-                            child: Text('Camera Feed Muted', style: TextStyle(color: Colors.white38)),
-                          ),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final isMobile = constraints.maxWidth < 600;
 
-                        // Control icons
-                        Positioned(
-                          bottom: 16,
-                          left: 16,
-                          child: Row(
+                final videoWidget = Container(
+                  margin: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(12)),
+                  child: Stack(
+                    children: [
+                      if (_showWhiteboard)
+                        GestureDetector(
+                          onPanUpdate: (details) {
+                            widget.whiteboardPoints.add(details.localPosition);
+                            widget.onWhiteboardUpdated();
+                            setState(() {});
+                          },
+                          child: CustomPaint(
+                            painter: _WhiteboardPainter(widget.whiteboardPoints),
+                            size: Size.infinite,
+                          ),
+                        )
+                      else if (!_cameraMuted)
+                        const Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              IconButton(
-                                icon: Icon(_micMuted ? Icons.mic_off_rounded : Icons.mic_rounded, color: _micMuted ? Colors.red : Colors.green),
-                                onPressed: () => setState(() => _micMuted = !_micMuted),
-                              ),
-                              IconButton(
-                                icon: Icon(_cameraMuted ? Icons.videocam_off_rounded : Icons.videocam_rounded, color: _cameraMuted ? Colors.red : Colors.green),
-                                onPressed: () => setState(() => _cameraMuted = !_cameraMuted),
-                              ),
-                              IconButton(
-                                icon: Icon(Icons.border_color_rounded, color: _showWhiteboard ? Colors.amber : Colors.white),
-                                onPressed: () => setState(() => _showWhiteboard = !_showWhiteboard),
-                              ),
-                              if (_showWhiteboard)
-                                IconButton(
-                                  icon: const Icon(Icons.clear_all_rounded, color: Colors.red),
-                                  onPressed: () {
-                                    widget.whiteboardPoints.clear();
-                                    widget.onWhiteboardUpdated();
-                                    setState(() {});
-                                  },
-                                ),
+                              Icon(Icons.videocam_rounded, size: 64, color: Colors.grey),
+                              SizedBox(height: 12),
+                              Text('[Simulated Live Webcam Feed]', style: TextStyle(color: Colors.white70, fontSize: 12)),
                             ],
                           ),
+                        )
+                      else
+                        const Center(
+                          child: Text('Camera Feed Muted', style: TextStyle(color: Colors.white38)),
                         ),
-                      ],
-                    ),
-                  ),
-                ),
 
-                // Live class text chat panel
-                Container(
-                  width: 240,
+                      // Control icons
+                      Positioned(
+                        bottom: 16,
+                        left: 16,
+                        child: Row(
+                          children: [
+                            IconButton(
+                              icon: Icon(_micMuted ? Icons.mic_off_rounded : Icons.mic_rounded, color: _micMuted ? Colors.red : Colors.green),
+                              onPressed: () => setState(() => _micMuted = !_micMuted),
+                            ),
+                            IconButton(
+                              icon: Icon(_cameraMuted ? Icons.videocam_off_rounded : Icons.videocam_rounded, color: _cameraMuted ? Colors.red : Colors.green),
+                              onPressed: () => setState(() => _cameraMuted = !_cameraMuted),
+                            ),
+                            IconButton(
+                              icon: Icon(Icons.border_color_rounded, color: _showWhiteboard ? Colors.amber : Colors.white),
+                              onPressed: () => setState(() => _showWhiteboard = !_showWhiteboard),
+                            ),
+                            if (_showWhiteboard)
+                              IconButton(
+                                icon: const Icon(Icons.clear_all_rounded, color: Colors.red),
+                                onPressed: () {
+                                  widget.whiteboardPoints.clear();
+                                  widget.onWhiteboardUpdated();
+                                  setState(() {});
+                                },
+                              ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+
+                final chatWidget = Container(
+                  width: isMobile ? double.infinity : 240,
+                  height: isMobile ? 250 : double.infinity,
                   color: Colors.black87,
                   child: Column(
                     children: [
@@ -515,8 +532,22 @@ class _InPlatformConferenceDialogState extends State<_InPlatformConferenceDialog
                       ),
                     ],
                   ),
-                ),
-              ],
+                );
+
+                return isMobile
+                    ? Column(
+                        children: [
+                          Expanded(child: videoWidget),
+                          chatWidget,
+                        ],
+                      )
+                    : Row(
+                        children: [
+                          Expanded(flex: 3, child: videoWidget),
+                          chatWidget,
+                        ],
+                      );
+              },
             ),
           ),
         ],
@@ -884,12 +915,32 @@ class _GamificationTab extends ConsumerWidget {
   }
 
   Widget _quizOption(int idx, String optionText) {
-    return RadioListTile<int>(
-      dense: true,
-      title: Text(optionText, style: const TextStyle(fontSize: 11)),
-      value: idx,
-      groupValue: selectedQuizAnswer,
-      onChanged: quizSubmitted ? null : (val) => onAnswerSelected(val ?? -1),
+    final isSelected = selectedQuizAnswer == idx;
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      decoration: BoxDecoration(
+        color: isSelected ? AppColors.primary.withValues(alpha: 0.08) : Colors.transparent,
+        border: Border.all(
+          color: isSelected ? AppColors.primary : Colors.grey.withValues(alpha: 0.3),
+        ),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: ListTile(
+        dense: true,
+        onTap: quizSubmitted ? null : () => onAnswerSelected(idx),
+        leading: Icon(
+          isSelected ? Icons.radio_button_checked_rounded : Icons.radio_button_off_rounded,
+          color: isSelected ? AppColors.primary : Colors.grey,
+          size: 18,
+        ),
+        title: Text(
+          optionText,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+          ),
+        ),
+      ),
     );
   }
 }

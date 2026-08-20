@@ -983,7 +983,7 @@ class _MarksEntryTabState extends ConsumerState<_MarksEntryTab> {
                                   vertical: 2,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: Colors.green.withOpacity(0.12),
+                                  color: Colors.green.withValues(alpha: 0.12),
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                                 child: const Text(
@@ -1002,7 +1002,7 @@ class _MarksEntryTabState extends ConsumerState<_MarksEntryTab> {
                                   vertical: 2,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: AppColors.warning.withOpacity(0.12),
+                                  color: AppColors.warning.withValues(alpha: 0.12),
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                                 child: const Text(
@@ -1192,7 +1192,7 @@ class _ResultAnalyticsTab extends ConsumerWidget {
             (t) => Card(
               child: ListTile(
                 leading: CircleAvatar(
-                  backgroundColor: AppColors.secondary.withOpacity(0.12),
+                  backgroundColor: AppColors.secondary.withValues(alpha: 0.12),
                   child: const Icon(
                     Icons.workspace_premium_rounded,
                     color: AppColors.secondary,
@@ -1942,8 +1942,8 @@ class _RecheckSupplementaryTabState
                                     ),
                                     decoration: BoxDecoration(
                                       color: req.status == 'Pending'
-                                          ? AppColors.warning.withOpacity(0.12)
-                                          : Colors.green.withOpacity(0.12),
+                                          ? AppColors.warning.withValues(alpha: 0.12)
+                                          : Colors.green.withValues(alpha: 0.12),
                                       borderRadius: BorderRadius.circular(4),
                                     ),
                                     child: Text(
@@ -2084,8 +2084,9 @@ class _RecheckSupplementaryTabState
                           const SizedBox(height: 12),
                           ElevatedButton.icon(
                             onPressed: () {
-                              if (_suplStudentNameCtrl.text.trim().isEmpty)
+                              if (_suplStudentNameCtrl.text.trim().isEmpty) {
                                 return;
+                              }
                               ref
                                   .read(supplementaryExamsProvider.notifier)
                                   .addSupplementary(
@@ -2136,7 +2137,7 @@ class _RecheckSupplementaryTabState
                               vertical: 2,
                             ),
                             decoration: BoxDecoration(
-                              color: AppColors.secondary.withOpacity(0.12),
+                              color: AppColors.secondary.withValues(alpha: 0.12),
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(
@@ -2347,7 +2348,7 @@ class _CertificatesCCETabState extends ConsumerState<_CertificatesCCETab> {
                                       vertical: 2,
                                     ),
                                     decoration: BoxDecoration(
-                                      color: Colors.green.withOpacity(0.12),
+                                      color: Colors.green.withValues(alpha: 0.12),
                                       borderRadius: BorderRadius.circular(4),
                                     ),
                                     child: const Text(

@@ -56,35 +56,52 @@ class _LeaveManagementPageState extends ConsumerState<LeaveManagementPage>
       body: Column(
         children: [
           // Subheader
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            color: isDark ? Colors.white10 : Colors.grey.withValues(alpha: 0.05),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Leave Policies & Approvals: $branchName',
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                      ),
-                      Text(
-                        'Carry Forward Rules: Enabled | Auto Attendance System: Operational',
-                        style: const TextStyle(fontSize: 11, color: Colors.grey),
-                      ),
-                    ],
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isMobile = constraints.maxWidth < 650;
+              final titleWidget = Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Leave Policies & Approvals: $branchName',
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                   ),
-                ),
-                ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
-                  onPressed: () => _tabController.animateTo(0),
-                  icon: const Icon(Icons.add_task_rounded, color: Colors.white, size: 16),
-                  label: const Text('Apply for Leave', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
-                ),
-              ],
-            ),
+                  const Text(
+                    'Carry Forward Rules: Enabled | Auto Attendance System: Operational',
+                    style: TextStyle(fontSize: 11, color: Colors.grey),
+                  ),
+                ],
+              );
+
+              final actionButton = ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+                onPressed: () => _tabController.animateTo(0),
+                icon: const Icon(Icons.add_task_rounded, color: Colors.white, size: 16),
+                label: const Text('Apply for Leave', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+              );
+
+              return Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                color: isDark ? Colors.white10 : Colors.grey.withValues(alpha: 0.05),
+                child: isMobile
+                    ? Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          titleWidget,
+                          const SizedBox(height: 12),
+                          actionButton,
+                        ],
+                      )
+                    : Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(child: titleWidget),
+                          const SizedBox(width: 16),
+                          actionButton,
+                        ],
+                      ),
+              );
+            },
           ),
 
           // Tab Bar
@@ -93,6 +110,7 @@ class _LeaveManagementPageState extends ConsumerState<LeaveManagementPage>
             child: TabBar(
               controller: _tabController,
               isScrollable: true,
+              tabAlignment: TabAlignment.start,
               indicatorColor: AppColors.primary,
               labelColor: AppColors.primary,
               unselectedLabelColor: isDark ? Colors.white70 : Colors.black87,
@@ -125,121 +143,132 @@ class _LeaveManagementPageState extends ConsumerState<LeaveManagementPage>
   // WIDGETS — Apply Leave & Balances Tab
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   Widget _buildApplyTab(List<LeaveBalance> balances, String branchId) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Form fields
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('✏️ Submit Leave Application', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                const SizedBox(height: 12),
-                DropdownButtonFormField<String>(
-                  initialValue: _selectedApplicantType,
-                  decoration: const InputDecoration(labelText: 'Applicant Classification'),
-                  items: const [
-                    DropdownMenuItem(value: 'Student', child: Text('Student Application')),
-                    DropdownMenuItem(value: 'Staff', child: Text('Staff / Teacher Application')),
-                  ],
-                  onChanged: (val) => setState(() => _selectedApplicantType = val ?? 'Student'),
-                ),
-                const SizedBox(height: 12),
-                DropdownButtonFormField<String>(
-                  initialValue: _selectedLeaveType,
-                  decoration: const InputDecoration(labelText: 'Leave Type'),
-                  items: const [
-                    DropdownMenuItem(value: 'Sick', child: Text('Sick Leave')),
-                    DropdownMenuItem(value: 'Casual', child: Text('Casual Leave')),
-                    DropdownMenuItem(value: 'Medical', child: Text('Medical Leave (Syllabus exemption)')),
-                    DropdownMenuItem(value: 'Emergency', child: Text('Emergency Leave')),
-                  ],
-                  onChanged: (val) => setState(() => _selectedLeaveType = val ?? 'Sick'),
-                ),
-                const SizedBox(height: 12),
-                TextField(controller: _applicantNameCtrl, decoration: const InputDecoration(labelText: 'Applicant Name')),
-                TextField(controller: _startDateCtrl, decoration: const InputDecoration(labelText: 'Start Date (YYYY-MM-DD)')),
-                TextField(controller: _endDateCtrl, decoration: const InputDecoration(labelText: 'End Date (YYYY-MM-DD)')),
-                TextField(controller: _reasonCtrl, maxLines: 2, decoration: const InputDecoration(labelText: 'Reason Description')),
-                TextField(controller: _attachmentCtrl, decoration: const InputDecoration(labelText: 'Medical Certificate / Doc attachment (Optional)')),
-                const SizedBox(height: 16),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
-                    onPressed: () {
-                      if (_applicantNameCtrl.text.isNotEmpty && _reasonCtrl.text.isNotEmpty) {
-                        ref.read(leaveApplicationsProvider.notifier).applyLeave(
-                          LeaveApplicationRecord(
-                            id: 'LVE-${DateTime.now().millisecondsSinceEpoch}',
-                            branchId: branchId,
-                            applicantType: _selectedApplicantType,
-                            applicantName: _applicantNameCtrl.text,
-                            leaveType: _selectedLeaveType,
-                            startDate: _startDateCtrl.text,
-                            endDate: _endDateCtrl.text,
-                            reason: _reasonCtrl.text,
-                            attachmentName: _attachmentCtrl.text.isNotEmpty ? _attachmentCtrl.text : null,
-                            status: 'Pending',
-                          ),
-                        );
-                        _applicantNameCtrl.clear();
-                        _reasonCtrl.clear();
-                        _attachmentCtrl.clear();
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('✓ Leave request submitted to department head.')),
-                        );
-                        _tabController.animateTo(1);
-                      }
-                    },
-                    child: const Text('Submit Application', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 24),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isMobile = constraints.maxWidth < 768;
 
-          // Leave balances progress
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('📊 My Leave Balances (Yearly)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                const SizedBox(height: 12),
-                ...balances.map((b) {
-                  final remaining = b.total - b.used;
-                  return Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(12.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+        final formWidget = Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('✏️ Submit Leave Application', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+            const SizedBox(height: 12),
+            DropdownButtonFormField<String>(
+              initialValue: _selectedApplicantType,
+              decoration: const InputDecoration(labelText: 'Applicant Classification'),
+              items: const [
+                DropdownMenuItem(value: 'Student', child: Text('Student Application')),
+                DropdownMenuItem(value: 'Staff', child: Text('Staff / Teacher Application')),
+              ],
+              onChanged: (val) => setState(() => _selectedApplicantType = val ?? 'Student'),
+            ),
+            const SizedBox(height: 12),
+            DropdownButtonFormField<String>(
+              initialValue: _selectedLeaveType,
+              decoration: const InputDecoration(labelText: 'Leave Type'),
+              items: const [
+                DropdownMenuItem(value: 'Sick', child: Text('Sick Leave')),
+                DropdownMenuItem(value: 'Casual', child: Text('Casual Leave')),
+                DropdownMenuItem(value: 'Medical', child: Text('Medical Leave (Syllabus exemption)')),
+                DropdownMenuItem(value: 'Emergency', child: Text('Emergency Leave')),
+              ],
+              onChanged: (val) => setState(() => _selectedLeaveType = val ?? 'Sick'),
+            ),
+            const SizedBox(height: 12),
+            TextField(controller: _applicantNameCtrl, decoration: const InputDecoration(labelText: 'Applicant Name')),
+            TextField(controller: _startDateCtrl, decoration: const InputDecoration(labelText: 'Start Date (YYYY-MM-DD)')),
+            TextField(controller: _endDateCtrl, decoration: const InputDecoration(labelText: 'End Date (YYYY-MM-DD)')),
+            TextField(controller: _reasonCtrl, maxLines: 2, decoration: const InputDecoration(labelText: 'Reason Description')),
+            TextField(controller: _attachmentCtrl, decoration: const InputDecoration(labelText: 'Medical Certificate / Doc attachment (Optional)')),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+                onPressed: () {
+                  if (_applicantNameCtrl.text.isNotEmpty && _reasonCtrl.text.isNotEmpty) {
+                    ref.read(leaveApplicationsProvider.notifier).applyLeave(
+                      LeaveApplicationRecord(
+                        id: 'LVE-${DateTime.now().millisecondsSinceEpoch}',
+                        branchId: branchId,
+                        applicantType: _selectedApplicantType,
+                        applicantName: _applicantNameCtrl.text,
+                        leaveType: _selectedLeaveType,
+                        startDate: _startDateCtrl.text,
+                        endDate: _endDateCtrl.text,
+                        reason: _reasonCtrl.text,
+                        attachmentName: _attachmentCtrl.text.isNotEmpty ? _attachmentCtrl.text : null,
+                        status: 'Pending',
+                      ),
+                    );
+                    _applicantNameCtrl.clear();
+                    _reasonCtrl.clear();
+                    _attachmentCtrl.clear();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('✓ Leave request submitted to department head.')),
+                    );
+                    _tabController.animateTo(1);
+                  }
+                },
+                child: const Text('Submit Application', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              ),
+            ),
+          ],
+        );
+
+        final balancesWidget = Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('📊 My Leave Balances (Yearly)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+            const SizedBox(height: 12),
+            ...balances.map((b) {
+              final remaining = b.total - b.used;
+              return Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text('${b.category} Leave', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
-                              Text('$remaining / ${b.total} Remaining', style: const TextStyle(fontSize: 10, color: Colors.indigo)),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          LinearProgressIndicator(
-                            value: remaining / b.total,
-                            backgroundColor: Colors.grey.withValues(alpha: 0.1),
-                            valueColor: const AlwaysStoppedAnimation<Color>(Colors.teal),
-                          ),
+                          Text('${b.category} Leave', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
+                          Text('$remaining / ${b.total} Remaining', style: const TextStyle(fontSize: 10, color: Colors.indigo)),
                         ],
                       ),
-                    ),
-                  );
-                }),
-              ],
-            ),
-          ),
-        ],
-      ),
+                      const SizedBox(height: 8),
+                      LinearProgressIndicator(
+                        value: remaining / b.total,
+                        backgroundColor: Colors.grey.withValues(alpha: 0.1),
+                        valueColor: const AlwaysStoppedAnimation<Color>(Colors.teal),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }),
+          ],
+        );
+
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: isMobile
+              ? Column(
+                  children: [
+                    formWidget,
+                    const SizedBox(height: 32),
+                    balancesWidget,
+                  ],
+                )
+              : Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(child: formWidget),
+                    const SizedBox(width: 24),
+                    Expanded(child: balancesWidget),
+                  ],
+                ),
+        );
+      },
     );
   }
 

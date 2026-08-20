@@ -40,9 +40,11 @@ class _LibraryManagementPageState extends ConsumerState<LibraryManagementPage>
         // Tab Bar
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8),
+          color: isDark ? Colors.black12 : Colors.white,
           child: TabBar(
             controller: _tabController,
             isScrollable: true,
+            tabAlignment: TabAlignment.start,
             indicatorColor: AppColors.primary,
             labelColor: AppColors.primary,
             unselectedLabelColor: isDark
@@ -189,7 +191,7 @@ class _CatalogTabState extends ConsumerState<_CatalogTab> {
                               child: ListTile(
                                 contentPadding: EdgeInsets.zero,
                                 leading: CircleAvatar(
-                                  backgroundColor: book.type == 'E-Book' ? AppColors.secondary.withOpacity(0.12) : AppColors.primarySurface,
+                                  backgroundColor: book.type == 'E-Book' ? AppColors.secondary.withValues(alpha: 0.12) : AppColors.primarySurface,
                                   child: Icon(book.type == 'E-Book' ? Icons.laptop_chromebook_rounded : Icons.menu_book_rounded, color: book.type == 'E-Book' ? AppColors.secondary : AppColors.primary, size: 18),
                                 ),
                                 title: Text(book.title, style: TextStyle(fontWeight: FontWeight.bold, color: textPri, fontSize: 13)),
@@ -352,7 +354,7 @@ class _CatalogTabState extends ConsumerState<_CatalogTab> {
     }
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(color: color.withOpacity(0.12), borderRadius: BorderRadius.circular(4)),
+      decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(4)),
       child: Text(status, style: TextStyle(color: color, fontSize: 9, fontWeight: FontWeight.bold)),
     );
   }
@@ -532,7 +534,7 @@ class _IssuesReturnsTabState extends ConsumerState<_IssuesReturnsTab> {
     }
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(color: color.withOpacity(0.12), borderRadius: BorderRadius.circular(4)),
+      decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(4)),
       child: Text(status, style: TextStyle(color: color, fontSize: 9, fontWeight: FontWeight.bold)),
     );
   }
@@ -648,7 +650,7 @@ class _MembersCardsTabState extends ConsumerState<_MembersCardsTab> {
                                     padding: const EdgeInsets.all(12),
                                     decoration: BoxDecoration(
                                       border: Border.all(color: Colors.blue.shade400),
-                                      color: Colors.blue.shade50.withOpacity(0.08),
+                                      color: Colors.blue.shade50.withValues(alpha: 0.08),
                                       borderRadius: BorderRadius.circular(6),
                                     ),
                                     child: Row(

@@ -40,9 +40,11 @@ class _HostelManagementPageState extends ConsumerState<HostelManagementPage>
         // Tab Navigation
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8),
+          color: isDark ? Colors.black12 : Colors.white,
           child: TabBar(
             controller: _tabController,
             isScrollable: true,
+            tabAlignment: TabAlignment.start,
             indicatorColor: AppColors.primary,
             labelColor: AppColors.primary,
             unselectedLabelColor: isDark
@@ -143,11 +145,11 @@ class _BuildingsRoomsTab extends ConsumerWidget {
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: buildings.length,
-              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+              gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
                 maxCrossAxisExtent: 400,
                 mainAxisSpacing: 12,
                 crossAxisSpacing: 12,
-                childAspectRatio: 2.2,
+                childAspectRatio: MediaQuery.of(context).size.width < 600 ? 1.8 : 2.2,
               ),
               itemBuilder: (context, index) {
                 final b = buildings[index];
@@ -186,11 +188,11 @@ class _BuildingsRoomsTab extends ConsumerWidget {
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: rooms.length,
-                gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
                   maxCrossAxisExtent: 260,
                   mainAxisSpacing: 12,
                   crossAxisSpacing: 12,
-                  childAspectRatio: 1.6,
+                  childAspectRatio: MediaQuery.of(context).size.width < 600 ? 1.3 : 1.6,
                 ),
                 itemBuilder: (context, index) {
                   final r = rooms[index];
@@ -580,17 +582,18 @@ class _CurfewTabState extends State<_CurfewTab> {
                         margin: const EdgeInsets.symmetric(vertical: 6),
                         child: Padding(
                           padding: const EdgeInsets.all(12),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Column(
+                          child: LayoutBuilder(
+                            builder: (context, constraints) {
+                              final isMobile = constraints.maxWidth < 450;
+                              final infoColumn = Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(a.studentName, style: const TextStyle(fontWeight: FontWeight.bold)),
                                   Text('${a.buildingName} | ${a.roomNo}', style: const TextStyle(fontSize: 10, color: Colors.grey)),
                                 ],
-                              ),
-                              Row(
+                              );
+                              final buttons = Row(
+                                mainAxisSize: MainAxisSize.min,
                                 children: [
                                   ElevatedButton(
                                     style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
@@ -604,8 +607,26 @@ class _CurfewTabState extends State<_CurfewTab> {
                                     child: const Text('Absent', style: TextStyle(color: Colors.white, fontSize: 11)),
                                   ),
                                 ],
-                              ),
-                            ],
+                              );
+
+                              return isMobile
+                                  ? Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        infoColumn,
+                                        const SizedBox(height: 12),
+                                        buttons,
+                                      ],
+                                    )
+                                  : Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Expanded(child: infoColumn),
+                                        const SizedBox(width: 8),
+                                        buttons,
+                                      ],
+                                    );
+                            },
                           ),
                         ),
                       );

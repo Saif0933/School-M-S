@@ -32,6 +32,9 @@ class _StudentManagementPageState extends ConsumerState<StudentManagementPage> w
   StudentEntity? _selectedStudent;
   String? _uploadingDocLabel;
 
+  // Sidebar profile tab index
+  int _profileTabIdx = 0;
+
   // Enrollment Form Controllers
   final _nameController = TextEditingController();
   final _guardianController = TextEditingController();
@@ -96,11 +99,14 @@ class _StudentManagementPageState extends ConsumerState<StudentManagementPage> w
 
     return Column(
       children: [
-        // TabBar Header
+        // TabBar Header - Scrollable to prevent horizontal overflow on mobile
         Container(
+          color: isDark ? Colors.black12 : Colors.white,
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: TabBar(
             controller: _tabController,
+            isScrollable: true,
+            tabAlignment: TabAlignment.start,
             indicatorColor: AppColors.primary,
             labelColor: AppColors.primary,
             unselectedLabelColor: Colors.grey,
@@ -174,105 +180,81 @@ class _StudentManagementPageState extends ConsumerState<StudentManagementPage> w
           // Filter Panel
           GlassCard(
             padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    // Search field
-                    Expanded(
-                      flex: 2,
-                      child: TextField(
-                        decoration: const InputDecoration(
-                          hintText: 'Search by Name or Student ID...',
-                          prefixIcon: Icon(Icons.search_rounded, size: 18),
-                          isDense: true,
-                        ),
-                        style: const TextStyle(fontSize: 12),
-                        onChanged: (val) => setState(() => _searchQuery = val),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
+            child: LayoutBuilder(
+              builder: (layoutContext, constraints) {
+                final isMobileFilter = constraints.maxWidth < 900;
+                
+                final searchField = TextField(
+                  decoration: const InputDecoration(
+                    hintText: 'Search by Name or Student ID...',
+                    prefixIcon: Icon(Icons.search_rounded, size: 18),
+                    isDense: true,
+                  ),
+                  style: const TextStyle(fontSize: 12),
+                  onChanged: (val) => setState(() => _searchQuery = val),
+                );
 
-                    // Branch filter (Org admin only)
-                    if (isOrgAdmin) ...[
-                      Expanded(
-                        child: DropdownButtonFormField<String>(
-                          initialValue: _filterBranchId,
-                          decoration: const InputDecoration(labelText: 'Campus Branch', isDense: true),
-                          style: TextStyle(fontSize: 12, color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
-                          items: [
-                            const DropdownMenuItem(value: 'ALL', child: Text('All Campuses', style: TextStyle(fontSize: 11))),
-                            ...branches.map((b) => DropdownMenuItem(value: b.id, child: Text(b.name, style: const TextStyle(fontSize: 11)))),
-                          ],
-                          onChanged: (val) {
-                            setState(() {
-                              _filterBranchId = val;
-                              _selectedClassId = null;
-                              _selectedSectionId = null;
-                            });
-                          },
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                    ],
-
-                    // Class filter
-                    Expanded(
-                      child: DropdownButtonFormField<String>(
-                        initialValue: _selectedClassId,
-                        decoration: const InputDecoration(labelText: 'Class', isDense: true),
+                final branchFilter = isOrgAdmin
+                    ? DropdownButtonFormField<String>(
+                        initialValue: _filterBranchId,
+                        decoration: const InputDecoration(labelText: 'Campus Branch', isDense: true),
                         style: TextStyle(fontSize: 12, color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
                         items: [
-                          const DropdownMenuItem(value: null, child: Text('All Classes', style: TextStyle(fontSize: 11))),
-                          ...classes.map((c) => DropdownMenuItem(value: c.id, child: Text(c.name, style: const TextStyle(fontSize: 11)))),
+                          const DropdownMenuItem(value: 'ALL', child: Text('All Campuses', style: TextStyle(fontSize: 11))),
+                          ...branches.map((b) => DropdownMenuItem(value: b.id, child: Text(b.name, style: const TextStyle(fontSize: 11)))),
                         ],
                         onChanged: (val) {
                           setState(() {
-                            _selectedClassId = val;
+                            _filterBranchId = val;
+                            _selectedClassId = null;
                             _selectedSectionId = null;
                           });
                         },
-                      ),
-                    ),
-                    const SizedBox(width: 12),
+                      )
+                    : const SizedBox.shrink();
 
-                    // Section filter
-                    Expanded(
-                      child: DropdownButtonFormField<String>(
-                        initialValue: _selectedSectionId,
-                        decoration: const InputDecoration(labelText: 'Section', isDense: true),
-                        style: TextStyle(fontSize: 12, color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
-                        items: [
-                          const DropdownMenuItem(value: null, child: Text('All Sections', style: TextStyle(fontSize: 11))),
-                          ...filteredSections.map((s) => DropdownMenuItem(value: s.id, child: Text('Section ${s.name}', style: const TextStyle(fontSize: 11)))),
-                        ],
-                        onChanged: (val) => setState(() => _selectedSectionId = val),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
+                final classFilter = DropdownButtonFormField<String>(
+                  initialValue: _selectedClassId,
+                  decoration: const InputDecoration(labelText: 'Class', isDense: true),
+                  style: TextStyle(fontSize: 12, color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
+                  items: [
+                    const DropdownMenuItem(value: null, child: Text('All Classes', style: TextStyle(fontSize: 11))),
+                    ...classes.map((c) => DropdownMenuItem(value: c.id, child: Text(c.name, style: const TextStyle(fontSize: 11)))),
+                  ],
+                  onChanged: (val) {
+                    setState(() {
+                      _selectedClassId = val;
+                      _selectedSectionId = null;
+                    });
+                  },
+                );
 
-                    // Status filter
-                    Expanded(
-                      child: DropdownButtonFormField<bool?>(
-                        initialValue: _selectedStatus,
-                        decoration: const InputDecoration(labelText: 'Status', isDense: true),
-                        style: TextStyle(fontSize: 12, color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
-                        items: const [
-                          DropdownMenuItem(value: null, child: Text('All Status', style: TextStyle(fontSize: 11))),
-                          DropdownMenuItem(value: true, child: Text('Active Only', style: TextStyle(fontSize: 11))),
-                          DropdownMenuItem(value: false, child: Text('Inactive Only', style: TextStyle(fontSize: 11))),
-                        ],
-                        onChanged: (val) => setState(() => _selectedStatus = val),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
+                final sectionFilter = DropdownButtonFormField<String>(
+                  initialValue: _selectedSectionId,
+                  decoration: const InputDecoration(labelText: 'Section', isDense: true),
+                  style: TextStyle(fontSize: 12, color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
+                  items: [
+                    const DropdownMenuItem(value: null, child: Text('All Sections', style: TextStyle(fontSize: 11))),
+                    ...filteredSections.map((s) => DropdownMenuItem(value: s.id, child: Text('Section ${s.name}', style: const TextStyle(fontSize: 11)))),
+                  ],
+                  onChanged: (val) => setState(() => _selectedSectionId = val),
+                );
 
-                    // Export actions
-                    if (_isExporting)
-                      const SizedBox(width: 32, height: 32, child: Padding(padding: EdgeInsets.all(8), child: CircularProgressIndicator(strokeWidth: 2)))
-                    else
-                      PopupMenuButton<String>(
+                final statusFilter = DropdownButtonFormField<bool?>(
+                  initialValue: _selectedStatus,
+                  decoration: const InputDecoration(labelText: 'Status', isDense: true),
+                  style: TextStyle(fontSize: 12, color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
+                  items: const [
+                    DropdownMenuItem(value: null, child: Text('All Status', style: TextStyle(fontSize: 11))),
+                    DropdownMenuItem(value: true, child: Text('Active Only', style: TextStyle(fontSize: 11))),
+                    DropdownMenuItem(value: false, child: Text('Inactive Only', style: TextStyle(fontSize: 11))),
+                  ],
+                  onChanged: (val) => setState(() => _selectedStatus = val),
+                );
+
+                final exportAction = _isExporting
+                    ? const SizedBox(width: 32, height: 32, child: Padding(padding: EdgeInsets.all(8), child: CircularProgressIndicator(strokeWidth: 2)))
+                    : PopupMenuButton<String>(
                         icon: const Icon(Icons.download_rounded, color: AppColors.primary),
                         tooltip: 'Export Student Records',
                         onSelected: (format) async {
@@ -289,105 +271,222 @@ class _StudentManagementPageState extends ConsumerState<StudentManagementPage> w
                           PopupMenuItem(value: 'Excel', child: Text('Export as Microsoft Excel', style: TextStyle(fontSize: 11))),
                           PopupMenuItem(value: 'CSV', child: Text('Export as raw CSV data', style: TextStyle(fontSize: 11))),
                         ],
+                      );
+
+                if (isMobileFilter) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(child: searchField),
+                          const SizedBox(width: 8),
+                          exportAction,
+                        ],
                       ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          if (isOrgAdmin) ...[
+                            Expanded(child: branchFilter),
+                            const SizedBox(width: 12),
+                          ],
+                          Expanded(child: classFilter),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(child: sectionFilter),
+                          const SizedBox(width: 12),
+                          Expanded(child: statusFilter),
+                        ],
+                      ),
+                    ],
+                  );
+                }
+
+                return Row(
+                  children: [
+                    Expanded(flex: 2, child: searchField),
+                    const SizedBox(width: 12),
+                    if (isOrgAdmin) ...[
+                      Expanded(child: branchFilter),
+                      const SizedBox(width: 12),
+                    ],
+                    Expanded(child: classFilter),
+                    const SizedBox(width: 12),
+                    Expanded(child: sectionFilter),
+                    const SizedBox(width: 12),
+                    Expanded(child: statusFilter),
+                    const SizedBox(width: 12),
+                    exportAction,
                   ],
-                ),
-              ],
+                );
+              },
             ),
           ),
           const SizedBox(height: 16),
 
           // Main Directory Content
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                flex: 3,
-                child: GlassCard(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Student Directory (${filteredStudents.length} Students)',
-                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
-                      ),
-                      const SizedBox(height: 12),
-                      if (filteredStudents.isEmpty)
-                        const Center(child: Padding(padding: EdgeInsets.all(40), child: Text('No students match search filters.', style: TextStyle(fontSize: 12, color: Colors.grey))))
-                      else
-                        ListView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: filteredStudents.length,
-                          itemBuilder: (context, idx) {
-                            final s = filteredStudents[idx];
-                            final clsName = classes.firstWhere((c) => c.id == s.classId, orElse: () => ClassEntity(id: '', branchId: '', departmentId: '', name: 'Unknown Class', code: '', maxStudentsCapacity: 0)).name;
-                            final secName = sections.firstWhere((sec) => sec.id == s.sectionId, orElse: () => SectionEntity(id: '', classId: '', name: 'Unknown Sec', roomNumber: '', classTeacher: '', maxStudentsCapacity: 0)).name;
-                            final isSelected = _selectedStudent?.id == s.id;
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isWide = constraints.maxWidth >= 900;
 
-                            return Container(
-                              margin: const EdgeInsets.only(bottom: 8),
-                              decoration: BoxDecoration(
+              final mainListWidget = GlassCard(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Student Directory (${filteredStudents.length} Students)',
+                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
+                    ),
+                    const SizedBox(height: 12),
+                    if (filteredStudents.isEmpty)
+                      const Center(child: Padding(padding: EdgeInsets.all(40), child: Text('No students match search filters.', style: TextStyle(fontSize: 12, color: Colors.grey))))
+                    else
+                      ListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: filteredStudents.length,
+                        itemBuilder: (context, idx) {
+                          final s = filteredStudents[idx];
+                          final clsName = classes.firstWhere((c) => c.id == s.classId, orElse: () => ClassEntity(id: '', branchId: '', departmentId: '', name: 'Unknown Class', code: '', maxStudentsCapacity: 0)).name;
+                          final secName = sections.firstWhere((sec) => sec.id == s.sectionId, orElse: () => SectionEntity(id: '', classId: '', name: 'Unknown Sec', roomNumber: '', classTeacher: '', maxStudentsCapacity: 0)).name;
+                          final isSelected = _selectedStudent?.id == s.id;
+
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 8),
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? AppColors.primary.withValues(alpha: 0.1)
+                                  : (isDark ? AppColors.darkBg : AppColors.lightBg),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
                                 color: isSelected
-                                    ? AppColors.primary.withValues(alpha: 0.1)
-                                    : (isDark ? AppColors.darkBg : AppColors.lightBg),
-                                borderRadius: BorderRadius.circular(10),
-                                border: Border.all(
-                                  color: isSelected
-                                      ? AppColors.primary
-                                      : (isDark ? AppColors.darkBorder : AppColors.lightBorder),
-                                ),
+                                    ? AppColors.primary
+                                    : (isDark ? AppColors.darkBorder : AppColors.lightBorder),
                               ),
-                              child: ListTile(
-                                dense: true,
-                                leading: CircleAvatar(
-                                  backgroundColor: s.isActive ? Colors.green.withValues(alpha: 0.15) : Colors.red.withValues(alpha: 0.15),
-                                  radius: 16,
-                                  child: Text(s.name[0], style: TextStyle(color: s.isActive ? Colors.green : Colors.red, fontWeight: FontWeight.bold, fontSize: 12)),
-                                ),
-                                title: Text(s.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-                                subtitle: Text('ID: ${s.admissionNumber}  |  Class: $clsName ($secName)', style: const TextStyle(fontSize: 10, color: Colors.grey)),
-                                trailing: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                      decoration: BoxDecoration(
-                                        color: s.isActive ? Colors.green.withValues(alpha: 0.1) : Colors.red.withValues(alpha: 0.1),
-                                        borderRadius: BorderRadius.circular(4),
-                                      ),
-                                      child: Text(
-                                        s.isActive ? 'Active' : 'Inactive',
-                                        style: TextStyle(color: s.isActive ? Colors.green : Colors.red, fontSize: 8, fontWeight: FontWeight.bold),
-                                      ),
+                            ),
+                            child: ListTile(
+                              dense: true,
+                              leading: CircleAvatar(
+                                backgroundColor: s.isActive ? Colors.green.withValues(alpha: 0.15) : Colors.red.withValues(alpha: 0.15),
+                                radius: 16,
+                                child: Text(s.name[0], style: TextStyle(color: s.isActive ? Colors.green : Colors.red, fontWeight: FontWeight.bold, fontSize: 12)),
+                              ),
+                              title: Text(s.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                              subtitle: Text('ID: ${s.admissionNumber}  |  Class: $clsName ($secName)', style: const TextStyle(fontSize: 10, color: Colors.grey)),
+                              trailing: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: s.isActive ? Colors.green.withValues(alpha: 0.1) : Colors.red.withValues(alpha: 0.1),
+                                      borderRadius: BorderRadius.circular(4),
                                     ),
-                                    const SizedBox(width: 8),
-                                    const Icon(Icons.chevron_right_rounded, size: 16, color: Colors.grey),
-                                  ],
-                                ),
-                                onTap: () => setState(() => _selectedStudent = s),
+                                    child: Text(
+                                      s.isActive ? 'Active' : 'Inactive',
+                                      style: TextStyle(color: s.isActive ? Colors.green : Colors.red, fontSize: 8, fontWeight: FontWeight.bold),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  const Icon(Icons.chevron_right_rounded, size: 16, color: Colors.grey),
+                                ],
                               ),
-                            );
-                          },
-                        ),
-                    ],
-                  ),
+                              onTap: () {
+                                setState(() => _selectedStudent = s);
+                                if (!isWide) {
+                                  _showStudentProfileBottomSheet(context, s, classes, sections);
+                                }
+                              },
+                            ),
+                          );
+                        },
+                      ),
+                  ],
                 ),
-              ),
+              );
 
-              // Student Detailed Profile Column
-              if (_selectedStudent != null) ...[
-                const SizedBox(width: 16),
-                Expanded(
-                  flex: 2,
-                  child: _buildStudentProfileSidebar(isDark, _selectedStudent!, classes, sections),
-                ),
-              ],
-            ],
+              if (isWide) {
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      flex: 3,
+                      child: mainListWidget,
+                    ),
+                    if (_selectedStudent != null) ...[
+                      const SizedBox(width: 16),
+                      Expanded(
+                        flex: 2,
+                        child: _buildStudentProfileSidebar(isDark, _selectedStudent!, classes, sections),
+                      ),
+                    ],
+                  ],
+                );
+              }
+
+              return mainListWidget;
+            },
           ),
         ],
       ),
+    );
+  }
+
+  void _showStudentProfileBottomSheet(
+    BuildContext context,
+    StudentEntity student,
+    List<ClassEntity> classes,
+    List<SectionEntity> sections,
+  ) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+        return DraggableScrollableSheet(
+          initialChildSize: 0.85,
+          minChildSize: 0.5,
+          maxChildSize: 0.95,
+          builder: (context, scrollController) {
+            return Container(
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF0F172A) : Colors.white,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 20),
+                child: Column(
+                  children: [
+                    const SizedBox(height: 12),
+                    Container(
+                      width: 40,
+                      height: 5,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[400],
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Expanded(
+                      child: SingleChildScrollView(
+                        controller: scrollController,
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: _buildStudentProfileSidebar(isDark, student, classes, sections, isBottomSheet: true),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 
@@ -395,8 +494,15 @@ class _StudentManagementPageState extends ConsumerState<StudentManagementPage> w
     bool isDark,
     StudentEntity student,
     List<ClassEntity> classes,
-    List<SectionEntity> sections,
-  ) {
+    List<SectionEntity> sections, {
+    bool isBottomSheet = false,
+  }) {
+    // Watches the global provider to automatically fetch the fresh profile upon updates
+    final freshStudent = ref.watch(academicStudentsProvider).firstWhere(
+      (s) => s.id == student.id,
+      orElse: () => student,
+    );
+
     return GlassCard(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -410,7 +516,13 @@ class _StudentManagementPageState extends ConsumerState<StudentManagementPage> w
                 icon: const Icon(Icons.close_rounded, size: 16, color: Colors.grey),
                 constraints: const BoxConstraints(),
                 padding: EdgeInsets.zero,
-                onPressed: () => setState(() => _selectedStudent = null),
+                onPressed: () {
+                  if (isBottomSheet) {
+                    Navigator.pop(context);
+                  } else {
+                    setState(() => _selectedStudent = null);
+                  }
+                },
               ),
             ],
           ),
@@ -421,15 +533,14 @@ class _StudentManagementPageState extends ConsumerState<StudentManagementPage> w
                 CircleAvatar(
                   radius: 30,
                   backgroundColor: AppColors.primary.withValues(alpha: 0.15),
-                  child: Text(student.name[0], style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppColors.primary)),
+                  child: Text(freshStudent.name[0], style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppColors.primary)),
                 ),
                 const SizedBox(height: 10),
-                Text(student.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                Text('Unique ID: ${student.admissionNumber}', style: const TextStyle(fontSize: 10, color: Colors.grey)),
-                const SizedBox(height: 6),
+                Text(freshStudent.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                Text('Unique ID: ${freshStudent.admissionNumber}', style: const TextStyle(fontSize: 10, color: Colors.grey)),
                 const SizedBox(height: 6),
                 DropdownButtonFormField<String>(
-                  initialValue: student.categorization,
+                  initialValue: freshStudent.categorization,
                   decoration: const InputDecoration(labelText: 'Categorization Status', isDense: true),
                   style: TextStyle(fontSize: 11, color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
                   items: const [
@@ -443,15 +554,12 @@ class _StudentManagementPageState extends ConsumerState<StudentManagementPage> w
                   onChanged: (val) {
                     if (val != null) {
                       ref.read(academicStudentsProvider.notifier).updateStudentProfile(
-                            student.id,
-                            student.copyWith(
+                            freshStudent.id,
+                            freshStudent.copyWith(
                               categorization: val,
                               isActive: val == 'Active',
                             ),
                           );
-                      setState(() {
-                        _selectedStudent = ref.read(academicStudentsProvider).firstWhere((s) => s.id == student.id);
-                      });
                     }
                   },
                 ),
@@ -461,729 +569,732 @@ class _StudentManagementPageState extends ConsumerState<StudentManagementPage> w
           const SizedBox(height: 12),
           const Divider(),
 
-          // Expanded profile accordion
-          DefaultTabController(
-            length: 5,
-            child: Column(
+          // Redesigned responsive Tab System (No hardcoded height TabBarView)
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.start,
               children: [
-                const TabBar(
-                  indicatorColor: AppColors.secondary,
-                  labelColor: AppColors.secondary,
-                  unselectedLabelColor: Colors.grey,
-                  labelStyle: TextStyle(fontSize: 8, fontWeight: FontWeight.bold),
-                  tabs: [
-                    Tab(text: 'Personal'),
-                    Tab(text: 'Academic'),
-                    Tab(text: 'Behavioral'),
-                    Tab(text: 'Medical'),
-                    Tab(text: 'Docs'),
-                  ],
-                ),
-                SizedBox(
-                  height: 330,
-                  child: TabBarView(
-                    children: [
-                      // Personal Tab
-                      ListView(
-                        padding: const EdgeInsets.only(top: 8),
-                        children: [
-                          _buildProfileRow('Guardian', student.guardianName),
-                          _buildProfileRow('Gender', student.gender),
-                          _buildProfileRow('DOB', student.dateOfBirth),
-                          _buildProfileRow('Blood Group', student.bloodGroup),
-                          _buildProfileRow('Phone', student.phone),
-                          _buildProfileRow('Email', student.email),
-                          _buildProfileRow('Address', student.address),
-                          const Divider(),
-                          const Text('Linked Siblings:', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.grey)),
-                          const SizedBox(height: 4),
-                          if (student.siblingIds.isEmpty)
-                            const Text('No siblings linked in records.', style: TextStyle(fontSize: 9, color: Colors.grey))
-                          else
-                            ...student.siblingIds.map((sibId) {
-                              final sib = ref.read(academicStudentsProvider).firstWhere((s) => s.id == sibId, orElse: () => StudentEntity(id: '', branchId: '', classId: '', sectionId: '', name: 'Sibling Deleted', admissionNumber: '', rollNumber: ''));
-                              return Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 2),
-                                child: Text('• ${sib.name} (ID: ${sib.admissionNumber})', style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold)),
-                              );
-                            }),
-                          const SizedBox(height: 4),
-                          ElevatedButton.icon(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.primary.withValues(alpha: 0.1),
-                              foregroundColor: AppColors.primary,
-                              padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-                              minimumSize: const Size(60, 24),
-                              elevation: 0,
-                            ),
-                            onPressed: () {
-                              final allStudents = ref.read(academicStudentsProvider);
-                              final otherStudents = allStudents.where((s) => s.id != student.id).toList();
-                              showDialog(
-                                context: context,
-                                builder: (context) => AlertDialog(
-                                  title: const Text('Link Sibling Relation', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-                                  content: SizedBox(
-                                    width: 300,
-                                    height: 200,
-                                    child: ListView.builder(
-                                      itemCount: otherStudents.length,
-                                      itemBuilder: (context, idx) {
-                                        final other = otherStudents[idx];
-                                        return ListTile(
-                                          dense: true,
-                                          title: Text(other.name, style: const TextStyle(fontSize: 11)),
-                                          subtitle: Text('ID: ${other.admissionNumber}', style: const TextStyle(fontSize: 9)),
-                                          onTap: () {
-                                            ref.read(academicStudentsProvider.notifier).updateStudentProfile(
-                                                  student.id,
-                                                  student.copyWith(siblingIds: [...student.siblingIds, other.id]),
-                                                );
-                                            ref.read(academicStudentsProvider.notifier).updateStudentProfile(
-                                                  other.id,
-                                                  other.copyWith(siblingIds: [...other.siblingIds, student.id]),
-                                                );
-                                            setState(() {
-                                              _selectedStudent = ref.read(academicStudentsProvider).firstWhere((s) => s.id == student.id);
-                                            });
-                                            Navigator.pop(context);
-                                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Sibling relationship linked successfully!')));
-                                          },
-                                        );
-                                      },
-                                    ),
-                                  ),
-                                ),
-                              );
-                            },
-                            icon: const Icon(Icons.link_rounded, size: 10),
-                            label: const Text('Link Sibling', style: TextStyle(fontSize: 8, fontWeight: FontWeight.bold)),
-                          ),
-                          const Divider(),
-                          const Text('Custom Branch Fields:', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.grey)),
-                          const SizedBox(height: 4),
-                          if (student.customFields.isEmpty)
-                            const Text('No custom fields registered.', style: TextStyle(fontSize: 9, color: Colors.grey))
-                          else
-                            ...student.customFields.entries.map((entry) => _buildProfileRow(entry.key, entry.value)),
-                          const SizedBox(height: 4),
-                          ElevatedButton.icon(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.primary.withValues(alpha: 0.1),
-                              foregroundColor: AppColors.primary,
-                              padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-                              minimumSize: const Size(60, 24),
-                              elevation: 0,
-                            ),
-                            onPressed: () {
-                              final keyCtrl = TextEditingController();
-                              final valCtrl = TextEditingController();
-                              showDialog(
-                                context: context,
-                                builder: (context) => AlertDialog(
-                                  title: const Text('Add Custom Branch Data Field', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-                                  content: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      TextField(
-                                        controller: keyCtrl,
-                                        style: const TextStyle(fontSize: 11),
-                                        decoration: const InputDecoration(labelText: 'Field Label (e.g. Locker Code, Bus Stop)', isDense: true),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      TextField(
-                                        controller: valCtrl,
-                                        style: const TextStyle(fontSize: 11),
-                                        decoration: const InputDecoration(labelText: 'Field Value', isDense: true),
-                                      ),
-                                    ],
-                                  ),
-                                  actions: [
-                                    TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-                                    ElevatedButton(
-                                      onPressed: () {
-                                        if (keyCtrl.text.trim().isNotEmpty) {
-                                          final updatedFields = Map<String, String>.from(student.customFields);
-                                          updatedFields[keyCtrl.text.trim()] = valCtrl.text.trim();
-                                          ref.read(academicStudentsProvider.notifier).updateStudentProfile(
-                                                student.id,
-                                                student.copyWith(customFields: updatedFields),
-                                              );
-                                          setState(() {
-                                            _selectedStudent = ref.read(academicStudentsProvider).firstWhere((s) => s.id == student.id);
-                                          });
-                                          Navigator.pop(context);
-                                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Custom field added for this student!')));
-                                        }
-                                      },
-                                      child: const Text('Add'),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            },
-                            icon: const Icon(Icons.add_circle_outline_rounded, size: 10),
-                            label: const Text('Add Custom Field', style: TextStyle(fontSize: 8, fontWeight: FontWeight.bold)),
-                          ),
-                        ],
-                      ),
-                      // Academic Tab
-                      ListView(
-                        padding: const EdgeInsets.only(top: 8),
-                        children: [
-                          // Class Assignment Dropdown
-                          DropdownButtonFormField<String>(
-                            initialValue: student.classId,
-                            decoration: const InputDecoration(labelText: 'Change Class', isDense: true),
-                            style: TextStyle(fontSize: 10, color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
-                            items: classes.map((c) => DropdownMenuItem(value: c.id, child: Text(c.name, style: const TextStyle(fontSize: 10)))).toList(),
-                            onChanged: (newClsId) {
-                              if (newClsId != null) {
-                                ref.read(academicStudentsProvider.notifier).updateStudentProfile(
-                                      student.id,
-                                      student.copyWith(classId: newClsId),
-                                    );
-                                setState(() {
-                                  _selectedStudent = ref.read(academicStudentsProvider).firstWhere((s) => s.id == student.id);
-                                });
-                              }
-                            },
-                          ),
-                          const SizedBox(height: 4),
-
-                          // Section Assignment Dropdown
-                          DropdownButtonFormField<String>(
-                            initialValue: student.sectionId,
-                            decoration: const InputDecoration(labelText: 'Change Section', isDense: true),
-                            style: TextStyle(fontSize: 10, color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
-                            items: sections.where((sec) => sec.classId == student.classId).map((s) => DropdownMenuItem(value: s.id, child: Text('Section ${s.name}', style: const TextStyle(fontSize: 10)))).toList(),
-                            onChanged: (newSecId) {
-                              if (newSecId != null) {
-                                ref.read(academicStudentsProvider.notifier).updateStudentProfile(
-                                      student.id,
-                                      student.copyWith(sectionId: newSecId),
-                                    );
-                                setState(() {
-                                  _selectedStudent = ref.read(academicStudentsProvider).firstWhere((s) => s.id == student.id);
-                                });
-                              }
-                            },
-                          ),
-                          const SizedBox(height: 6),
-
-                          // Roll Number Input
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Text('Roll Number: ${student.rollNumber.isNotEmpty ? student.rollNumber : "Not Assigned"}', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
-                              ),
-                              TextButton.icon(
-                                style: TextButton.styleFrom(padding: EdgeInsets.zero, minimumSize: const Size(40, 24)),
-                                onPressed: () {
-                                  final ctrl = TextEditingController(text: student.rollNumber);
-                                  showDialog(
-                                    context: context,
-                                    builder: (context) => AlertDialog(
-                                      title: const Text('Update Roll Number', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-                                      content: TextField(controller: ctrl, decoration: const InputDecoration(isDense: true)),
-                                      actions: [
-                                        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-                                        ElevatedButton(
-                                          onPressed: () {
-                                            ref.read(academicStudentsProvider.notifier).updateStudentProfile(
-                                                  student.id,
-                                                  student.copyWith(rollNumber: ctrl.text.trim()),
-                                                );
-                                            setState(() {
-                                              _selectedStudent = ref.read(academicStudentsProvider).firstWhere((s) => s.id == student.id);
-                                            });
-                                            Navigator.pop(context);
-                                          },
-                                          child: const Text('Save'),
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                },
-                                icon: const Icon(Icons.edit_rounded, size: 10),
-                                label: const Text('Edit', style: TextStyle(fontSize: 9)),
-                              ),
-                            ],
-                          ),
-                          _buildProfileRow('Repeat Year Status', student.isRepeatingYear ? 'Repeating Year' : 'Normal Year'),
-                          const Divider(),
-                          const SizedBox(height: 6),
-
-                          // Promotions, demotions, repeat actions
-                          const Text('Academic Year Actions:', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey)),
-                          const SizedBox(height: 4),
-                          Wrap(
-                            spacing: 6,
-                            children: [
-                              ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.blue.withValues(alpha: 0.15),
-                                  foregroundColor: Colors.blue,
-                                  elevation: 0,
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                  minimumSize: const Size(60, 24),
-                                ),
-                                onPressed: () {
-                                  // Simple simulated promotion (finds class with index + 1 or next sequential name)
-                                  final currentClsIndex = classes.indexWhere((c) => c.id == student.classId);
-                                  if (currentClsIndex < classes.length - 1) {
-                                    final nextCls = classes[currentClsIndex + 1];
-                                    final defaultSec = sections.firstWhere((sec) => sec.classId == nextCls.id);
-                                    ref.read(academicStudentsProvider.notifier).updateStudentProfile(
-                                          student.id,
-                                          student.copyWith(classId: nextCls.id, sectionId: defaultSec.id, rollNumber: '', isRepeatingYear: false),
-                                        );
-                                    setState(() {
-                                      _selectedStudent = ref.read(academicStudentsProvider).firstWhere((s) => s.id == student.id);
-                                    });
-                                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Student promoted to next class grade!')));
-                                  } else {
-                                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Student is already in highest class grade.')));
-                                  }
-                                },
-                                child: const Text('Promote', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold)),
-                              ),
-                              ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.red.withValues(alpha: 0.15),
-                                  foregroundColor: Colors.red,
-                                  elevation: 0,
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                  minimumSize: const Size(60, 24),
-                                ),
-                                onPressed: () {
-                                  final currentClsIndex = classes.indexWhere((c) => c.id == student.classId);
-                                  if (currentClsIndex > 0) {
-                                    final prevCls = classes[currentClsIndex - 1];
-                                    final defaultSec = sections.firstWhere((sec) => sec.classId == prevCls.id);
-                                    ref.read(academicStudentsProvider.notifier).updateStudentProfile(
-                                          student.id,
-                                          student.copyWith(classId: prevCls.id, sectionId: defaultSec.id, rollNumber: '', isRepeatingYear: false),
-                                        );
-                                    setState(() {
-                                      _selectedStudent = ref.read(academicStudentsProvider).firstWhere((s) => s.id == student.id);
-                                    });
-                                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Student demoted to previous class grade.')));
-                                  } else {
-                                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Student is in lowest class grade.')));
-                                  }
-                                },
-                                child: const Text('Demote', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold)),
-                              ),
-                              ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.amber.withValues(alpha: 0.15),
-                                  foregroundColor: Colors.amber[800],
-                                  elevation: 0,
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                  minimumSize: const Size(60, 24),
-                                ),
-                                onPressed: () {
-                                  ref.read(academicStudentsProvider.notifier).updateStudentProfile(
-                                        student.id,
-                                        student.copyWith(isRepeatingYear: true, rollNumber: ''),
-                                      );
-                                  setState(() {
-                                    _selectedStudent = ref.read(academicStudentsProvider).firstWhere((s) => s.id == student.id);
-                                  });
-                                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Student marked as repeating year in same class.')));
-                                },
-                                child: const Text('Repeat Year', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold)),
-                              ),
-                              ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.purple.withValues(alpha: 0.15),
-                                  foregroundColor: Colors.purple,
-                                  elevation: 0,
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                  minimumSize: const Size(60, 24),
-                                ),
-                                onPressed: () {
-                                  showDialog(
-                                    context: context,
-                                    builder: (context) => AlertDialog(
-                                      title: const Text('Convert to Alumni', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-                                      content: const Text('Are you sure you want to graduate this student to Alumni status? They will be marked as inactive and registered in the Alumni cohort.', style: TextStyle(fontSize: 11)),
-                                      actions: [
-                                        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-                                        ElevatedButton(
-                                          onPressed: () {
-                                            ref.read(academicStudentsProvider.notifier).updateStudentProfile(
-                                                  student.id,
-                                                  student.copyWith(
-                                                    categorization: 'Graduated',
-                                                    isActive: false,
-                                                  ),
-                                                );
-                                            setState(() {
-                                              _selectedStudent = ref.read(academicStudentsProvider).firstWhere((s) => s.id == student.id);
-                                            });
-                                            Navigator.pop(context);
-                                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Student graduated to Alumni status!')));
-                                          },
-                                          child: const Text('Confirm'),
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                },
-                                child: const Text('Graduate / Alumni', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold)),
-                              ),
-                            ],
-                          ),
-                          const Divider(),
-                          const Text('Achievements & Portfolio:', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.grey)),
-                          const SizedBox(height: 4),
-                          ...student.achievements.map((ach) => Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 2),
-                                child: Row(
-                                  children: [
-                                    const Icon(Icons.emoji_events_rounded, color: Colors.amber, size: 12),
-                                    const SizedBox(width: 4),
-                                    Expanded(child: Text(ach, style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold))),
-                                  ],
-                                ),
-                              )),
-                          const SizedBox(height: 4),
-                          ElevatedButton.icon(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.amber.withValues(alpha: 0.15),
-                              foregroundColor: Colors.amber[800],
-                              padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-                              minimumSize: const Size(60, 24),
-                              elevation: 0,
-                            ),
-                            onPressed: () {
-                              final ctrl = TextEditingController();
-                              showDialog(
-                                context: context,
-                                builder: (context) => AlertDialog(
-                                  title: const Text('Log Achievement / Portfolio Item', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-                                  content: TextField(
-                                    controller: ctrl,
-                                    style: const TextStyle(fontSize: 11),
-                                    decoration: const InputDecoration(isDense: true, hintText: 'e.g. Best Student MUN 2026'),
-                                  ),
-                                  actions: [
-                                    TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-                                    ElevatedButton(
-                                      onPressed: () {
-                                        if (ctrl.text.trim().isNotEmpty) {
-                                          ref.read(academicStudentsProvider.notifier).updateStudentProfile(
-                                                student.id,
-                                                student.copyWith(achievements: [...student.achievements, ctrl.text.trim()]),
-                                              );
-                                          setState(() {
-                                            _selectedStudent = ref.read(academicStudentsProvider).firstWhere((s) => s.id == student.id);
-                                          });
-                                          Navigator.pop(context);
-                                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Achievement logged to portfolio!')));
-                                        }
-                                      },
-                                      child: const Text('Add'),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            },
-                            icon: const Icon(Icons.add_rounded, size: 10),
-                            label: const Text('Add Achievement', style: TextStyle(fontSize: 8, fontWeight: FontWeight.bold)),
-                          ),
-                          const Divider(),
-                          const Text('RFID & Biometric Registry:', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.grey)),
-                          const SizedBox(height: 6),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: student.rfidCardNumber.isEmpty ? Colors.red.withValues(alpha: 0.1) : Colors.green.withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Text(
-                                  student.rfidCardNumber.isEmpty ? 'Not Registered' : student.rfidCardNumber,
-                                  style: TextStyle(color: student.rfidCardNumber.isEmpty ? Colors.red : Colors.green, fontSize: 8, fontWeight: FontWeight.bold),
-                                ),
-                              ),
-                              ElevatedButton.icon(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppColors.primary.withValues(alpha: 0.15),
-                                  foregroundColor: AppColors.primary,
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                  minimumSize: const Size(60, 24),
-                                  elevation: 0,
-                                ),
-                                onPressed: () {
-                                  bool isScanning = true;
-                                  showDialog(
-                                    context: context,
-                                    builder: (context) => StatefulBuilder(
-                                      builder: (context, setState) {
-                                        if (isScanning) {
-                                          Future.delayed(const Duration(milliseconds: 1800), () {
-                                            if (context.mounted) {
-                                              final newRfid = 'RFID-${DateTime.now().millisecondsSinceEpoch.toString().substring(9)}-${student.name.substring(0, 2).toUpperCase()}';
-                                              ref.read(academicStudentsProvider.notifier).updateStudentProfile(
-                                                    student.id,
-                                                    student.copyWith(rfidCardNumber: newRfid),
-                                                  );
-                                              setState(() {
-                                                _selectedStudent = ref.read(academicStudentsProvider).firstWhere((s) => s.id == student.id);
-                                              });
-                                              Navigator.pop(context);
-                                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('RFID Card registered successfully! Card ID: $newRfid')));
-                                            }
-                                          });
-                                        }
-
-                                        return AlertDialog(
-                                          title: const Text('Scanning RFID Badge / Biometric...', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-                                          content: Column(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              const SizedBox(height: 12),
-                                              const SizedBox(
-                                                width: 40,
-                                                height: 40,
-                                                child: CircularProgressIndicator(strokeWidth: 3),
-                                              ),
-                                              const SizedBox(height: 16),
-                                              Text(
-                                                'Place student RFID badge on the USB scanner or press finger on the biometric reader...',
-                                                style: TextStyle(fontSize: 10, color: Colors.grey[600]),
-                                                textAlign: TextAlign.center,
-                                              ),
-                                            ],
-                                          ),
-                                          actions: [
-                                            TextButton(
-                                              onPressed: () {
-                                                isScanning = false;
-                                                Navigator.pop(context);
-                                              },
-                                              child: const Text('Cancel'),
-                                            ),
-                                          ],
-                                        );
-                                      },
-                                    ),
-                                  );
-                                },
-                                icon: const Icon(Icons.nfc_rounded, size: 10),
-                                label: Text(student.rfidCardNumber.isEmpty ? 'Register' : 'Update', style: const TextStyle(fontSize: 8, fontWeight: FontWeight.bold)),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                      // Behavioral Tab
-                      ListView(
-                        padding: const EdgeInsets.only(top: 8),
-                        children: [
-                          _buildProfileRow('Attendance Rate', '${student.attendanceRate}%'),
-                          const SizedBox(height: 6),
-                          const Text('Behavioral Remarks / Flags:', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.grey)),
-                          const SizedBox(height: 4),
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: Colors.amber.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(6),
-                              border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
-                            ),
-                            child: Text(student.behavioralRemarks, style: const TextStyle(fontSize: 9, color: Colors.brown)),
-                          ),
-                          const Divider(),
-                          const Text('Disciplinary Log (Branch Scoped):', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.grey)),
-                          const SizedBox(height: 4),
-                          ...student.disciplinaryRecords.map((disc) => Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 2),
-                                child: Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Icon(Icons.gavel_rounded, color: Colors.red, size: 12),
-                                    const SizedBox(width: 4),
-                                    Expanded(child: Text(disc, style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold))),
-                                  ],
-                                ),
-                              )),
-                          const SizedBox(height: 6),
-                          ElevatedButton.icon(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.red.withValues(alpha: 0.15),
-                              foregroundColor: Colors.red,
-                              padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-                              minimumSize: const Size(60, 24),
-                              elevation: 0,
-                            ),
-                            onPressed: () {
-                              final ctrl = TextEditingController();
-                              showDialog(
-                                context: context,
-                                builder: (context) => AlertDialog(
-                                  title: const Text('Log Disciplinary Incident', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-                                  content: TextField(
-                                    controller: ctrl,
-                                    style: const TextStyle(fontSize: 11),
-                                    decoration: const InputDecoration(isDense: true, hintText: 'Enter incident details...'),
-                                  ),
-                                  actions: [
-                                    TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-                                    ElevatedButton(
-                                      onPressed: () {
-                                        if (ctrl.text.trim().isNotEmpty) {
-                                          ref.read(academicStudentsProvider.notifier).updateStudentProfile(
-                                                student.id,
-                                                student.copyWith(disciplinaryRecords: [...student.disciplinaryRecords, ctrl.text.trim()]),
-                                              );
-                                          setState(() {
-                                            _selectedStudent = ref.read(academicStudentsProvider).firstWhere((s) => s.id == student.id);
-                                          });
-                                          Navigator.pop(context);
-                                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Disciplinary infraction logged.')));
-                                        }
-                                      },
-                                      child: const Text('Log'),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            },
-                            icon: const Icon(Icons.add_moderator_rounded, size: 10),
-                            label: const Text('Log Disciplinary Action', style: TextStyle(fontSize: 8, fontWeight: FontWeight.bold)),
-                          ),
-                        ],
-                      ),
-                      // Medical Tab
-                      ListView(
-                        padding: const EdgeInsets.only(top: 8),
-                        children: [
-                          _buildProfileRow('Known Allergies', student.allergies),
-                          _buildProfileRow('Medical Conditions', student.medicalConditions),
-                          _buildProfileRow('Emergency Contact', student.emergencyContact),
-                        ],
-                      ),
-                      // Documents Tab
-                      ListView(
-                        padding: const EdgeInsets.only(top: 8),
-                        children: [
-                          const Text('Branch-Scoped Certificate Vault', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey)),
-                          const SizedBox(height: 8),
-                          ...['Birth Certificate', 'Student Photos', 'Aadhar Card', 'Caste Certificate'].map((doc) {
-                            final isUploaded = student.uploadedDocuments.contains(doc);
-                            final isCurrentlyUploading = _uploadingDocLabel == doc;
-
-                            return Container(
-                              margin: const EdgeInsets.only(bottom: 6),
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: isDark ? AppColors.darkBg : AppColors.lightBg,
-                                borderRadius: BorderRadius.circular(6),
-                                border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.lightBorder),
-                              ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(doc, style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold)),
-                                  if (isUploaded)
-                                    Row(
-                                      children: [
-                                        const Icon(Icons.check_circle_rounded, color: Colors.green, size: 12),
-                                        const SizedBox(width: 4),
-                                        const Text('Uploaded', style: TextStyle(fontSize: 9, color: Colors.green, fontWeight: FontWeight.bold)),
-                                        const SizedBox(width: 4),
-                                        IconButton(
-                                          icon: const Icon(Icons.remove_red_eye_outlined, size: 10, color: AppColors.primary),
-                                          constraints: const BoxConstraints(),
-                                          padding: EdgeInsets.zero,
-                                          onPressed: () {
-                                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Simulated opening of file: $doc')));
-                                          },
-                                        ),
-                                      ],
-                                    )
-                                  else if (isCurrentlyUploading)
-                                    const SizedBox(width: 10, height: 10, child: CircularProgressIndicator(strokeWidth: 2))
-                                  else
-                                    ElevatedButton.icon(
-                                      style: ElevatedButton.styleFrom(
-                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                        minimumSize: const Size(50, 20),
-                                        backgroundColor: AppColors.primary,
-                                      ),
-                                      onPressed: () async {
-                                        setState(() => _uploadingDocLabel = doc);
-                                        await Future.delayed(const Duration(seconds: 1));
-                                        ref.read(academicStudentsProvider.notifier).updateStudentProfile(
-                                              student.id,
-                                              student.copyWith(uploadedDocuments: [...student.uploadedDocuments, doc]),
-                                            );
-                                        setState(() {
-                                          _uploadingDocLabel = null;
-                                          _selectedStudent = ref.read(academicStudentsProvider).firstWhere((s) => s.id == student.id);
-                                        });
-                                        if (!mounted) return;
-                                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$doc uploaded successfully to branch vault!')));
-                                      },
-                                      icon: const Icon(Icons.upload_file_rounded, size: 8),
-                                      label: const Text('Upload', style: TextStyle(fontSize: 8)),
-                                    ),
-                                ],
-                              ),
-                            );
-                          }),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 12),
-                const Divider(),
-                const SizedBox(height: 8),
-                const Text('Quick Actions & Certificate Generation', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey)),
-                const SizedBox(height: 6),
-                Row(
-                  children: [
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.purple.withValues(alpha: 0.15),
-                          foregroundColor: Colors.purple,
-                          elevation: 0,
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                        ),
-                        onPressed: () => _showTransferRequestDialog(context, student),
-                        icon: const Icon(Icons.swap_horiz_rounded, size: 12),
-                        label: const Text('Request Transfer', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold)),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.teal.withValues(alpha: 0.15),
-                          foregroundColor: Colors.teal,
-                          elevation: 0,
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                        ),
-                        onPressed: () => _showCertificateGenerationModal(context, student, classes, sections),
-                        icon: const Icon(Icons.card_membership_rounded, size: 12),
-                        label: const Text('Generate Cards / Certs', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold)),
-                      ),
-                    ),
-                  ],
-                ),
+                _profileTabHeader(0, 'Personal'),
+                const SizedBox(width: 8),
+                _profileTabHeader(1, 'Academic'),
+                const SizedBox(width: 8),
+                _profileTabHeader(2, 'Behavioral'),
+                const SizedBox(width: 8),
+                _profileTabHeader(3, 'Medical'),
+                const SizedBox(width: 8),
+                _profileTabHeader(4, 'Docs'),
               ],
             ),
           ),
+          const Divider(),
+          const SizedBox(height: 8),
+
+          // Render active tab contents natively to prevent vertical scroll constraints
+          if (_profileTabIdx == 0) _buildPersonalTab(freshStudent),
+          if (_profileTabIdx == 1) _buildAcademicTab(freshStudent, classes, sections),
+          if (_profileTabIdx == 2) _buildBehavioralTab(freshStudent),
+          if (_profileTabIdx == 3) _buildMedicalTab(freshStudent),
+          if (_profileTabIdx == 4) _buildDocsTab(freshStudent),
+
+          const SizedBox(height: 16),
+          const Divider(),
+          const SizedBox(height: 8),
+          const Text('Quick Actions & Certificate Generation', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey)),
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.purple.withValues(alpha: 0.15),
+                    foregroundColor: Colors.purple,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                  ),
+                  onPressed: () => _showTransferRequestDialog(context, freshStudent),
+                  icon: const Icon(Icons.swap_horiz_rounded, size: 12),
+                  label: const Text('Request Transfer', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold)),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.teal.withValues(alpha: 0.15),
+                    foregroundColor: Colors.teal,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                  ),
+                  onPressed: () => _showCertificateGenerationModal(context, freshStudent, classes, sections),
+                  icon: const Icon(Icons.card_membership_rounded, size: 12),
+                  label: const Text('Generate Cards / Certs', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold)),
+                ),
+              ),
+            ],
+          ),
         ],
       ),
+    );
+  }
+
+  Widget _profileTabHeader(int index, String label) {
+    final isSelected = _profileTabIdx == index;
+    return InkWell(
+      onTap: () => setState(() => _profileTabIdx = index),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 10),
+        decoration: BoxDecoration(
+          border: Border(
+            bottom: BorderSide(
+              color: isSelected ? AppColors.secondary : Colors.transparent,
+              width: 2,
+            ),
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+            color: isSelected ? AppColors.secondary : Colors.grey,
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Personal profile tab contents
+  Widget _buildPersonalTab(StudentEntity student) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildProfileRow('Guardian', student.guardianName),
+        _buildProfileRow('Gender', student.gender),
+        _buildProfileRow('DOB', student.dateOfBirth),
+        _buildProfileRow('Blood Group', student.bloodGroup),
+        _buildProfileRow('Phone', student.phone),
+        _buildProfileRow('Email', student.email),
+        _buildProfileRow('Address', student.address),
+        const Divider(),
+        const Text('Linked Siblings:', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.grey)),
+        const SizedBox(height: 4),
+        if (student.siblingIds.isEmpty)
+          const Text('No siblings linked in records.', style: TextStyle(fontSize: 9, color: Colors.grey))
+        else
+          ...student.siblingIds.map((sibId) {
+            final sib = ref.read(academicStudentsProvider).firstWhere((s) => s.id == sibId, orElse: () => StudentEntity(id: '', branchId: '', classId: '', sectionId: '', name: 'Sibling Deleted', admissionNumber: '', rollNumber: ''));
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 2),
+              child: Text('• ${sib.name} (ID: ${sib.admissionNumber})', style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold)),
+            );
+          }),
+        const SizedBox(height: 4),
+        ElevatedButton.icon(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+            foregroundColor: AppColors.primary,
+            padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+            minimumSize: const Size(60, 24),
+            elevation: 0,
+          ),
+          onPressed: () {
+            final allStudents = ref.read(academicStudentsProvider);
+            final otherStudents = allStudents.where((s) => s.id != student.id).toList();
+            showDialog(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: const Text('Link Sibling Relation', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                content: SizedBox(
+                  width: 300,
+                  height: 200,
+                  child: ListView.builder(
+                    itemCount: otherStudents.length,
+                    itemBuilder: (context, idx) {
+                      final other = otherStudents[idx];
+                      return ListTile(
+                        dense: true,
+                        title: Text(other.name, style: const TextStyle(fontSize: 11)),
+                        subtitle: Text('ID: ${other.admissionNumber}', style: const TextStyle(fontSize: 9)),
+                        onTap: () {
+                          ref.read(academicStudentsProvider.notifier).updateStudentProfile(
+                                student.id,
+                                student.copyWith(siblingIds: [...student.siblingIds, other.id]),
+                              );
+                          ref.read(academicStudentsProvider.notifier).updateStudentProfile(
+                                other.id,
+                                other.copyWith(siblingIds: [...other.siblingIds, student.id]),
+                              );
+                          Navigator.pop(context);
+                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Sibling relationship linked successfully!')));
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ),
+            );
+          },
+          icon: const Icon(Icons.link_rounded, size: 10),
+          label: const Text('Link Sibling', style: TextStyle(fontSize: 8, fontWeight: FontWeight.bold)),
+        ),
+        const Divider(),
+        const Text('Custom Branch Fields:', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.grey)),
+        const SizedBox(height: 4),
+        if (student.customFields.isEmpty)
+          const Text('No custom fields registered.', style: TextStyle(fontSize: 9, color: Colors.grey))
+        else
+          ...student.customFields.entries.map((entry) => _buildProfileRow(entry.key, entry.value)),
+        const SizedBox(height: 4),
+        ElevatedButton.icon(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+            foregroundColor: AppColors.primary,
+            padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+            minimumSize: const Size(60, 24),
+            elevation: 0,
+          ),
+          onPressed: () {
+            final keyCtrl = TextEditingController();
+            final valCtrl = TextEditingController();
+            showDialog(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: const Text('Add Custom Branch Data Field', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: keyCtrl,
+                      style: const TextStyle(fontSize: 11),
+                      decoration: const InputDecoration(labelText: 'Field Label (e.g. Locker Code, Bus Stop)', isDense: true),
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: valCtrl,
+                      style: const TextStyle(fontSize: 11),
+                      decoration: const InputDecoration(labelText: 'Field Value', isDense: true),
+                    ),
+                  ],
+                ),
+                actions: [
+                  TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+                  ElevatedButton(
+                    onPressed: () {
+                      if (keyCtrl.text.trim().isNotEmpty) {
+                        final updatedFields = Map<String, String>.from(student.customFields);
+                        updatedFields[keyCtrl.text.trim()] = valCtrl.text.trim();
+                        ref.read(academicStudentsProvider.notifier).updateStudentProfile(
+                              student.id,
+                              student.copyWith(customFields: updatedFields),
+                            );
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Custom field added for this student!')));
+                      }
+                    },
+                    child: const Text('Add'),
+                  ),
+                ],
+              ),
+            );
+          },
+          icon: const Icon(Icons.add_circle_outline_rounded, size: 10),
+          label: const Text('Add Custom Field', style: TextStyle(fontSize: 8, fontWeight: FontWeight.bold)),
+        ),
+      ],
+    );
+  }
+
+  // Academic profile tab contents
+  Widget _buildAcademicTab(StudentEntity student, List<ClassEntity> classes, List<SectionEntity> sections) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        DropdownButtonFormField<String>(
+          initialValue: student.classId,
+          decoration: const InputDecoration(labelText: 'Change Class', isDense: true),
+          style: TextStyle(fontSize: 10, color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
+          items: classes.map((c) => DropdownMenuItem(value: c.id, child: Text(c.name, style: const TextStyle(fontSize: 10)))).toList(),
+          onChanged: (newClsId) {
+            if (newClsId != null) {
+              ref.read(academicStudentsProvider.notifier).updateStudentProfile(
+                    student.id,
+                    student.copyWith(classId: newClsId),
+                  );
+            }
+          },
+        ),
+        const SizedBox(height: 4),
+        DropdownButtonFormField<String>(
+          initialValue: student.sectionId,
+          decoration: const InputDecoration(labelText: 'Change Section', isDense: true),
+          style: TextStyle(fontSize: 10, color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
+          items: sections.where((sec) => sec.classId == student.classId).map((s) => DropdownMenuItem(value: s.id, child: Text('Section ${s.name}', style: const TextStyle(fontSize: 10)))).toList(),
+          onChanged: (newSecId) {
+            if (newSecId != null) {
+              ref.read(academicStudentsProvider.notifier).updateStudentProfile(
+                    student.id,
+                    student.copyWith(sectionId: newSecId),
+                  );
+            }
+          },
+        ),
+        const SizedBox(height: 6),
+        Row(
+          children: [
+            Expanded(
+              child: Text('Roll Number: ${student.rollNumber.isNotEmpty ? student.rollNumber : "Not Assigned"}', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+            ),
+            TextButton.icon(
+              style: TextButton.styleFrom(padding: EdgeInsets.zero, minimumSize: const Size(40, 24)),
+              onPressed: () {
+                final ctrl = TextEditingController(text: student.rollNumber);
+                showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: const Text('Update Roll Number', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                    content: TextField(controller: ctrl, decoration: const InputDecoration(isDense: true)),
+                    actions: [
+                      TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+                      ElevatedButton(
+                        onPressed: () {
+                          ref.read(academicStudentsProvider.notifier).updateStudentProfile(
+                                student.id,
+                                student.copyWith(rollNumber: ctrl.text.trim()),
+                              );
+                          Navigator.pop(context);
+                        },
+                        child: const Text('Save'),
+                      ),
+                    ],
+                  ),
+                );
+              },
+              icon: const Icon(Icons.edit_rounded, size: 10),
+              label: const Text('Edit', style: TextStyle(fontSize: 9)),
+            ),
+          ],
+        ),
+        _buildProfileRow('Repeat Year Status', student.isRepeatingYear ? 'Repeating Year' : 'Normal Year'),
+        const Divider(),
+        const SizedBox(height: 6),
+        const Text('Academic Year Actions:', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey)),
+        const SizedBox(height: 6),
+        Wrap(
+          spacing: 6,
+          runSpacing: 6,
+          children: [
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue.withValues(alpha: 0.15),
+                foregroundColor: Colors.blue,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                minimumSize: const Size(60, 24),
+              ),
+              onPressed: () {
+                final currentClsIndex = classes.indexWhere((c) => c.id == student.classId);
+                if (currentClsIndex < classes.length - 1) {
+                  final nextCls = classes[currentClsIndex + 1];
+                  final defaultSec = sections.firstWhere((sec) => sec.classId == nextCls.id);
+                  ref.read(academicStudentsProvider.notifier).updateStudentProfile(
+                        student.id,
+                        student.copyWith(classId: nextCls.id, sectionId: defaultSec.id, rollNumber: '', isRepeatingYear: false),
+                      );
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Student promoted to next class grade!')));
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Student is already in highest class grade.')));
+                }
+              },
+              child: const Text('Promote', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold)),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red.withValues(alpha: 0.15),
+                foregroundColor: Colors.red,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                minimumSize: const Size(60, 24),
+              ),
+              onPressed: () {
+                final currentClsIndex = classes.indexWhere((c) => c.id == student.classId);
+                if (currentClsIndex > 0) {
+                  final prevCls = classes[currentClsIndex - 1];
+                  final defaultSec = sections.firstWhere((sec) => sec.classId == prevCls.id);
+                  ref.read(academicStudentsProvider.notifier).updateStudentProfile(
+                        student.id,
+                        student.copyWith(classId: prevCls.id, sectionId: defaultSec.id, rollNumber: '', isRepeatingYear: false),
+                      );
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Student demoted to previous class grade.')));
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Student is in lowest class grade.')));
+                }
+              },
+              child: const Text('Demote', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold)),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.amber.withValues(alpha: 0.15),
+                foregroundColor: Colors.amber[800],
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                minimumSize: const Size(60, 24),
+              ),
+              onPressed: () {
+                ref.read(academicStudentsProvider.notifier).updateStudentProfile(
+                      student.id,
+                      student.copyWith(isRepeatingYear: true, rollNumber: ''),
+                    );
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Student registered to Repeat current Academic Year.')));
+              },
+              child: const Text('Repeat Year', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold)),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.purple.withValues(alpha: 0.15),
+                foregroundColor: Colors.purple,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                minimumSize: const Size(60, 24),
+              ),
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: const Text('Convert to Alumni', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                    content: const Text('Are you sure you want to graduate this student to Alumni status? They will be marked as inactive and registered in the Alumni cohort.', style: TextStyle(fontSize: 11)),
+                    actions: [
+                      TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+                      ElevatedButton(
+                        onPressed: () {
+                          ref.read(academicStudentsProvider.notifier).updateStudentProfile(
+                                student.id,
+                                student.copyWith(
+                                  categorization: 'Graduated',
+                                  isActive: false,
+                                ),
+                              );
+                          Navigator.pop(context);
+                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Student graduated to Alumni status!')));
+                        },
+                        child: const Text('Confirm'),
+                      ),
+                    ],
+                  ),
+                );
+              },
+              child: const Text('Graduate / Alumni', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold)),
+            ),
+          ],
+        ),
+        const Divider(),
+        const Text('Achievements & Portfolio:', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.grey)),
+        const SizedBox(height: 4),
+        ...student.achievements.map((ach) => Padding(
+              padding: const EdgeInsets.symmetric(vertical: 2),
+              child: Row(
+                children: [
+                  const Icon(Icons.emoji_events_rounded, color: Colors.amber, size: 12),
+                  const SizedBox(width: 4),
+                  Expanded(child: Text(ach, style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold))),
+                ],
+              ),
+            )),
+        const SizedBox(height: 4),
+        ElevatedButton.icon(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.amber.withValues(alpha: 0.15),
+            foregroundColor: Colors.amber[800],
+            padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+            minimumSize: const Size(60, 24),
+            elevation: 0,
+          ),
+          onPressed: () {
+            final ctrl = TextEditingController();
+            showDialog(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: const Text('Log Achievement / Portfolio Item', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                content: TextField(
+                  controller: ctrl,
+                  style: const TextStyle(fontSize: 11),
+                  decoration: const InputDecoration(isDense: true, hintText: 'e.g. Best Student MUN 2026'),
+                ),
+                actions: [
+                  TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+                  ElevatedButton(
+                    onPressed: () {
+                      if (ctrl.text.trim().isNotEmpty) {
+                        ref.read(academicStudentsProvider.notifier).updateStudentProfile(
+                              student.id,
+                              student.copyWith(achievements: [...student.achievements, ctrl.text.trim()]),
+                            );
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Achievement logged to portfolio!')));
+                      }
+                    },
+                    child: const Text('Add'),
+                  ),
+                ],
+              ),
+            );
+          },
+          icon: const Icon(Icons.add_rounded, size: 10),
+          label: const Text('Add Achievement', style: TextStyle(fontSize: 8, fontWeight: FontWeight.bold)),
+        ),
+        const Divider(),
+        const Text('RFID & Biometric Registry:', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.grey)),
+        const SizedBox(height: 6),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: student.rfidCardNumber.isEmpty ? Colors.red.withValues(alpha: 0.1) : Colors.green.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(
+                student.rfidCardNumber.isEmpty ? 'Not Registered' : student.rfidCardNumber,
+                style: TextStyle(color: student.rfidCardNumber.isEmpty ? Colors.red : Colors.green, fontSize: 8, fontWeight: FontWeight.bold),
+              ),
+            ),
+            ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary.withValues(alpha: 0.15),
+                foregroundColor: AppColors.primary,
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                minimumSize: const Size(60, 24),
+                elevation: 0,
+              ),
+              onPressed: () {
+                bool isScanning = true;
+                showDialog(
+                  context: context,
+                  builder: (context) => StatefulBuilder(
+                    builder: (context, setState) {
+                      if (isScanning) {
+                        Future.delayed(const Duration(milliseconds: 1800), () {
+                          if (context.mounted) {
+                            final newRfid = 'RFID-${DateTime.now().millisecondsSinceEpoch.toString().substring(9)}-${student.name.substring(0, 2).toUpperCase()}';
+                            ref.read(academicStudentsProvider.notifier).updateStudentProfile(
+                                  student.id,
+                                  student.copyWith(rfidCardNumber: newRfid),
+                                );
+                            Navigator.pop(context);
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('RFID Card registered successfully! Card ID: $newRfid')));
+                          }
+                        });
+                      }
+
+                      return AlertDialog(
+                        title: const Text('Scanning RFID Badge / Biometric...', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                        content: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const SizedBox(height: 12),
+                            const SizedBox(
+                              width: 40,
+                              height: 40,
+                              child: CircularProgressIndicator(strokeWidth: 3),
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'Place student RFID badge on the USB scanner or press finger on the biometric reader...',
+                              style: TextStyle(fontSize: 10, color: Colors.grey[600]),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () {
+                              isScanning = false;
+                              Navigator.pop(context);
+                            },
+                            child: const Text('Cancel'),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                );
+              },
+              icon: const Icon(Icons.nfc_rounded, size: 10),
+              label: Text(student.rfidCardNumber.isEmpty ? 'Register' : 'Update', style: const TextStyle(fontSize: 8, fontWeight: FontWeight.bold)),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  // Behavioral profile tab contents
+  Widget _buildBehavioralTab(StudentEntity student) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildProfileRow('Attendance Rate', '${student.attendanceRate}%'),
+        const SizedBox(height: 6),
+        const Text('Behavioral Remarks / Flags:', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.grey)),
+        const SizedBox(height: 4),
+        Container(
+          padding: const EdgeInsets.all(8),
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: Colors.amber.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
+          ),
+          child: Text(student.behavioralRemarks, style: const TextStyle(fontSize: 9, color: Colors.brown)),
+        ),
+        const Divider(),
+        const Text('Disciplinary Log (Branch Scoped):', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.grey)),
+        const SizedBox(height: 4),
+        ...student.disciplinaryRecords.map((disc) => Padding(
+              padding: const EdgeInsets.symmetric(vertical: 2),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(Icons.gavel_rounded, color: Colors.red, size: 12),
+                  const SizedBox(width: 4),
+                  Expanded(child: Text(disc, style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold))),
+                ],
+              ),
+            )),
+        const SizedBox(height: 6),
+        ElevatedButton.icon(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.red.withValues(alpha: 0.15),
+            foregroundColor: Colors.red,
+            padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+            minimumSize: const Size(60, 24),
+            elevation: 0,
+          ),
+          onPressed: () {
+            final ctrl = TextEditingController();
+            showDialog(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: const Text('Log Disciplinary Incident', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                content: TextField(
+                  controller: ctrl,
+                  style: const TextStyle(fontSize: 11),
+                  decoration: const InputDecoration(isDense: true, hintText: 'Enter incident details...'),
+                ),
+                actions: [
+                  TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+                  ElevatedButton(
+                    onPressed: () {
+                      if (ctrl.text.trim().isNotEmpty) {
+                        ref.read(academicStudentsProvider.notifier).updateStudentProfile(
+                              student.id,
+                              student.copyWith(disciplinaryRecords: [...student.disciplinaryRecords, ctrl.text.trim()]),
+                            );
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Disciplinary infraction logged.')));
+                      }
+                    },
+                    child: const Text('Log'),
+                  ),
+                ],
+              ),
+            );
+          },
+          icon: const Icon(Icons.add_moderator_rounded, size: 10),
+          label: const Text('Log Disciplinary Action', style: TextStyle(fontSize: 8, fontWeight: FontWeight.bold)),
+        ),
+      ],
+    );
+  }
+
+  // Medical profile tab contents
+  Widget _buildMedicalTab(StudentEntity student) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildProfileRow('Known Allergies', student.allergies),
+        _buildProfileRow('Medical Conditions', student.medicalConditions),
+        _buildProfileRow('Emergency Contact', student.emergencyContact),
+      ],
+    );
+  }
+
+  // Documents profile tab contents
+  Widget _buildDocsTab(StudentEntity student) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('Branch-Scoped Certificate Vault', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey)),
+        const SizedBox(height: 8),
+        ...['Birth Certificate', 'Student Photos', 'Aadhar Card', 'Caste Certificate'].map((doc) {
+          final isUploaded = student.uploadedDocuments.contains(doc);
+          final isCurrentlyUploading = _uploadingDocLabel == doc;
+
+          return Container(
+            margin: const EdgeInsets.only(bottom: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.darkBg : AppColors.lightBg,
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.lightBorder),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(doc, style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold)),
+                ),
+                const SizedBox(width: 8),
+                if (isUploaded)
+                  Row(
+                    children: [
+                      const Icon(Icons.check_circle_rounded, color: Colors.green, size: 12),
+                      const SizedBox(width: 4),
+                      const Text('Uploaded', style: TextStyle(fontSize: 9, color: Colors.green, fontWeight: FontWeight.bold)),
+                      const SizedBox(width: 4),
+                      IconButton(
+                        icon: const Icon(Icons.remove_red_eye_outlined, size: 10, color: AppColors.primary),
+                        constraints: const BoxConstraints(),
+                        padding: EdgeInsets.zero,
+                        onPressed: () {
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Simulated opening of file: $doc')));
+                        },
+                      ),
+                    ],
+                  )
+                else if (isCurrentlyUploading)
+                  const SizedBox(width: 10, height: 10, child: CircularProgressIndicator(strokeWidth: 2))
+                else
+                  ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      minimumSize: const Size(50, 20),
+                      backgroundColor: AppColors.primary,
+                    ),
+                    onPressed: () async {
+                      setState(() => _uploadingDocLabel = doc);
+                      await Future.delayed(const Duration(seconds: 1));
+                      ref.read(academicStudentsProvider.notifier).updateStudentProfile(
+                            student.id,
+                            student.copyWith(uploadedDocuments: [...student.uploadedDocuments, doc]),
+                          );
+                      setState(() {
+                        _uploadingDocLabel = null;
+                      });
+                      if (!mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$doc uploaded successfully to branch vault!')));
+                    },
+                    icon: const Icon(Icons.upload_file_rounded, size: 8),
+                    label: const Text('Upload', style: TextStyle(fontSize: 8)),
+                  ),
+              ],
+            ),
+          );
+        }),
+      ],
     );
   }
 
@@ -1194,7 +1305,15 @@ class _StudentManagementPageState extends ConsumerState<StudentManagementPage> w
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label, style: const TextStyle(fontSize: 10, color: Colors.grey, fontWeight: FontWeight.bold)),
-          Text(value, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+          const SizedBox(width: 12),
+          Flexible(
+            child: Text(
+              value,
+              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+              textAlign: TextAlign.end,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
         ],
       ),
     );
@@ -1214,32 +1333,36 @@ class _StudentManagementPageState extends ConsumerState<StudentManagementPage> w
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
           title: Text('Initiate Inter-Branch Transfer: ${student.name}', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text('Target Campus Branch *', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey)),
-              const SizedBox(height: 6),
-              if (targetBranches.isEmpty)
-                const Text('No other branches exist inside organization to transfer to.', style: TextStyle(fontSize: 11, color: Colors.red))
-              else
-                DropdownButtonFormField<String>(
-                  initialValue: destBranchId,
-                  style: TextStyle(fontSize: 11, color: Theme.of(context).brightness == Brightness.dark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
-                  items: targetBranches.map((b) => DropdownMenuItem(value: b.id, child: Text(b.name, style: const TextStyle(fontSize: 11)))).toList(),
-                  onChanged: (val) => setState(() => destBranchId = val),
-                  decoration: const InputDecoration(isDense: true),
+          content: Container(
+            constraints: const BoxConstraints(maxWidth: 450),
+            width: MediaQuery.of(context).size.width * 0.9,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Target Campus Branch *', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey)),
+                const SizedBox(height: 6),
+                if (targetBranches.isEmpty)
+                  const Text('No other branches exist inside organization to transfer to.', style: TextStyle(fontSize: 11, color: Colors.red))
+                else
+                  DropdownButtonFormField<String>(
+                    initialValue: destBranchId,
+                    style: TextStyle(fontSize: 11, color: Theme.of(context).brightness == Brightness.dark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
+                    items: targetBranches.map((b) => DropdownMenuItem(value: b.id, child: Text(b.name, style: const TextStyle(fontSize: 11)))).toList(),
+                    onChanged: (val) => setState(() => destBranchId = val),
+                    decoration: const InputDecoration(isDense: true),
+                  ),
+                const SizedBox(height: 12),
+                const Text('Reason for Transfer Request *', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey)),
+                const SizedBox(height: 6),
+                TextField(
+                  controller: reasonCtrl,
+                  style: const TextStyle(fontSize: 11),
+                  maxLines: 3,
+                  decoration: const InputDecoration(isDense: true, hintText: 'Enter relocation rationale...'),
                 ),
-              const SizedBox(height: 12),
-              const Text('Reason for Transfer Request *', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey)),
-              const SizedBox(height: 6),
-              TextField(
-                controller: reasonCtrl,
-                style: const TextStyle(fontSize: 11),
-                maxLines: 3,
-                decoration: const InputDecoration(isDense: true, hintText: 'Enter relocation rationale...'),
-              ),
-            ],
+              ],
+            ),
           ),
           actions: [
             TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
@@ -1299,14 +1422,17 @@ class _StudentManagementPageState extends ConsumerState<StudentManagementPage> w
                 IconButton(icon: const Icon(Icons.close_rounded, size: 16), onPressed: () => Navigator.pop(context)),
               ],
             ),
-            content: SizedBox(
-              width: 580,
+            content: Container(
+              constraints: const BoxConstraints(maxWidth: 580),
+              width: MediaQuery.of(context).size.width * 0.9,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Selector
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  // Selector wrapped in Wrap for small screens
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    alignment: WrapAlignment.center,
                     children: [
                       ChoiceChip(
                         label: const Text('Bonafide', style: TextStyle(fontSize: 10)),
@@ -1523,9 +1649,11 @@ class _StudentManagementPageState extends ConsumerState<StudentManagementPage> w
         ),
         const SizedBox(height: 30),
 
-        // Signatures
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        // Signatures wrapped in Wrap to prevent horizontal overflow
+        Wrap(
+          spacing: 16,
+          runSpacing: 16,
+          alignment: WrapAlignment.center,
           children: [
             Column(
               children: [
@@ -1637,10 +1765,10 @@ class _StudentManagementPageState extends ConsumerState<StudentManagementPage> w
                         Text('Reason: "${req.reason}"', style: const TextStyle(fontSize: 10, color: Colors.grey, fontStyle: FontStyle.italic)),
                         const SizedBox(height: 10),
                         if (req.status == 'Pending')
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              ElevatedButton(
+                          LayoutBuilder(
+                            builder: (context, innerConstraints) {
+                              final isCardMobile = innerConstraints.maxWidth < 450;
+                              final rejectBtn = ElevatedButton(
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: Colors.red.withValues(alpha: 0.15),
                                   foregroundColor: Colors.red,
@@ -1655,9 +1783,9 @@ class _StudentManagementPageState extends ConsumerState<StudentManagementPage> w
                                   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Relocation request rejected.')));
                                 },
                                 child: const Text('Reject', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
-                              ),
-                              const SizedBox(width: 8),
-                              ElevatedButton(
+                              );
+
+                              final approveBtn = ElevatedButton(
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: Colors.green.withValues(alpha: 0.15),
                                   foregroundColor: Colors.green,
@@ -1672,8 +1800,27 @@ class _StudentManagementPageState extends ConsumerState<StudentManagementPage> w
                                   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Relocation request approved! Student shifted branches.')));
                                 },
                                 child: const Text('Approve & Shift Branch', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
-                              ),
-                            ],
+                              );
+
+                              if (isCardMobile) {
+                                return Column(
+                                  children: [
+                                    SizedBox(width: double.infinity, child: approveBtn),
+                                    const SizedBox(height: 8),
+                                    SizedBox(width: double.infinity, child: rejectBtn),
+                                  ],
+                                );
+                              }
+
+                              return Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  rejectBtn,
+                                  const SizedBox(width: 8),
+                                  approveBtn,
+                                ],
+                              );
+                            },
                           ),
                       ],
                     ),
@@ -1700,36 +1847,36 @@ class _StudentManagementPageState extends ConsumerState<StudentManagementPage> w
       padding: const EdgeInsets.all(16),
       child: GlassCard(
         padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Enrolling New Student to ${branch.name}',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
-            ),
-            const Text(
-              'Fill out the multi-step profile fields. The enrollment system automatically attaches the branch ID and prefix code to generate a unique Student ID.',
-              style: TextStyle(fontSize: 11, color: Colors.grey),
-            ),
-            const SizedBox(height: 18),
-            const Divider(),
-            const SizedBox(height: 12),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final isMobileForm = constraints.maxWidth < 600;
 
-            // Step 1: Personal Details
-            const Text('1. Personal Profile Details', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.secondary)),
-            const SizedBox(height: 8),
-            Row(
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: TextField(
+                Text(
+                  'Enrolling New Student to ${branch.name}',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
+                ),
+                const Text(
+                  'Fill out the multi-step profile fields. The enrollment system automatically attaches the branch ID and prefix code to generate a unique Student ID.',
+                  style: TextStyle(fontSize: 11, color: Colors.grey),
+                ),
+                const SizedBox(height: 18),
+                const Divider(),
+                const SizedBox(height: 12),
+
+                // Step 1: Personal Details
+                const Text('1. Personal Profile Details', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.secondary)),
+                const SizedBox(height: 8),
+                _responsiveFormRow(
+                  isMobile: isMobileForm,
+                  left: TextField(
                     controller: _nameController,
                     style: const TextStyle(fontSize: 11),
                     decoration: const InputDecoration(labelText: 'Full Student Name *', isDense: true),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: DropdownButtonFormField<String>(
+                  right: DropdownButtonFormField<String>(
                     initialValue: _gender,
                     decoration: const InputDecoration(labelText: 'Gender', isDense: true),
                     style: TextStyle(fontSize: 11, color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
@@ -1743,21 +1890,15 @@ class _StudentManagementPageState extends ConsumerState<StudentManagementPage> w
                     },
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
+                const SizedBox(height: 12),
+                _responsiveFormRow(
+                  isMobile: isMobileForm,
+                  left: TextField(
                     controller: _dobController,
                     style: const TextStyle(fontSize: 11),
                     decoration: const InputDecoration(labelText: 'Date of Birth (YYYY-MM-DD)', isDense: true),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: DropdownButtonFormField<String>(
+                  right: DropdownButtonFormField<String>(
                     initialValue: _bloodGroup,
                     decoration: const InputDecoration(labelText: 'Blood Group', isDense: true),
                     style: TextStyle(fontSize: 11, color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
@@ -1773,57 +1914,42 @@ class _StudentManagementPageState extends ConsumerState<StudentManagementPage> w
                     },
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
+                const SizedBox(height: 12),
+                _responsiveFormRow(
+                  isMobile: isMobileForm,
+                  left: TextField(
                     controller: _guardianController,
                     style: const TextStyle(fontSize: 11),
                     decoration: const InputDecoration(labelText: 'Guardian Full Name *', isDense: true),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: TextField(
+                  right: TextField(
                     controller: _phoneController,
                     style: const TextStyle(fontSize: 11),
                     decoration: const InputDecoration(labelText: 'Contact Phone Number', isDense: true),
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
+                const SizedBox(height: 12),
+                _responsiveFormRow(
+                  isMobile: isMobileForm,
+                  left: TextField(
                     controller: _emailController,
                     style: const TextStyle(fontSize: 11),
                     decoration: const InputDecoration(labelText: 'Guardian Email', isDense: true),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: TextField(
+                  right: TextField(
                     controller: _addressController,
                     style: const TextStyle(fontSize: 11),
                     decoration: const InputDecoration(labelText: 'Residential Address', isDense: true),
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 18),
+                const SizedBox(height: 20),
 
-            // Step 2: Academic Details
-            const Text('2. Academic Enrollment Details', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.secondary)),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: DropdownButtonFormField<String>(
+                // Step 2: Academic Details
+                const Text('2. Academic Enrollment Details', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.secondary)),
+                const SizedBox(height: 8),
+                _responsiveFormRow(
+                  isMobile: isMobileForm,
+                  left: DropdownButtonFormField<String>(
                     initialValue: _enrollClassId,
                     decoration: const InputDecoration(labelText: 'Assign Class *', isDense: true),
                     style: TextStyle(fontSize: 11, color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
@@ -1837,10 +1963,7 @@ class _StudentManagementPageState extends ConsumerState<StudentManagementPage> w
                       });
                     },
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: DropdownButtonFormField<String>(
+                  right: DropdownButtonFormField<String>(
                     initialValue: _enrollSectionId,
                     decoration: const InputDecoration(labelText: 'Assign Section *', isDense: true),
                     style: TextStyle(fontSize: 11, color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
@@ -1850,145 +1973,150 @@ class _StudentManagementPageState extends ConsumerState<StudentManagementPage> w
                     onChanged: (val) => setState(() => _enrollSectionId = val),
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
+                const SizedBox(height: 12),
+                _responsiveFormRow(
+                  isMobile: isMobileForm,
+                  left: TextField(
                     controller: _rollNumberController,
                     style: const TextStyle(fontSize: 11),
-                    decoration: const InputDecoration(labelText: 'Roll Number (Leave blank to auto-generate later)', isDense: true),
+                    decoration: const InputDecoration(labelText: 'Roll Number (Leave blank to auto-generate)', isDense: true),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: TextField(
+                  right: TextField(
                     controller: _admissionDateController,
                     style: const TextStyle(fontSize: 11),
                     decoration: const InputDecoration(labelText: 'Admission Date (YYYY-MM-DD)', isDense: true),
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 18),
+                const SizedBox(height: 20),
 
-            // Step 3: Medical & Behavioral Details
-            const Text('3. Behavioral & Medical Profiles', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.secondary)),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
+                // Step 3: Medical & Behavioral Details
+                const Text('3. Behavioral & Medical Profiles', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.secondary)),
+                const SizedBox(height: 8),
+                _responsiveFormRow(
+                  isMobile: isMobileForm,
+                  left: TextField(
                     controller: _allergiesController,
                     style: const TextStyle(fontSize: 11),
                     decoration: const InputDecoration(labelText: 'Allergies (e.g. Peanuts)', isDense: true),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: TextField(
+                  right: TextField(
                     controller: _conditionsController,
                     style: const TextStyle(fontSize: 11),
                     decoration: const InputDecoration(labelText: 'Medical Conditions (e.g. Asthma)', isDense: true),
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
+                const SizedBox(height: 12),
+                _responsiveFormRow(
+                  isMobile: isMobileForm,
+                  left: TextField(
                     controller: _emergencyContactController,
                     style: const TextStyle(fontSize: 11),
                     decoration: const InputDecoration(labelText: 'Emergency Medical Contact Phone', isDense: true),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: TextField(
+                  right: TextField(
                     controller: _remarksController,
                     style: const TextStyle(fontSize: 11),
                     decoration: const InputDecoration(labelText: 'Behavioral Entry Remarks', isDense: true),
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 24),
+                const SizedBox(height: 28),
 
-            // Submit Button
-            SizedBox(
-              width: double.infinity,
-              height: 42,
-              child: ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
-                onPressed: () {
-                  if (_nameController.text.trim().isEmpty ||
-                      _guardianController.text.trim().isEmpty ||
-                      _enrollClassId == null ||
-                      _enrollSectionId == null) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Please fill all mandatory (*) profile fields!')),
-                    );
-                    return;
-                  }
+                // Submit Button
+                SizedBox(
+                  width: double.infinity,
+                  height: 42,
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+                    onPressed: () {
+                      if (_nameController.text.trim().isEmpty ||
+                          _guardianController.text.trim().isEmpty ||
+                          _enrollClassId == null ||
+                          _enrollSectionId == null) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Please fill all mandatory (*) profile fields!')),
+                        );
+                        return;
+                      }
 
-                  // Auto generate unique Student ID with Branch prefix
-                  final branchPrefix = branch.code.toUpperCase();
-                  final uniqueStudentId = '$branchPrefix-STU-${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}';
+                      // Auto generate unique Student ID with Branch prefix
+                      final branchPrefix = branch.code.toUpperCase();
+                      final uniqueStudentId = '$branchPrefix-STU-${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}';
 
-                  ref.read(academicStudentsProvider.notifier).addStudent(
-                        branchId: branchId,
-                        classId: _enrollClassId!,
-                        sectionId: _enrollSectionId!,
-                        name: _nameController.text.trim(),
-                        admissionNumber: uniqueStudentId,
-                        rollNumber: _rollNumberController.text.trim(),
-                        gender: _gender,
-                        dateOfBirth: _dobController.text.trim(),
-                        bloodGroup: _bloodGroup,
-                        guardianName: _guardianController.text.trim(),
-                        phone: _phoneController.text.trim(),
-                        email: _emailController.text.trim(),
-                        address: _addressController.text.trim(),
-                        admissionDate: _admissionDateController.text.trim(),
-                        behavioralRemarks: _remarksController.text.trim(),
-                        allergies: _allergiesController.text.trim(),
-                        medicalConditions: _conditionsController.text.trim(),
-                        emergencyContact: _emergencyContactController.text.trim().isNotEmpty
-                            ? _emergencyContactController.text.trim()
-                            : _phoneController.text.trim(),
+                      ref.read(academicStudentsProvider.notifier).addStudent(
+                            branchId: branchId,
+                            classId: _enrollClassId!,
+                            sectionId: _enrollSectionId!,
+                            name: _nameController.text.trim(),
+                            admissionNumber: uniqueStudentId,
+                            rollNumber: _rollNumberController.text.trim(),
+                            gender: _gender,
+                            dateOfBirth: _dobController.text.trim(),
+                            bloodGroup: _bloodGroup,
+                            guardianName: _guardianController.text.trim(),
+                            phone: _phoneController.text.trim(),
+                            email: _emailController.text.trim(),
+                            address: _addressController.text.trim(),
+                            admissionDate: _admissionDateController.text.trim(),
+                            behavioralRemarks: _remarksController.text.trim(),
+                            allergies: _allergiesController.text.trim(),
+                            medicalConditions: _conditionsController.text.trim(),
+                            emergencyContact: _emergencyContactController.text.trim().isNotEmpty
+                                ? _emergencyContactController.text.trim()
+                                : _phoneController.text.trim(),
+                          );
+
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Student successfully enrolled! Unique ID Generated: $uniqueStudentId')),
                       );
 
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Student successfully enrolled! Unique ID Generated: $uniqueStudentId')),
-                  );
+                      // Clear form
+                      _nameController.clear();
+                      _guardianController.clear();
+                      _phoneController.clear();
+                      _emailController.clear();
+                      _addressController.clear();
+                      _rollNumberController.clear();
+                      _emergencyContactController.clear();
+                      setState(() {
+                        _enrollClassId = null;
+                        _enrollSectionId = null;
+                      });
 
-                  // Clear form
-                  _nameController.clear();
-                  _guardianController.clear();
-                  _phoneController.clear();
-                  _emailController.clear();
-                  _addressController.clear();
-                  _rollNumberController.clear();
-                  _emergencyContactController.clear();
-                  setState(() {
-                    _enrollClassId = null;
-                    _enrollSectionId = null;
-                  });
-
-                  // Go to directory tab
-                  _tabController.animateTo(0);
-                },
-                icon: const Icon(Icons.check_circle_outline_rounded, size: 18),
-                label: const Text('Complete Student Enrollment & Generate ID', style: TextStyle(fontWeight: FontWeight.bold)),
-              ),
-            ),
-          ],
+                      // Go to directory tab
+                      _tabController.animateTo(0);
+                    },
+                    icon: const Icon(Icons.check_circle_outline_rounded, size: 18),
+                    label: const Text('Complete Student Enrollment & Generate ID', style: TextStyle(fontWeight: FontWeight.bold)),
+                  ),
+                ),
+              ],
+            );
+          },
         ),
       ),
+    );
+  }
+
+  Widget _responsiveFormRow({
+    required bool isMobile,
+    required Widget left,
+    required Widget right,
+  }) {
+    if (isMobile) {
+      return Column(
+        children: [
+          left,
+          const SizedBox(height: 12),
+          right,
+        ],
+      );
+    }
+    return Row(
+      children: [
+        Expanded(child: left),
+        const SizedBox(width: 12),
+        Expanded(child: right),
+      ],
     );
   }
 
@@ -2013,33 +2141,49 @@ class _StudentManagementPageState extends ConsumerState<StudentManagementPage> w
           // Gallery Filters
           GlassCard(
             padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    decoration: const InputDecoration(
-                      hintText: 'Search gallery by student name...',
-                      prefixIcon: Icon(Icons.search_rounded, size: 18),
-                      isDense: true,
-                    ),
-                    style: const TextStyle(fontSize: 12),
-                    onChanged: (val) => setState(() => _searchQuery = val),
+            child: LayoutBuilder(
+              builder: (context, filterConstraints) {
+                final isMobileFilter = filterConstraints.maxWidth < 600;
+                
+                final searchField = TextField(
+                  decoration: const InputDecoration(
+                    hintText: 'Search gallery by student name...',
+                    prefixIcon: Icon(Icons.search_rounded, size: 18),
+                    isDense: true,
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: DropdownButtonFormField<String>(
-                    initialValue: _selectedClassId,
-                    decoration: const InputDecoration(labelText: 'Filter Class', isDense: true),
-                    style: TextStyle(fontSize: 12, color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
-                    items: [
-                      const DropdownMenuItem(value: null, child: Text('All Classes', style: TextStyle(fontSize: 11))),
-                      ...classes.map((c) => DropdownMenuItem(value: c.id, child: Text(c.name, style: const TextStyle(fontSize: 11)))),
+                  style: const TextStyle(fontSize: 12),
+                  onChanged: (val) => setState(() => _searchQuery = val),
+                );
+
+                final classDropdown = DropdownButtonFormField<String>(
+                  initialValue: _selectedClassId,
+                  decoration: const InputDecoration(labelText: 'Filter Class', isDense: true),
+                  style: TextStyle(fontSize: 12, color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
+                  items: [
+                    const DropdownMenuItem(value: null, child: Text('All Classes', style: TextStyle(fontSize: 11))),
+                    ...classes.map((c) => DropdownMenuItem(value: c.id, child: Text(c.name, style: const TextStyle(fontSize: 11)))),
+                  ],
+                  onChanged: (val) => setState(() => _selectedClassId = val),
+                );
+
+                if (isMobileFilter) {
+                  return Column(
+                    children: [
+                      searchField,
+                      const SizedBox(height: 12),
+                      classDropdown,
                     ],
-                    onChanged: (val) => setState(() => _selectedClassId = val),
-                  ),
-                ),
-              ],
+                  );
+                }
+
+                return Row(
+                  children: [
+                    Expanded(child: searchField),
+                    const SizedBox(width: 12),
+                    Expanded(child: classDropdown),
+                  ],
+                );
+              },
             ),
           ),
           const SizedBox(height: 16),
@@ -2058,59 +2202,73 @@ class _StudentManagementPageState extends ConsumerState<StudentManagementPage> w
                 if (filteredStudents.isEmpty)
                   const Center(child: Padding(padding: EdgeInsets.all(40), child: Text('No student photos found.', style: TextStyle(fontSize: 11, color: Colors.grey))))
                 else
-                  GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                      maxCrossAxisExtent: 160,
-                      mainAxisSpacing: 16,
-                      crossAxisSpacing: 16,
-                      childAspectRatio: 0.85,
-                    ),
-                    itemCount: filteredStudents.length,
-                    itemBuilder: (context, idx) {
-                      final s = filteredStudents[idx];
-                      final clsName = classes.firstWhere((c) => c.id == s.classId, orElse: () => ClassEntity(id: '', branchId: '', departmentId: '', name: 'Grade Class', code: '', maxStudentsCapacity: 0)).name;
+                  LayoutBuilder(
+                    builder: (context, gridConstraints) {
+                      final isMobileGrid = gridConstraints.maxWidth < 900;
+                      return GridView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+                          maxCrossAxisExtent: 160,
+                          mainAxisSpacing: 16,
+                          crossAxisSpacing: 16,
+                          childAspectRatio: isMobileGrid ? 0.75 : 0.8, // Set dynamic ratio to prevent overflow
+                        ),
+                        itemCount: filteredStudents.length,
+                        itemBuilder: (context, idx) {
+                          final s = filteredStudents[idx];
+                          final clsName = classes.firstWhere((c) => c.id == s.classId, orElse: () => ClassEntity(id: '', branchId: '', departmentId: '', name: 'Grade Class', code: '', maxStudentsCapacity: 0)).name;
 
-                      return Container(
-                        decoration: BoxDecoration(
-                          color: isDark ? AppColors.darkBg : AppColors.lightBg,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.lightBorder),
-                        ),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            // Profile Avatar Image
-                            CircleAvatar(
-                              radius: 28,
-                              backgroundImage: NetworkImage(s.photoUrl),
+                          return Container(
+                            decoration: BoxDecoration(
+                              color: isDark ? AppColors.darkBg : AppColors.lightBg,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.lightBorder),
                             ),
-                            const SizedBox(height: 8),
-                            Text(
-                              s.name,
-                              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
-                              textAlign: TextAlign.center,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                CircleAvatar(
+                                  radius: 28,
+                                  backgroundImage: NetworkImage(s.photoUrl),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  s.name,
+                                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                                  textAlign: TextAlign.center,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                Text(
+                                  clsName,
+                                  style: const TextStyle(fontSize: 9, color: Colors.grey),
+                                  textAlign: TextAlign.center,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 4),
+                                TextButton(
+                                  style: TextButton.styleFrom(padding: EdgeInsets.zero, minimumSize: const Size(60, 20)),
+                                  onPressed: () {
+                                    setState(() {
+                                      _selectedStudent = s;
+                                    });
+                                    _tabController.animateTo(0);
+                                    if (isMobileGrid) {
+                                      // Wait a brief moment to ensure tab changes before showing sheet
+                                      Future.delayed(const Duration(milliseconds: 100), () {
+                                        if (!context.mounted) return;
+                                        _showStudentProfileBottomSheet(context, s, classes, ref.read(academicSectionsProvider));
+                                      });
+                                    }
+                                  },
+                                  child: const Text('View Profile', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold)),
+                                ),
+                              ],
                             ),
-                            Text(
-                              clsName,
-                              style: const TextStyle(fontSize: 9, color: Colors.grey),
-                            ),
-                            const SizedBox(height: 4),
-                            TextButton(
-                              style: TextButton.styleFrom(padding: EdgeInsets.zero, minimumSize: const Size(60, 20)),
-                              onPressed: () {
-                                setState(() {
-                                  _selectedStudent = s;
-                                });
-                                _tabController.animateTo(0);
-                              },
-                              child: const Text('View Profile', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold)),
-                            ),
-                          ],
-                        ),
+                          );
+                        },
                       );
                     },
                   ),
@@ -2170,9 +2328,11 @@ class _StudentManagementPageState extends ConsumerState<StudentManagementPage> w
                 alignLabelWithHint: true,
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
 
-            Row(
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
               children: [
                 ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(backgroundColor: AppColors.secondary),
@@ -2264,7 +2424,6 @@ class _StudentManagementPageState extends ConsumerState<StudentManagementPage> w
                   icon: const Icon(Icons.fact_check_rounded, size: 14),
                   label: const Text('Validate CSV Safety & Config'),
                 ),
-                const SizedBox(width: 12),
                 if (_csvValidated)
                   ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),

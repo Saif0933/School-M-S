@@ -78,35 +78,52 @@ class _NoticeBoardPageState extends ConsumerState<NoticeBoardPage>
       body: Column(
         children: [
           // Subheader
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            color: isDark ? Colors.white10 : Colors.grey.withValues(alpha: 0.05),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Digital Notice Board: $branchName',
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                      ),
-                      Text(
-                        'Campus TV Integrator: Active | Scope filtering: Enabled',
-                        style: const TextStyle(fontSize: 11, color: Colors.grey),
-                      ),
-                    ],
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isMobile = constraints.maxWidth < 600;
+              final titleWidget = Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Digital Notice Board: $branchName',
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                   ),
-                ),
-                ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
-                  onPressed: () => _tabController.animateTo(1),
-                  icon: const Icon(Icons.add_alert_rounded, color: Colors.white, size: 16),
-                  label: const Text('Publish Notice', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
-                ),
-              ],
-            ),
+                  const Text(
+                    'Campus TV Integrator: Active | Scope filtering: Enabled',
+                    style: TextStyle(fontSize: 11, color: Colors.grey),
+                  ),
+                ],
+              );
+
+              final actionButton = ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+                onPressed: () => _tabController.animateTo(1),
+                icon: const Icon(Icons.add_alert_rounded, color: Colors.white, size: 16),
+                label: const Text('Publish Notice', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+              );
+
+              return Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                color: isDark ? Colors.white10 : Colors.grey.withValues(alpha: 0.05),
+                child: isMobile
+                    ? Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          titleWidget,
+                          const SizedBox(height: 10),
+                          actionButton,
+                        ],
+                      )
+                    : Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(child: titleWidget),
+                          const SizedBox(width: 16),
+                          actionButton,
+                        ],
+                      ),
+              );
+            },
           ),
 
           // Tab Bar
@@ -115,6 +132,7 @@ class _NoticeBoardPageState extends ConsumerState<NoticeBoardPage>
             child: TabBar(
               controller: _tabController,
               isScrollable: true,
+              tabAlignment: TabAlignment.start,
               indicatorColor: AppColors.primary,
               labelColor: AppColors.primary,
               unselectedLabelColor: isDark ? Colors.white70 : Colors.black87,
@@ -161,44 +179,66 @@ class _NoticeBoardPageState extends ConsumerState<NoticeBoardPage>
         // Search & Language filters
         Padding(
           padding: const EdgeInsets.all(12),
-          child: Row(
-            children: [
-              Expanded(
-                flex: 2,
-                child: TextField(
-                  decoration: const InputDecoration(
-                    labelText: 'Search Notice Board Title / Content...',
-                    prefixIcon: Icon(Icons.search_rounded),
-                    isDense: true,
-                  ),
-                  onChanged: (val) => setState(() => _searchQuery = val),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final isMobile = constraints.maxWidth < 600;
+
+              final searchField = TextField(
+                decoration: const InputDecoration(
+                  labelText: 'Search Notice Board Title / Content...',
+                  prefixIcon: Icon(Icons.search_rounded),
+                  isDense: true,
                 ),
-              ),
-              const SizedBox(width: 8),
-              DropdownButton<String>(
-                value: _selectedCategoryFilter,
-                style: const TextStyle(fontSize: 11, color: Colors.indigo),
-                items: const [
-                  DropdownMenuItem(value: 'All', child: Text('All categories')),
-                  DropdownMenuItem(value: 'Academic', child: Text('Academic')),
-                  DropdownMenuItem(value: 'Administrative', child: Text('Administrative')),
-                  DropdownMenuItem(value: 'Emergency', child: Text('Emergency')),
-                  DropdownMenuItem(value: 'General', child: Text('General')),
+                onChanged: (val) => setState(() => _searchQuery = val),
+              );
+
+              final dropdowns = Wrap(
+                spacing: 12,
+                runSpacing: 8,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  DropdownButton<String>(
+                    value: _selectedCategoryFilter,
+                    style: const TextStyle(fontSize: 11, color: Colors.indigo),
+                    items: const [
+                      DropdownMenuItem(value: 'All', child: Text('All categories')),
+                      DropdownMenuItem(value: 'Academic', child: Text('Academic')),
+                      DropdownMenuItem(value: 'Administrative', child: Text('Administrative')),
+                      DropdownMenuItem(value: 'Emergency', child: Text('Emergency')),
+                      DropdownMenuItem(value: 'General', child: Text('General')),
+                    ],
+                    onChanged: (val) => setState(() => _selectedCategoryFilter = val ?? 'All'),
+                  ),
+                  DropdownButton<String>(
+                    value: _selectedLang,
+                    style: const TextStyle(fontSize: 11, color: Colors.teal),
+                    items: const [
+                      DropdownMenuItem(value: 'English', child: Text('English (Original)')),
+                      DropdownMenuItem(value: 'Hindi', child: Text('Hindi (Mock Transl.)')),
+                      DropdownMenuItem(value: 'Marathi', child: Text('Marathi (Mock Transl.)')),
+                    ],
+                    onChanged: (val) => setState(() => _selectedLang = val ?? 'English'),
+                  ),
                 ],
-                onChanged: (val) => setState(() => _selectedCategoryFilter = val ?? 'All'),
-              ),
-              const SizedBox(width: 8),
-              DropdownButton<String>(
-                value: _selectedLang,
-                style: const TextStyle(fontSize: 11, color: Colors.teal),
-                items: const [
-                  DropdownMenuItem(value: 'English', child: Text('English (Original)')),
-                  DropdownMenuItem(value: 'Hindi', child: Text('Hindi (Mock Transl.)')),
-                  DropdownMenuItem(value: 'Marathi', child: Text('Marathi (Mock Transl.)')),
-                ],
-                onChanged: (val) => setState(() => _selectedLang = val ?? 'English'),
-              ),
-            ],
+              );
+
+              return isMobile
+                  ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        searchField,
+                        const SizedBox(height: 10),
+                        dropdowns,
+                      ],
+                    )
+                  : Row(
+                      children: [
+                        Expanded(child: searchField),
+                        const SizedBox(width: 16),
+                        dropdowns,
+                      ],
+                    );
+            },
           ),
         ),
         const Divider(height: 1),
@@ -268,29 +308,31 @@ class _NoticeBoardPageState extends ConsumerState<NoticeBoardPage>
                         ),
                       ],
                       const Divider(height: 20),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text('Published: ${n.publishedDate} | Views: ${n.views}', style: const TextStyle(fontSize: 9, color: Colors.grey)),
-                          Row(
-                            children: [
-                              ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: hasAck ? Colors.green : AppColors.primary,
-                                  minimumSize: const Size(80, 30),
-                                ),
-                                onPressed: () {
-                                  ref.read(noticesProvider.notifier).acknowledgeNotice(n.id, 'Student User');
-                                  ref.read(noticesProvider.notifier).incrementViews(n.id);
-                                },
-                                child: Text(
-                                  hasAck ? 'Acknowledged ✓' : 'Acknowledge Notice',
-                                  style: const TextStyle(fontSize: 9, color: Colors.white, fontWeight: FontWeight.bold),
-                                ),
+                      SizedBox(
+                        width: double.infinity,
+                        child: Wrap(
+                          alignment: WrapAlignment.spaceBetween,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            Text('Published: ${n.publishedDate} | Views: ${n.views}', style: const TextStyle(fontSize: 9, color: Colors.grey)),
+                            ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: hasAck ? Colors.green : AppColors.primary,
+                                minimumSize: const Size(80, 30),
                               ),
-                            ],
-                          ),
-                        ],
+                              onPressed: () {
+                                ref.read(noticesProvider.notifier).acknowledgeNotice(n.id, 'Student User');
+                                ref.read(noticesProvider.notifier).incrementViews(n.id);
+                              },
+                              child: Text(
+                                hasAck ? 'Acknowledged ✓' : 'Acknowledge Notice',
+                                style: const TextStyle(fontSize: 9, color: Colors.white, fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
@@ -417,20 +459,27 @@ class _NoticeBoardPageState extends ConsumerState<NoticeBoardPage>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Row(
+          LayoutBuilder(
+            builder: (context, tvConstraints) {
+              final isTvMobile = tvConstraints.maxWidth < 650;
+
+              final infoRow = Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.live_tv_rounded, color: Colors.redAccent, size: 24),
-                  SizedBox(width: 8),
-                  Text(
-                    'CAMPUS LED DISPLAY BOARD EMULATOR',
-                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12, letterSpacing: 1),
+                  const Icon(Icons.live_tv_rounded, color: Colors.redAccent, size: 24),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'CAMPUS LED DISPLAY BOARD EMULATOR',
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12, letterSpacing: 1),
+                    ),
                   ),
                 ],
-              ),
-              Row(
+              );
+
+              final navControls = Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   IconButton(
                     icon: const Icon(Icons.arrow_back_ios_rounded, color: Colors.white, size: 16),
@@ -450,8 +499,25 @@ class _NoticeBoardPageState extends ConsumerState<NoticeBoardPage>
                     },
                   ),
                 ],
-              ),
-            ],
+              );
+
+              return isTvMobile
+                  ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        infoRow,
+                        const SizedBox(height: 10),
+                        navControls,
+                      ],
+                    )
+                  : Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(child: infoRow),
+                        navControls,
+                      ],
+                    );
+            },
           ),
           const Divider(color: Colors.white24, height: 20),
           const Spacer(),
@@ -504,17 +570,54 @@ class _NoticeBoardPageState extends ConsumerState<NoticeBoardPage>
           // Bulk Import desk
           Card(
             color: Colors.blue.withValues(alpha: 0.05),
-            child: ListTile(
-              leading: const Icon(Icons.file_download_rounded, color: Colors.blue),
-              title: const Text('Download CSV template for bulk notices import', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
-              subtitle: const Text('Prepare Excel notice sheets and import all at once.'),
-              trailing: ElevatedButton(
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('✓ Starting notices bulk CSV download...')),
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: LayoutBuilder(
+                builder: (context, cardConstraints) {
+                  final isCardMobile = cardConstraints.maxWidth < 550;
+                  final infoWidget = Row(
+                    children: [
+                      const Icon(Icons.file_download_rounded, color: Colors.blue),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('Download CSV template for bulk notices import', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
+                            const SizedBox(height: 4),
+                            const Text('Prepare Excel notice sheets and import all at once.', style: TextStyle(fontSize: 9, color: Colors.grey)),
+                          ],
+                        ),
+                      ),
+                    ],
                   );
+
+                  final buttonWidget = ElevatedButton(
+                    onPressed: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('✓ Starting notices bulk CSV download...')),
+                      );
+                    },
+                    child: const Text('Download template', style: TextStyle(fontSize: 9)),
+                  );
+
+                  return isCardMobile
+                      ? Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            infoWidget,
+                            const SizedBox(height: 12),
+                            SizedBox(width: double.infinity, child: buttonWidget),
+                          ],
+                        )
+                      : Row(
+                          children: [
+                            Expanded(child: infoWidget),
+                            const SizedBox(width: 16),
+                            buttonWidget,
+                          ],
+                        );
                 },
-                child: const Text('Download template', style: TextStyle(fontSize: 9)),
               ),
             ),
           ),

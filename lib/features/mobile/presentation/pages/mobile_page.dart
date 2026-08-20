@@ -46,240 +46,260 @@ class _MobileFeaturesPageState extends ConsumerState<MobileFeaturesPage> {
     final mobileConfig = ref.watch(mobileConfigProvider);
 
     return Scaffold(
-      body: Row(
-        children: [
-          // Left Panel: Configuration & Controllers
-          Expanded(
-            flex: 2,
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('📱 Mobile App Simulation Desk', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Simulate and configure branch-scoped features, biometric authorization, GPS fences, offline databases sync, and multi-app interfaces.',
-                    style: TextStyle(fontSize: 11, color: Colors.grey),
-                  ),
-                  const Divider(height: 24),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final isMobile = constraints.maxWidth < 800;
 
-                  // Role Selection Switcher
-                  const Text('Select App Interface:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: ['Org Admin', 'Branch Admin', 'Teacher', 'Parent', 'Student'].map((role) {
-                      final active = mobileConfig.activeAppRole == role;
-                      return ChoiceChip(
-                        label: Text(role, style: TextStyle(fontSize: 10, color: active ? Colors.white : null)),
-                        selected: active,
-                        selectedColor: AppColors.primary,
-                        onSelected: (sel) {
-                          if (sel) {
-                            ref.read(mobileConfigProvider.notifier).switchAppRole(role);
-                          }
-                        },
-                      );
-                    }).toList(),
-                  ),
-                  const SizedBox(height: 20),
+          final configWidget = Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('📱 Mobile App Simulation Desk', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                const SizedBox(height: 8),
+                const Text(
+                  'Simulate and configure branch-scoped features, biometric authorization, GPS fences, offline databases sync, and multi-app interfaces.',
+                  style: TextStyle(fontSize: 11, color: Colors.grey),
+                ),
+                const Divider(height: 24),
 
-                  // Biometrics Toggle
-                  Card(
-                    child: ListTile(
-                      title: const Text('Biometric Authentication (Face ID)', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                      subtitle: Text(mobileConfig.biometricEnabled ? 'Enabled (Prompts scanner upon app launch)' : 'Disabled'),
-                      trailing: Switch(
-                        value: mobileConfig.biometricEnabled,
-                        onChanged: (val) => ref.read(mobileConfigProvider.notifier).toggleBiometrics(),
-                      ),
+                // Role Selection Switcher
+                const Text('Select App Interface:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: ['Org Admin', 'Branch Admin', 'Teacher', 'Parent', 'Student'].map((role) {
+                    final active = mobileConfig.activeAppRole == role;
+                    return ChoiceChip(
+                      label: Text(role, style: TextStyle(fontSize: 10, color: active ? Colors.white : null)),
+                      selected: active,
+                      selectedColor: AppColors.primary,
+                      onSelected: (sel) {
+                        if (sel) {
+                          ref.read(mobileConfigProvider.notifier).switchAppRole(role);
+                        }
+                      },
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: 20),
+
+                // Biometrics Toggle
+                Card(
+                  child: ListTile(
+                    title: const Text('Biometric Authentication (Face ID)', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                    subtitle: Text(mobileConfig.biometricEnabled ? 'Enabled (Prompts scanner upon app launch)' : 'Disabled'),
+                    trailing: Switch(
+                      value: mobileConfig.biometricEnabled,
+                      onChanged: (val) => ref.read(mobileConfigProvider.notifier).toggleBiometrics(),
                     ),
                   ),
+                ),
 
-                  // Offline Mode Sync
-                  Card(
-                    child: ListTile(
-                      title: const Text('Offline Mode Syncing', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                      subtitle: Text(mobileConfig.offlineMode ? 'Running Offline (Using cached SQLite)' : 'Connected Online (Real-time Sync)'),
-                      trailing: Switch(
-                        value: mobileConfig.offlineMode,
-                        onChanged: (val) => ref.read(mobileConfigProvider.notifier).toggleOfflineMode(),
-                      ),
+                // Offline Mode Sync
+                Card(
+                  child: ListTile(
+                    title: const Text('Offline Mode Syncing', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                    subtitle: Text(mobileConfig.offlineMode ? 'Running Offline (Using cached SQLite)' : 'Connected Online (Real-time Sync)'),
+                    trailing: Switch(
+                      value: mobileConfig.offlineMode,
+                      onChanged: (val) => ref.read(mobileConfigProvider.notifier).toggleOfflineMode(),
                     ),
                   ),
-                  if (mobileConfig.offlineMode) ...[
-                    const SizedBox(height: 8),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed: () {
-                          ref.read(mobileConfigProvider.notifier).triggerSync();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('✓ Sync complete! Local cache written back to branch servers.')),
-                          );
-                        },
-                        icon: Icon(mobileConfig.synced ? Icons.cloud_done_rounded : Icons.sync_rounded, size: 16),
-                        label: Text(mobileConfig.synced ? 'Branch Sync Cache' : 'Synchronizing...'),
-                      ),
+                ),
+                if (mobileConfig.offlineMode) ...[
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        ref.read(mobileConfigProvider.notifier).triggerSync();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('✓ Sync complete! Local cache written back to branch servers.')),
+                        );
+                      },
+                      icon: Icon(mobileConfig.synced ? Icons.cloud_done_rounded : Icons.sync_rounded, size: 16),
+                      label: Text(mobileConfig.synced ? 'Branch Sync Cache' : 'Synchronizing...'),
                     ),
-                  ],
-
-                  const SizedBox(height: 20),
-
-                  // GPS Coordinates Location Emulator
-                  const Text('GPS Location Simulation:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-                  const SizedBox(height: 8),
-                  DropdownButtonFormField<Map<String, dynamic>>(
-                    initialValue: _selectedGps,
-                    decoration: const InputDecoration(labelText: 'Simulated Device Location'),
-                    items: _gpsLocations.map((loc) {
-                      return DropdownMenuItem<Map<String, dynamic>>(
-                        value: loc,
-                        child: Text(loc['name'], style: const TextStyle(fontSize: 11)),
-                      );
-                    }).toList(),
-                    onChanged: (val) {
-                      if (val != null) {
-                        setState(() => _selectedGps = val);
-                        ref.read(mobileConfigProvider.notifier).updateGps(val['lat'], val['lng']);
-                      }
-                    },
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Theme and Language Selector
-                  const Text('App Translation & Style:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-                  const SizedBox(height: 8),
-                  DropdownButtonFormField<String>(
-                    initialValue: mobileConfig.currentLanguage,
-                    decoration: const InputDecoration(labelText: 'Language Translation'),
-                    items: const [
-                      DropdownMenuItem(value: 'English', child: Text('English (Global)')),
-                      DropdownMenuItem(value: 'Hindi', child: Text('Hindi (हिन्दी)')),
-                      DropdownMenuItem(value: 'Marathi', child: Text('Marathi (मराठी)')),
-                    ],
-                    onChanged: (val) {
-                      if (val != null) {
-                        ref.read(mobileConfigProvider.notifier).changeLanguage(val);
-                      }
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                  DropdownButtonFormField<String>(
-                    initialValue: mobileConfig.activeThemeMode,
-                    decoration: const InputDecoration(labelText: 'Visual Dark Mode / Theme'),
-                    items: const [
-                      DropdownMenuItem(value: 'Light', child: Text('Classic Light')),
-                      DropdownMenuItem(value: 'Dark', child: Text('Sleek Dark Mode')),
-                      DropdownMenuItem(value: 'Branch Custom', child: Text('Branch HSL Color Theme')),
-                    ],
-                    onChanged: (val) {
-                      if (val != null) {
-                        ref.read(mobileConfigProvider.notifier).changeTheme(val);
-                      }
-                    },
                   ),
                 ],
-              ),
-            ),
-          ),
-          const VerticalDivider(width: 1),
 
-          // Right Panel: Smartphone frame simulation
-          Expanded(
-            flex: 3,
-            child: Container(
-              color: isDark ? Colors.black26 : Colors.grey.withValues(alpha: 0.1),
-              alignment: Alignment.center,
-              child: Container(
-                width: 320,
-                height: 600,
-                decoration: BoxDecoration(
-                  color: mobileConfig.activeThemeMode == 'Dark'
-                      ? Colors.black
-                      : (mobileConfig.activeThemeMode == 'Light' ? Colors.white : AppColors.primary.withValues(alpha: 0.05)),
-                  borderRadius: BorderRadius.circular(36),
-                  border: Border.all(color: Colors.grey.withValues(alpha: 0.8), width: 8),
-                  boxShadow: const [
-                    BoxShadow(color: Colors.black26, blurRadius: 16, offset: Offset(0, 8)),
-                  ],
+                const SizedBox(height: 20),
+
+                // GPS Coordinates Location Emulator
+                const Text('GPS Location Simulation:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                const SizedBox(height: 8),
+                DropdownButtonFormField<Map<String, dynamic>>(
+                  initialValue: _selectedGps,
+                  decoration: const InputDecoration(labelText: 'Simulated Device Location'),
+                  items: _gpsLocations.map((loc) {
+                    return DropdownMenuItem<Map<String, dynamic>>(
+                      value: loc,
+                      child: Text(loc['name'], style: const TextStyle(fontSize: 11)),
+                    );
+                  }).toList(),
+                  onChanged: (val) {
+                    if (val != null) {
+                      setState(() => _selectedGps = val);
+                      ref.read(mobileConfigProvider.notifier).updateGps(val['lat'], val['lng']);
+                    }
+                  },
                 ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(28),
-                  child: Scaffold(
-                    backgroundColor: Colors.transparent,
-                    appBar: AppBar(
-                      automaticallyImplyLeading: false,
-                      title: Text(
-                        '${mobileConfig.activeAppRole} Mobile App',
-                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
-                      ),
-                      actions: [
-                        if (mobileConfig.biometricEnabled)
-                          const Padding(
-                            padding: EdgeInsets.only(right: 8),
-                            child: Icon(Icons.fingerprint_rounded, size: 18, color: Colors.green),
-                          ),
-                        Padding(
-                          padding: const EdgeInsets.only(right: 12),
-                          child: Icon(
-                            mobileConfig.offlineMode ? Icons.cloud_off_rounded : Icons.cloud_done_rounded,
-                            size: 16,
-                          ),
-                        ),
-                      ],
-                    ),
-                    body: Column(
-                      children: [
-                        // Dynamic Phone Viewport Area
-                        Expanded(
-                          child: _buildPhoneViewportContent(activeBranchId, user?.activeBranch?.branchName ?? "Campus"),
-                        ),
+                const SizedBox(height: 20),
 
-                        // Simple In-App Messaging input inside the mockup
-                        const Divider(height: 1),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          color: isDark ? Colors.white10 : Colors.grey.withValues(alpha: 0.05),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: TextField(
-                                  controller: _messageTextCtrl,
-                                  style: const TextStyle(fontSize: 10),
-                                  decoration: const InputDecoration(
-                                    hintText: 'In-app branch message...',
-                                    border: InputBorder.none,
-                                    isDense: true,
-                                  ),
+                // Theme and Language Selector
+                const Text('App Translation & Style:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                const SizedBox(height: 8),
+                DropdownButtonFormField<String>(
+                  initialValue: mobileConfig.currentLanguage,
+                  decoration: const InputDecoration(labelText: 'Language Translation'),
+                  items: const [
+                    DropdownMenuItem(value: 'English', child: Text('English (Global)')),
+                    DropdownMenuItem(value: 'Hindi', child: Text('Hindi (हिन्दी)')),
+                    DropdownMenuItem(value: 'Marathi', child: Text('Marathi (मराठी)')),
+                  ],
+                  onChanged: (val) {
+                    if (val != null) {
+                      ref.read(mobileConfigProvider.notifier).changeLanguage(val);
+                    }
+                  },
+                ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  initialValue: mobileConfig.activeThemeMode,
+                  decoration: const InputDecoration(labelText: 'Visual Dark Mode / Theme'),
+                  items: const [
+                    DropdownMenuItem(value: 'Light', child: Text('Classic Light')),
+                    DropdownMenuItem(value: 'Dark', child: Text('Sleek Dark Mode')),
+                    DropdownMenuItem(value: 'Branch Custom', child: Text('Branch HSL Color Theme')),
+                  ],
+                  onChanged: (val) {
+                    if (val != null) {
+                      ref.read(mobileConfigProvider.notifier).changeTheme(val);
+                    }
+                  },
+                ),
+              ],
+            ),
+          );
+
+          final simulatorWidget = Container(
+            color: isDark ? Colors.black26 : Colors.grey.withValues(alpha: 0.1),
+            alignment: Alignment.center,
+            padding: const EdgeInsets.symmetric(vertical: 24),
+            child: Container(
+              width: 320,
+              height: 600,
+              decoration: BoxDecoration(
+                color: mobileConfig.activeThemeMode == 'Dark'
+                    ? Colors.black
+                    : (mobileConfig.activeThemeMode == 'Light' ? Colors.white : AppColors.primary.withValues(alpha: 0.05)),
+                borderRadius: BorderRadius.circular(36),
+                border: Border.all(color: Colors.grey.withValues(alpha: 0.8), width: 8),
+                boxShadow: const [
+                  BoxShadow(color: Colors.black26, blurRadius: 16, offset: Offset(0, 8)),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(28),
+                child: Scaffold(
+                  backgroundColor: Colors.transparent,
+                  appBar: AppBar(
+                    automaticallyImplyLeading: false,
+                    title: Text(
+                      '${mobileConfig.activeAppRole} Mobile App',
+                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                    ),
+                    actions: [
+                      if (mobileConfig.biometricEnabled)
+                        const Padding(
+                          padding: EdgeInsets.only(right: 8),
+                          child: Icon(Icons.fingerprint_rounded, size: 18, color: Colors.green),
+                        ),
+                      Padding(
+                        padding: const EdgeInsets.only(right: 12),
+                        child: Icon(
+                          mobileConfig.offlineMode ? Icons.cloud_off_rounded : Icons.cloud_done_rounded,
+                          size: 16,
+                        ),
+                      ),
+                    ],
+                  ),
+                  body: Column(
+                    children: [
+                      // Dynamic Phone Viewport Area
+                      Expanded(
+                        child: _buildPhoneViewportContent(activeBranchId, user?.activeBranch?.branchName ?? "Campus"),
+                      ),
+
+                      // Simple In-App Messaging input inside the mockup
+                      const Divider(height: 1),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        color: isDark ? Colors.white10 : Colors.grey.withValues(alpha: 0.05),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: TextField(
+                                controller: _messageTextCtrl,
+                                style: const TextStyle(fontSize: 10),
+                                decoration: const InputDecoration(
+                                  hintText: 'In-app branch message...',
+                                  border: InputBorder.none,
+                                  isDense: true,
                                 ),
                               ),
-                              IconButton(
-                                icon: const Icon(Icons.send_rounded, size: 16, color: AppColors.primary),
-                                onPressed: () {
-                                  if (_messageTextCtrl.text.isNotEmpty) {
-                                    ref.read(mobileMessagesProvider.notifier).postMessage(
-                                      activeBranchId,
-                                      '${mobileConfig.activeAppRole} Device',
-                                      _messageTextCtrl.text,
-                                    );
-                                    _messageTextCtrl.clear();
-                                  }
-                                },
-                              ),
-                            ],
-                          ),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.send_rounded, size: 16, color: AppColors.primary),
+                              onPressed: () {
+                                if (_messageTextCtrl.text.isNotEmpty) {
+                                  ref.read(mobileMessagesProvider.notifier).postMessage(
+                                    activeBranchId,
+                                    '${mobileConfig.activeAppRole} Device',
+                                    _messageTextCtrl.text,
+                                  );
+                                  _messageTextCtrl.clear();
+                                }
+                              },
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
               ),
             ),
-          ),
-        ],
+          );
+
+          return isMobile
+              ? SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      configWidget,
+                      const Divider(height: 1),
+                      simulatorWidget,
+                    ],
+                  ),
+                )
+              : Row(
+                  children: [
+                    Expanded(
+                      flex: 2,
+                      child: SingleChildScrollView(
+                        child: configWidget,
+                      ),
+                    ),
+                    const VerticalDivider(width: 1),
+                    Expanded(
+                      flex: 3,
+                      child: simulatorWidget,
+                    ),
+                  ],
+                );
+        },
       ),
     );
   }

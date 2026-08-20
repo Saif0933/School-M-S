@@ -93,6 +93,7 @@ class _StaffManagementPageState extends ConsumerState<StaffManagementPage>
           child: TabBar(
             controller: _tabController,
             isScrollable: true,
+            tabAlignment: TabAlignment.start,
             indicatorColor: AppColors.primary,
             labelColor: AppColors.primary,
             unselectedLabelColor: Colors.grey,
@@ -191,36 +192,43 @@ class _StaffManagementPageState extends ConsumerState<StaffManagementPage>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Stats Summary
-          Row(
-            children: [
-              _statCard(
-                'Total Staff',
-                '${staffList.length}',
-                Icons.badge_rounded,
-                Colors.blue,
-              ),
-              const SizedBox(width: 12),
-              _statCard(
-                'Teachers',
-                '${staffList.where((s) => s.role == 'Teacher').length}',
-                Icons.school_rounded,
-                Colors.green,
-              ),
-              const SizedBox(width: 12),
-              _statCard(
-                'HODs',
-                '${staffList.where((s) => s.role == 'HOD').length}',
-                Icons.star_rounded,
-                Colors.amber,
-              ),
-              const SizedBox(width: 12),
-              _statCard(
-                'Shared',
-                '${staffList.where((s) => s.sharedBranchIds.isNotEmpty).length}',
-                Icons.share_rounded,
-                Colors.purple,
-              ),
-            ],
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isMobile = constraints.maxWidth < 600;
+              if (isMobile) {
+                return Column(
+                  children: [
+                    Row(
+                      children: [
+                        _statCard('Total Staff', '${staffList.length}', Icons.badge_rounded, Colors.blue),
+                        const SizedBox(width: 12),
+                        _statCard('Teachers', '${staffList.where((s) => s.role == 'Teacher').length}', Icons.school_rounded, Colors.green),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        _statCard('HODs', '${staffList.where((s) => s.role == 'HOD').length}', Icons.star_rounded, Colors.amber),
+                        const SizedBox(width: 12),
+                        _statCard('Shared', '${staffList.where((s) => s.sharedBranchIds.isNotEmpty).length}', Icons.share_rounded, Colors.purple),
+                      ],
+                    ),
+                  ],
+                );
+              }
+
+              return Row(
+                children: [
+                  _statCard('Total Staff', '${staffList.length}', Icons.badge_rounded, Colors.blue),
+                  const SizedBox(width: 12),
+                  _statCard('Teachers', '${staffList.where((s) => s.role == 'Teacher').length}', Icons.school_rounded, Colors.green),
+                  const SizedBox(width: 12),
+                  _statCard('HODs', '${staffList.where((s) => s.role == 'HOD').length}', Icons.star_rounded, Colors.amber),
+                  const SizedBox(width: 12),
+                  _statCard('Shared', '${staffList.where((s) => s.sharedBranchIds.isNotEmpty).length}', Icons.share_rounded, Colors.purple),
+                ],
+              );
+            },
           ),
           const SizedBox(height: 16),
 
@@ -2243,36 +2251,43 @@ class _StaffManagementPageState extends ConsumerState<StaffManagementPage>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Today's Attendance Summary
-          Row(
-            children: [
-              _statCard(
-                'Present',
-                '${attendance.where((a) => a.status == 'Present').length}',
-                Icons.check_circle_rounded,
-                Colors.green,
-              ),
-              const SizedBox(width: 12),
-              _statCard(
-                'Absent',
-                '${attendance.where((a) => a.status == 'Absent').length}',
-                Icons.cancel_rounded,
-                Colors.red,
-              ),
-              const SizedBox(width: 12),
-              _statCard(
-                'On Leave',
-                '${attendance.where((a) => a.status == 'OnLeave').length}',
-                Icons.event_busy_rounded,
-                Colors.orange,
-              ),
-              const SizedBox(width: 12),
-              _statCard(
-                'Late',
-                '${attendance.where((a) => a.status == 'Late').length}',
-                Icons.access_time_rounded,
-                Colors.amber,
-              ),
-            ],
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isMobile = constraints.maxWidth < 600;
+              if (isMobile) {
+                return Column(
+                  children: [
+                    Row(
+                      children: [
+                        _statCard('Present', '${attendance.where((a) => a.status == 'Present').length}', Icons.check_circle_rounded, Colors.green),
+                        const SizedBox(width: 12),
+                        _statCard('Absent', '${attendance.where((a) => a.status == 'Absent').length}', Icons.cancel_rounded, Colors.red),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        _statCard('On Leave', '${attendance.where((a) => a.status == 'OnLeave').length}', Icons.event_busy_rounded, Colors.orange),
+                        const SizedBox(width: 12),
+                        _statCard('Late', '${attendance.where((a) => a.status == 'Late').length}', Icons.access_time_rounded, Colors.amber),
+                      ],
+                    ),
+                  ],
+                );
+              }
+
+              return Row(
+                children: [
+                  _statCard('Present', '${attendance.where((a) => a.status == 'Present').length}', Icons.check_circle_rounded, Colors.green),
+                  const SizedBox(width: 12),
+                  _statCard('Absent', '${attendance.where((a) => a.status == 'Absent').length}', Icons.cancel_rounded, Colors.red),
+                  const SizedBox(width: 12),
+                  _statCard('On Leave', '${attendance.where((a) => a.status == 'OnLeave').length}', Icons.event_busy_rounded, Colors.orange),
+                  const SizedBox(width: 12),
+                  _statCard('Late', '${attendance.where((a) => a.status == 'Late').length}', Icons.access_time_rounded, Colors.amber),
+                ],
+              );
+            },
           ),
           const SizedBox(height: 16),
 
@@ -2560,36 +2575,43 @@ class _StaffManagementPageState extends ConsumerState<StaffManagementPage>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              _statCard(
-                'Total Payroll',
-                '₹${totalPay.toStringAsFixed(0)}',
-                Icons.account_balance_wallet_rounded,
-                Colors.green,
-              ),
-              const SizedBox(width: 12),
-              _statCard(
-                'Pending',
-                '$pendingCount',
-                Icons.hourglass_top_rounded,
-                Colors.orange,
-              ),
-              const SizedBox(width: 12),
-              _statCard(
-                'Trainings',
-                '${trainings.length}',
-                Icons.school_rounded,
-                Colors.blue,
-              ),
-              const SizedBox(width: 12),
-              _statCard(
-                'Transfers',
-                '${transfers.length}',
-                Icons.swap_horiz_rounded,
-                Colors.purple,
-              ),
-            ],
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isMobile = constraints.maxWidth < 600;
+              if (isMobile) {
+                return Column(
+                  children: [
+                    Row(
+                      children: [
+                        _statCard('Total Payroll', '₹${totalPay.toStringAsFixed(0)}', Icons.account_balance_wallet_rounded, Colors.green),
+                        const SizedBox(width: 12),
+                        _statCard('Pending', '$pendingCount', Icons.hourglass_top_rounded, Colors.orange),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        _statCard('Trainings', '${trainings.length}', Icons.school_rounded, Colors.blue),
+                        const SizedBox(width: 12),
+                        _statCard('Transfers', '${transfers.length}', Icons.swap_horiz_rounded, Colors.purple),
+                      ],
+                    ),
+                  ],
+                );
+              }
+
+              return Row(
+                children: [
+                  _statCard('Total Payroll', '₹${totalPay.toStringAsFixed(0)}', Icons.account_balance_wallet_rounded, Colors.green),
+                  const SizedBox(width: 12),
+                  _statCard('Pending', '$pendingCount', Icons.hourglass_top_rounded, Colors.orange),
+                  const SizedBox(width: 12),
+                  _statCard('Trainings', '${trainings.length}', Icons.school_rounded, Colors.blue),
+                  const SizedBox(width: 12),
+                  _statCard('Transfers', '${transfers.length}', Icons.swap_horiz_rounded, Colors.purple),
+                ],
+              );
+            },
           ),
           const SizedBox(height: 16),
 
@@ -2947,29 +2969,39 @@ class _StaffManagementPageState extends ConsumerState<StaffManagementPage>
                   style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
                 ),
                 const Divider(),
-                Row(
-                  children: [
-                    _statCard(
-                      'Total Staff',
-                      '${branchStaff.length}',
-                      Icons.people_rounded,
-                      Colors.blue,
-                    ),
-                    const SizedBox(width: 12),
-                    _statCard(
-                      'Avg Experience',
-                      '${branchStaff.isEmpty ? 0 : (branchStaff.fold<int>(0, (s, e) => s + e.yearsOfExperience) / branchStaff.length).round()} yrs',
-                      Icons.timeline_rounded,
-                      Colors.green,
-                    ),
-                    const SizedBox(width: 12),
-                    _statCard(
-                      'Reviews',
-                      '${reviews.length}',
-                      Icons.rate_review_rounded,
-                      Colors.amber,
-                    ),
-                  ],
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final isMobile = constraints.maxWidth < 600;
+                    if (isMobile) {
+                      return Column(
+                        children: [
+                          Row(
+                            children: [
+                              _statCard('Total Staff', '${branchStaff.length}', Icons.people_rounded, Colors.blue),
+                              const SizedBox(width: 12),
+                              _statCard('Avg Experience', '${branchStaff.isEmpty ? 0 : (branchStaff.fold<int>(0, (s, e) => s + e.yearsOfExperience) / branchStaff.length).round()} yrs', Icons.timeline_rounded, Colors.green),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              _statCard('Reviews', '${reviews.length}', Icons.rate_review_rounded, Colors.amber),
+                            ],
+                          ),
+                        ],
+                      );
+                    }
+
+                    return Row(
+                      children: [
+                        _statCard('Total Staff', '${branchStaff.length}', Icons.people_rounded, Colors.blue),
+                        const SizedBox(width: 12),
+                        _statCard('Avg Experience', '${branchStaff.isEmpty ? 0 : (branchStaff.fold<int>(0, (s, e) => s + e.yearsOfExperience) / branchStaff.length).round()} yrs', Icons.timeline_rounded, Colors.green),
+                        const SizedBox(width: 12),
+                        _statCard('Reviews', '${reviews.length}', Icons.rate_review_rounded, Colors.amber),
+                      ],
+                    );
+                  },
                 ),
               ],
             ),

@@ -81,46 +81,64 @@ class _EventsCalendarPageState extends ConsumerState<EventsCalendarPage>
       body: Column(
         children: [
           // Sub Header
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            color: isDark ? Colors.white10 : Colors.grey.withValues(alpha: 0.05),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Events & Academic Calendars: $branchName',
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                      ),
-                      Text(
-                        'Consolidated & Branch Activities | Venue Lockings Status: Operational',
-                        style: const TextStyle(fontSize: 11, color: Colors.grey),
-                      ),
-                    ],
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isMobile = constraints.maxWidth < 650;
+              final titleWidget = Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Events & Academic Calendars: $branchName',
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                   ),
-                ),
-                Row(
-                  children: [
-                    ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
-                      onPressed: () => _tabController.animateTo(1),
-                      icon: const Icon(Icons.add_circle_outline_rounded, color: Colors.white, size: 16),
-                      label: const Text('Schedule Event', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
-                    ),
-                    const SizedBox(width: 8),
-                    ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(backgroundColor: Colors.teal),
-                      onPressed: () => _exportICalFeed(context),
-                      icon: const Icon(Icons.share_rounded, color: Colors.white, size: 16),
-                      label: const Text('Export iCal', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+                  const Text(
+                    'Consolidated & Branch Activities | Venue Lockings Status: Operational',
+                    style: TextStyle(fontSize: 11, color: Colors.grey),
+                  ),
+                ],
+              );
+
+              final actionButtons = Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+                    onPressed: () => _tabController.animateTo(1),
+                    icon: const Icon(Icons.add_circle_outline_rounded, color: Colors.white, size: 16),
+                    label: const Text('Schedule Event', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+                  ),
+                  ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(backgroundColor: Colors.teal),
+                    onPressed: () => _exportICalFeed(context),
+                    icon: const Icon(Icons.share_rounded, color: Colors.white, size: 16),
+                    label: const Text('Export iCal', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+                  ),
+                ],
+              );
+
+              return Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                color: isDark ? Colors.white10 : Colors.grey.withValues(alpha: 0.05),
+                child: isMobile
+                    ? Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          titleWidget,
+                          const SizedBox(height: 12),
+                          actionButtons,
+                        ],
+                      )
+                    : Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(child: titleWidget),
+                          const SizedBox(width: 16),
+                          actionButtons,
+                        ],
+                      ),
+              );
+            },
           ),
 
           // Tab Bar
@@ -129,6 +147,7 @@ class _EventsCalendarPageState extends ConsumerState<EventsCalendarPage>
             child: TabBar(
               controller: _tabController,
               isScrollable: true,
+              tabAlignment: TabAlignment.start,
               indicatorColor: AppColors.primary,
               labelColor: AppColors.primary,
               unselectedLabelColor: isDark ? Colors.white70 : Colors.black87,
@@ -185,19 +204,36 @@ class _EventsCalendarPageState extends ConsumerState<EventsCalendarPage>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text('📆 Interactive Month Planner (August 2026)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-              DropdownButton<String>(
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isMobile = constraints.maxWidth < 500;
+              final titleText = const Text('📆 Interactive Month Planner (August 2026)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13));
+              final dropdown = DropdownButton<String>(
                 value: _calendarScope,
                 items: const [
                   DropdownMenuItem(value: 'Branch', child: Text('My Campus Events Only', style: TextStyle(fontSize: 11))),
                   DropdownMenuItem(value: 'Org-Wide', child: Text('Consolidated All-Branch Calendar', style: TextStyle(fontSize: 11))),
                 ],
                 onChanged: (val) => setState(() => _calendarScope = val ?? 'Branch'),
-              ),
-            ],
+              );
+
+              return isMobile
+                  ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        titleText,
+                        const SizedBox(height: 8),
+                        dropdown,
+                      ],
+                    )
+                  : Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(child: titleText),
+                        dropdown,
+                      ],
+                    );
+            },
           ),
           const SizedBox(height: 12),
 
@@ -291,11 +327,13 @@ class _EventsCalendarPageState extends ConsumerState<EventsCalendarPage>
                         const SizedBox(height: 4),
                         Text(evt.description, style: const TextStyle(fontSize: 11, color: Colors.grey)),
                         const Divider(height: 20),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text('Volunteers: ${evt.volunteers.join(", ")}', style: const TextStyle(fontSize: 10, color: Colors.teal)),
-                            Row(
+                        LayoutBuilder(
+                          builder: (context, constraints) {
+                            final isMobile = constraints.maxWidth < 500;
+                            final volunteersWidget = Text('Volunteers: ${evt.volunteers.join(", ")}', style: const TextStyle(fontSize: 10, color: Colors.teal));
+                            final buttonsWidget = Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
                               children: [
                                 ElevatedButton(
                                   onPressed: () => _showAddVolunteerDialog(context, evt.id),
@@ -305,7 +343,6 @@ class _EventsCalendarPageState extends ConsumerState<EventsCalendarPage>
                                   ),
                                   child: const Text('Volunteer', style: TextStyle(fontSize: 9)),
                                 ),
-                                const SizedBox(width: 8),
                                 ElevatedButton(
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: evt.rsvps.contains('Me') ? Colors.amber : AppColors.primary,
@@ -321,8 +358,26 @@ class _EventsCalendarPageState extends ConsumerState<EventsCalendarPage>
                                   ),
                                 ),
                               ],
-                            ),
-                          ],
+                            );
+
+                            return isMobile
+                                ? Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      volunteersWidget,
+                                      const SizedBox(height: 12),
+                                      buttonsWidget,
+                                    ],
+                                  )
+                                : Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Expanded(child: volunteersWidget),
+                                      const SizedBox(width: 8),
+                                      buttonsWidget,
+                                    ],
+                                  );
+                          },
                         ),
                       ],
                     ),

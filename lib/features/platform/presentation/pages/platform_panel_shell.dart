@@ -494,88 +494,117 @@ class _PlatformPanelShellState extends ConsumerState<PlatformPanelShell> {
       ),
       child: SafeArea(
         bottom: false,
-        child: Row(
-          children: [
-            // Mobile Menu Toggle Button
-            if (!isDesktop) ...[
-              IconButton(
-                icon: const Icon(Icons.menu_rounded),
-                onPressed: () {
-                  _scaffoldKey.currentState?.openDrawer();
-                },
-              ),
-              const SizedBox(width: 8),
-            ],
+        child: LayoutBuilder(
+          builder: (context, headerConstraints) {
+            final isMobileHeader = headerConstraints.maxWidth < 650;
 
-            // Active Page Title & Subtitle
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    pageTitles[_selectedNavId] ?? 'Platform Control Panel',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
-                      color: isDark
-                          ? AppColors.darkTextPrimary
-                          : AppColors.lightTextPrimary,
-                    ),
+            final titleWidget = Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  pageTitles[_selectedNavId] ?? 'Platform Control Panel',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    color: isDark
+                        ? AppColors.darkTextPrimary
+                        : AppColors.lightTextPrimary,
                   ),
-                  Text(
-                    pageSubtitles[_selectedNavId] ?? '',
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: isDark
-                          ? AppColors.darkTextSecondary
-                          : AppColors.lightTextSecondary,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-            ),
-
-            // Onboard Quick Action Button
-            ElevatedButton.icon(
-              onPressed: () {
-                showDialog(
-                  context: context,
-                  builder: (context) => const OrganizationOnboardingModal(),
-                );
-              },
-              icon: const Icon(Icons.add_business_rounded, size: 16),
-              label: const Text(
-                'Onboard Org',
-                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
                 ),
-              ),
-            ),
-            const SizedBox(width: 10),
+                Text(
+                  pageSubtitles[_selectedNavId] ?? '',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: isDark
+                        ? AppColors.darkTextSecondary
+                        : AppColors.lightTextSecondary,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            );
 
-            // Theme Toggle Button
-            IconButton(
-              onPressed: () =>
-                  ref.read(themeModeProvider.notifier).toggleTheme(),
-              icon: Icon(
-                isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
-                color: isDark
-                    ? AppColors.darkTextSecondary
-                    : AppColors.lightTextSecondary,
-              ),
-              tooltip: 'Toggle Theme',
-            ),
-          ],
+            final actionsRow = Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ElevatedButton.icon(
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) => const OrganizationOnboardingModal(),
+                    );
+                  },
+                  icon: const Icon(Icons.add_business_rounded, size: 16),
+                  label: const Text(
+                    'Onboard Org',
+                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                IconButton(
+                  onPressed: () =>
+                      ref.read(themeModeProvider.notifier).toggleTheme(),
+                  icon: Icon(
+                    ref.watch(themeModeProvider) == ThemeMode.dark
+                        ? Icons.light_mode_rounded
+                        : Icons.dark_mode_rounded,
+                  ),
+                ),
+              ],
+            );
+
+            final mobileHeaderRow = Row(
+              children: [
+                if (!isDesktop) ...[
+                  IconButton(
+                    icon: const Icon(Icons.menu_rounded),
+                    onPressed: () {
+                      _scaffoldKey.currentState?.openDrawer();
+                    },
+                  ),
+                  const SizedBox(width: 8),
+                ],
+                Expanded(child: titleWidget),
+              ],
+            );
+
+            return isMobileHeader
+                ? Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      mobileHeaderRow,
+                      const SizedBox(height: 12),
+                      actionsRow,
+                    ],
+                  )
+                : Row(
+                    children: [
+                      if (!isDesktop) ...[
+                        IconButton(
+                          icon: const Icon(Icons.menu_rounded),
+                          onPressed: () {
+                            _scaffoldKey.currentState?.openDrawer();
+                          },
+                        ),
+                        const SizedBox(width: 8),
+                      ],
+                      Expanded(child: titleWidget),
+                      const SizedBox(width: 16),
+                      actionsRow,
+                    ],
+                  );
+          },
         ),
       ),
     );
@@ -643,64 +672,19 @@ class _PlatformPanelShellState extends ConsumerState<PlatformPanelShell> {
           LayoutBuilder(
             builder: (context, constraints) {
               final isWide = constraints.maxWidth > 900;
-              return Flex(
-                direction: isWide ? Axis.horizontal : Axis.vertical,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Tier Distribution Card
-                  Expanded(
-                    flex: isWide ? 6 : 0,
-                    child: GlassCard(
-                      padding: const EdgeInsets.all(20),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'SaaS Subscription Plan Distribution',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w700,
-                                  color: isDark
-                                      ? AppColors.darkTextPrimary
-                                      : AppColors.lightTextPrimary,
-                                ),
-                              ),
-                              TextButton(
-                                onPressed: () {
-                                  setState(() => _selectedNavId = 'subscription');
-                                },
-                                child: const Text('View Pricing Matrix →'),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
 
-                          _buildTierDistributionBar('Basic Plan', basicCount, orgs.length, const Color(0xFF3B82F6), isDark),
-                          const SizedBox(height: 12),
-                          _buildTierDistributionBar('Standard Plan', standardCount, orgs.length, const Color(0xFF10B981), isDark),
-                          const SizedBox(height: 12),
-                          _buildTierDistributionBar('Premium Plan', premiumCount, orgs.length, const Color(0xFF8B5CF6), isDark),
-                          const SizedBox(height: 12),
-                          _buildTierDistributionBar('Enterprise Plan', enterpriseCount, orgs.length, const Color(0xFFF59E0B), isDark),
-                        ],
-                      ),
-                    ),
-                  ),
-                  if (isWide) const SizedBox(width: 20) else const SizedBox(height: 20),
-
-                  // Recent Activity Log Card
-                  Expanded(
-                    flex: isWide ? 5 : 0,
-                    child: GlassCard(
-                      padding: const EdgeInsets.all(20),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Recent Platform Activities',
+              final distributionCard = GlassCard(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'SaaS Subscription Plan Distribution',
+                            overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w700,
@@ -709,17 +693,69 @@ class _PlatformPanelShellState extends ConsumerState<PlatformPanelShell> {
                                   : AppColors.lightTextPrimary,
                             ),
                           ),
-                          const SizedBox(height: 16),
-                          _buildActivityItem('Sunrise Education Trust upgraded to Premium Plan', '2 hours ago', Icons.arrow_upward_rounded, isDark),
-                          _buildActivityItem('Zenith Global Schools renewed Annual Enterprise Plan', '1 day ago', Icons.autorenew_rounded, isDark),
-                          _buildActivityItem('Harmony Public School Trust started 30-day Trial', '3 days ago', Icons.new_releases_rounded, isDark),
-                          _buildActivityItem('Vidya Niketan Academy added 1 new branch', '5 days ago', Icons.add_circle_outline_rounded, isDark),
-                        ],
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            setState(() => _selectedNavId = 'subscription');
+                          },
+                          child: const Text('View Pricing Matrix →'),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+
+                    _buildTierDistributionBar('Basic Plan', basicCount, orgs.length, const Color(0xFF3B82F6), isDark),
+                    const SizedBox(height: 12),
+                    _buildTierDistributionBar('Standard Plan', standardCount, orgs.length, const Color(0xFF10B981), isDark),
+                    const SizedBox(height: 12),
+                    _buildTierDistributionBar('Premium Plan', premiumCount, orgs.length, const Color(0xFF8B5CF6), isDark),
+                    const SizedBox(height: 12),
+                    _buildTierDistributionBar('Enterprise Plan', enterpriseCount, orgs.length, const Color(0xFFF59E0B), isDark),
+                  ],
+                ),
+              );
+
+              final activityCard = GlassCard(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Recent Platform Activities',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: isDark
+                            ? AppColors.darkTextPrimary
+                            : AppColors.lightTextPrimary,
                       ),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 16),
+                    _buildActivityItem('Sunrise Education Trust upgraded to Premium Plan', '2 hours ago', Icons.arrow_upward_rounded, isDark),
+                    _buildActivityItem('Zenith Global Schools renewed Annual Enterprise Plan', '1 day ago', Icons.autorenew_rounded, isDark),
+                    _buildActivityItem('Harmony Public School Trust started 30-day Trial', '3 days ago', Icons.new_releases_rounded, isDark),
+                    _buildActivityItem('Vidya Niketan Academy added 1 new branch', '5 days ago', Icons.add_circle_outline_rounded, isDark),
+                  ],
+                ),
               );
+
+              return isWide
+                  ? Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(flex: 6, child: distributionCard),
+                        const SizedBox(width: 20),
+                        Expanded(flex: 5, child: activityCard),
+                      ],
+                    )
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        distributionCard,
+                        const SizedBox(height: 20),
+                        activityCard,
+                      ],
+                    );
             },
           ),
         ],
@@ -792,11 +828,17 @@ class _PlatformPanelShellState extends ConsumerState<PlatformPanelShell> {
                 .toList(),
           );
         } else {
+          final isSmallMobile = constraints.maxWidth < 550;
           return Wrap(
             spacing: 12,
             runSpacing: 12,
             children: cards
-                .map((c) => SizedBox(width: (constraints.maxWidth - 12) / 2, child: c))
+                .map((c) => SizedBox(
+                      width: isSmallMobile
+                          ? constraints.maxWidth
+                          : (constraints.maxWidth - 12) / 2,
+                      child: c,
+                    ))
                 .toList(),
           );
         }

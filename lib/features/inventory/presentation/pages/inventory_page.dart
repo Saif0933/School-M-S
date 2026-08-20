@@ -65,46 +65,64 @@ class _InventoryManagementPageState extends ConsumerState<InventoryManagementPag
       body: Column(
         children: [
           // Subheader for stats & Quick Register triggers
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            color: isDark ? Colors.white10 : Colors.grey.withValues(alpha: 0.05),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Campus Asset & Inventory Register: ${user?.activeBranch?.branchName ?? "Primary Campus"}',
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                      ),
-                      Text(
-                        'Registered Assets: ${assets.length} | Stock Valuation: ₹${inventory.fold<double>(0, (a, b) => a + b.totalValuation).toStringAsFixed(0)}',
-                        style: const TextStyle(fontSize: 11, color: Colors.grey),
-                      ),
-                    ],
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isMobile = constraints.maxWidth < 750;
+              final infoWidget = Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Campus Asset & Inventory Register: ${user?.activeBranch?.branchName ?? "Primary Campus"}',
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                   ),
-                ),
-                Row(
-                  children: [
-                    ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
-                      onPressed: () => _showRegisterAssetDialog(context, activeBranchId, user?.activeBranch?.branchCode ?? "SIS-DEL"),
-                      icon: const Icon(Icons.add_box_rounded, color: Colors.white, size: 16),
-                      label: const Text('Add Asset', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
-                    ),
-                    const SizedBox(width: 8),
-                    ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(backgroundColor: Colors.teal),
-                      onPressed: () => _showAddStockDialog(context, activeBranchId),
-                      icon: const Icon(Icons.playlist_add_rounded, color: Colors.white, size: 16),
-                      label: const Text('Add Stock Item', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+                  Text(
+                    'Registered Assets: ${assets.length} | Stock Valuation: ₹${inventory.fold<double>(0, (a, b) => a + b.totalValuation).toStringAsFixed(0)}',
+                    style: const TextStyle(fontSize: 11, color: Colors.grey),
+                  ),
+                ],
+              );
+
+              final actionButtons = Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+                    onPressed: () => _showRegisterAssetDialog(context, activeBranchId, user?.activeBranch?.branchCode ?? "SIS-DEL"),
+                    icon: const Icon(Icons.add_box_rounded, color: Colors.white, size: 16),
+                    label: const Text('Add Asset', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+                  ),
+                  ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(backgroundColor: Colors.teal),
+                    onPressed: () => _showAddStockDialog(context, activeBranchId),
+                    icon: const Icon(Icons.playlist_add_rounded, color: Colors.white, size: 16),
+                    label: const Text('Add Stock Item', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+                  ),
+                ],
+              );
+
+              return Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                color: isDark ? Colors.white10 : Colors.grey.withValues(alpha: 0.05),
+                child: isMobile
+                    ? Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          infoWidget,
+                          const SizedBox(height: 12),
+                          actionButtons,
+                        ],
+                      )
+                    : Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(child: infoWidget),
+                          const SizedBox(width: 16),
+                          actionButtons,
+                        ],
+                      ),
+              );
+            },
           ),
 
           // Tab Bar
@@ -113,6 +131,7 @@ class _InventoryManagementPageState extends ConsumerState<InventoryManagementPag
             child: TabBar(
               controller: _tabController,
               isScrollable: true,
+              tabAlignment: TabAlignment.start,
               indicatorColor: AppColors.primary,
               labelColor: AppColors.primary,
               unselectedLabelColor: isDark ? Colors.white70 : Colors.black87,
@@ -339,8 +358,9 @@ class _AssetsMaintenanceTab extends ConsumerWidget {
                   Text('Logs: ${a.maintenanceLogs.join(", ")}', style: const TextStyle(fontSize: 10, color: Colors.grey)),
                 ],
                 const Divider(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
                   children: [
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(backgroundColor: Colors.teal),
@@ -489,10 +509,14 @@ class _InventoryStockTab extends ConsumerWidget {
                 ),
                 Text('Valuation: ₹${item.totalValuation.toStringAsFixed(0)} (Unit: ₹${item.unitValuation})', style: const TextStyle(fontSize: 11, color: Colors.grey)),
                 const Divider(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                Wrap(
+                  alignment: WrapAlignment.spaceBetween,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 8,
+                  runSpacing: 8,
                   children: [
                     Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         IconButton(
                           icon: const Icon(Icons.remove_circle_outline_rounded, color: Colors.red),
@@ -562,33 +586,70 @@ class _PurchaseOrdersTab extends ConsumerWidget {
       itemCount: orders.length,
       itemBuilder: (context, index) {
         final po = orders[index];
+        final isPaid = po.status == 'Paid';
+
         return Card(
-          child: ListTile(
-            title: Text('${po.vendorName} [${po.id}]', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-            subtitle: Text('${po.details}\nTotal Dues: ₹${po.amount.toStringAsFixed(0)} | Date: ${po.date}'),
-            trailing: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Chip(
-                  label: Text(po.status, style: const TextStyle(fontSize: 10, color: Colors.white)),
-                  backgroundColor: po.status == 'Paid' ? Colors.green : Colors.orange,
-                ),
-                if (po.status != 'Paid')
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.teal,
-                      minimumSize: const Size(60, 24),
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final isMobile = constraints.maxWidth < 550;
+
+                final info = Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('${po.vendorName} [${po.id}]', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                    const SizedBox(height: 4),
+                    Text('${po.details}\nTotal Dues: ₹${po.amount.toStringAsFixed(0)} | Date: ${po.date}', style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                  ],
+                );
+
+                final statusActions = Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: isMobile ? CrossAxisAlignment.start : CrossAxisAlignment.end,
+                  children: [
+                    Chip(
+                      label: Text(po.status, style: const TextStyle(fontSize: 10, color: Colors.white)),
+                      backgroundColor: isPaid ? Colors.green : Colors.orange,
                     ),
-                    onPressed: () {
-                      ref.read(purchaseOrdersProvider.notifier).updateOrderStatus(po.id, 'Paid');
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('✓ Vendor balance cleared! Payment recorded in branch expense registers.')),
+                    if (!isPaid) ...[
+                      const SizedBox(height: 6),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.teal,
+                          minimumSize: const Size(80, 30),
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                        ),
+                        onPressed: () {
+                          ref.read(purchaseOrdersProvider.notifier).updateOrderStatus(po.id, 'Paid');
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('✓ Vendor balance cleared! Payment recorded in branch expense registers.')),
+                          );
+                        },
+                        child: const Text('Pay Vendor', style: TextStyle(fontSize: 10, color: Colors.white)),
+                      ),
+                    ],
+                  ],
+                );
+
+                return isMobile
+                    ? Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          info,
+                          const SizedBox(height: 12),
+                          statusActions,
+                        ],
+                      )
+                    : Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(child: info),
+                          const SizedBox(width: 16),
+                          statusActions,
+                        ],
                       );
-                    },
-                    child: const Text('Pay Vendor', style: TextStyle(fontSize: 9, color: Colors.white)),
-                  ),
-              ],
+              },
             ),
           ),
         );

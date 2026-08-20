@@ -164,176 +164,207 @@ class _DepartmentClassSectionPageState
       length: 11,
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        appBar: PreferredSize(
-          preferredSize: const Size.fromHeight(115),
-          child: Container(
-            padding: const EdgeInsets.only(top: 12, left: 16, right: 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Header Row with Branch Switcher
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Academic Structure & Course Allocations',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w900,
-                            color: isDark
-                                ? AppColors.darkTextPrimary
-                                : AppColors.lightTextPrimary,
-                          ),
-                        ),
-                        Text(
-                          'Configure departments, classes, subjects, electives, batches, promotions, fee plans, exams, attendance, and PTMs for ${activeBranch.name}',
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: isDark
-                                ? AppColors.darkTextSecondary
-                                : AppColors.lightTextSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
-                    if (user != null && user.role.isOrgLevel)
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        decoration: BoxDecoration(
-                          color: isDark
-                              ? AppColors.darkCard
-                              : AppColors.lightCard,
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(
-                            color: isDark
-                                ? AppColors.darkBorder
-                                : AppColors.lightBorder,
-                          ),
-                        ),
-                        child: DropdownButtonHideUnderline(
-                          child: DropdownButton<String>(
-                            value: _selectedBranchId,
+        body: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.only(top: 12, left: 16, right: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header Row with Branch Switcher
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      final isMobile = constraints.maxWidth < 600;
+                      final titleWidget = Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Academic Structure & Course Allocations',
                             style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
+                              fontSize: isMobile ? 16 : 18,
+                              fontWeight: FontWeight.w900,
                               color: isDark
                                   ? AppColors.darkTextPrimary
                                   : AppColors.lightTextPrimary,
                             ),
-                            items: branches.map((b) {
-                              return DropdownMenuItem(
-                                value: b.id,
-                                child: Text(b.name),
-                              );
-                            }).toList(),
-                            onChanged: (val) {
-                              if (val != null) {
-                                setState(() {
-                                  _selectedBranchId = val;
-                                  _classDeptId = null;
-                                  _secClassId = null;
-                                  _subAssignClassId = null;
-                                  _subAssignSectionId = 'ALL';
-                                  _dirClassId = null;
-                                  _dirSectionId = null;
-                                  _promoFromClassId = null;
-                                  _promoToClassId = null;
-                                  _promoToSectionId = null;
-                                  _ttClassId = null;
-                                  _ttSectionId = 'ALL';
-                                  _feeClassId = null;
-                                  _examClassId = null;
-                                  _attClassId = null;
-                                  _attSectionId = null;
-                                  _tempAttendanceMap.clear();
-                                  _ptmClassId = null;
-                                  _ptmSectionId = null;
-                                });
-                              }
-                            },
                           ),
-                        ),
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                TabBar(
-                  isScrollable: true,
-                  tabAlignment: TabAlignment.start,
-                  indicatorColor: AppColors.primary,
-                  labelColor: AppColors.primary,
-                  unselectedLabelColor: Colors.grey,
-                  labelStyle: const TextStyle(
-                    fontWeight: FontWeight.w800,
-                    fontSize: 12,
+                          const SizedBox(height: 2),
+                          Text(
+                            'Configure departments, classes, subjects, electives, batches, promotions, fee plans, exams, attendance, and PTMs for ${activeBranch.name}',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: isDark
+                                  ? AppColors.darkTextSecondary
+                                  : AppColors.lightTextSecondary,
+                            ),
+                            maxLines: isMobile ? 2 : 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      );
+
+                      final branchWidget = user != null && user.role.isOrgLevel
+                          ? Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12),
+                              decoration: BoxDecoration(
+                                color: isDark
+                                    ? AppColors.darkCard
+                                    : AppColors.lightCard,
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                  color: isDark
+                                      ? AppColors.darkBorder
+                                      : AppColors.lightBorder,
+                                ),
+                              ),
+                              child: DropdownButtonHideUnderline(
+                                child: DropdownButton<String>(
+                                  value: _selectedBranchId,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    color: isDark
+                                        ? AppColors.darkTextPrimary
+                                        : AppColors.lightTextPrimary,
+                                  ),
+                                  items: branches.map((b) {
+                                    return DropdownMenuItem(
+                                      value: b.id,
+                                      child: Text(b.name),
+                                    );
+                                  }).toList(),
+                                  onChanged: (val) {
+                                    if (val != null) {
+                                      setState(() {
+                                        _selectedBranchId = val;
+                                        _classDeptId = null;
+                                        _secClassId = null;
+                                        _subAssignClassId = null;
+                                        _subAssignSectionId = 'ALL';
+                                        _dirClassId = null;
+                                        _dirSectionId = null;
+                                        _promoFromClassId = null;
+                                        _promoToClassId = null;
+                                        _promoToSectionId = null;
+                                        _ttClassId = null;
+                                        _ttSectionId = 'ALL';
+                                        _feeClassId = null;
+                                        _examClassId = null;
+                                        _attClassId = null;
+                                        _attSectionId = null;
+                                        _tempAttendanceMap.clear();
+                                        _ptmClassId = null;
+                                        _ptmSectionId = null;
+                                      });
+                                    }
+                                  },
+                                ),
+                              ),
+                            )
+                          : null;
+
+                      if (isMobile && branchWidget != null) {
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            titleWidget,
+                            const SizedBox(height: 8),
+                            branchWidget,
+                          ],
+                        );
+                      }
+
+                      return Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(child: titleWidget),
+                          if (branchWidget != null) ...[
+                            const SizedBox(width: 12),
+                            branchWidget,
+                          ],
+                        ],
+                      );
+                    },
                   ),
-                  tabs: const [
-                    Tab(
-                      icon: Icon(Icons.account_tree_rounded, size: 16),
-                      text: 'Academic Tree',
+                  const SizedBox(height: 12),
+                  TabBar(
+                    isScrollable: true,
+                    tabAlignment: TabAlignment.start,
+                    indicatorColor: AppColors.primary,
+                    labelColor: AppColors.primary,
+                    unselectedLabelColor: Colors.grey,
+                    labelStyle: const TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 12,
                     ),
-                    Tab(
-                      icon: Icon(Icons.menu_book_rounded, size: 16),
-                      text: 'Subject Assignments',
-                    ),
-                    Tab(
-                      icon: Icon(Icons.ballot_rounded, size: 16),
-                      text: 'Electives & Streams',
-                    ),
-                    Tab(
-                      icon: Icon(Icons.history_toggle_off_rounded, size: 16),
-                      text: 'Batches & Years',
-                    ),
-                    Tab(
-                      icon: Icon(Icons.badge_rounded, size: 16),
-                      text: 'Student Directory',
-                    ),
-                    Tab(
-                      icon: Icon(Icons.trending_up_rounded, size: 16),
-                      text: 'Promotion Workflow',
-                    ),
-                    Tab(
-                      icon: Icon(Icons.calendar_today_rounded, size: 16),
-                      text: 'Timetable Slots',
-                    ),
-                    Tab(
-                      icon: Icon(Icons.monetization_on_rounded, size: 16),
-                      text: 'Class Fee Plans',
-                    ),
-                    Tab(
-                      icon: Icon(Icons.percent_rounded, size: 16),
-                      text: 'Exam Schedules',
-                    ),
-                    Tab(
-                      icon: Icon(Icons.rule_rounded, size: 16),
-                      text: 'Attendance Register',
-                    ),
-                    Tab(
-                      icon: Icon(Icons.people_alt_rounded, size: 16),
-                      text: 'PTM Scheduler',
-                    ),
-                  ],
-                ),
-              ],
+                    tabs: const [
+                      Tab(
+                        icon: Icon(Icons.account_tree_rounded, size: 16),
+                        text: 'Academic Tree',
+                      ),
+                      Tab(
+                        icon: Icon(Icons.menu_book_rounded, size: 16),
+                        text: 'Subject Assignments',
+                      ),
+                      Tab(
+                        icon: Icon(Icons.ballot_rounded, size: 16),
+                        text: 'Electives & Streams',
+                      ),
+                      Tab(
+                        icon: Icon(Icons.history_toggle_off_rounded, size: 16),
+                        text: 'Batches & Years',
+                      ),
+                      Tab(
+                        icon: Icon(Icons.badge_rounded, size: 16),
+                        text: 'Student Directory',
+                      ),
+                      Tab(
+                        icon: Icon(Icons.trending_up_rounded, size: 16),
+                        text: 'Promotion Workflow',
+                      ),
+                      Tab(
+                        icon: Icon(Icons.calendar_today_rounded, size: 16),
+                        text: 'Timetable Slots',
+                      ),
+                      Tab(
+                        icon: Icon(Icons.monetization_on_rounded, size: 16),
+                        text: 'Class Fee Plans',
+                      ),
+                      Tab(
+                        icon: Icon(Icons.percent_rounded, size: 16),
+                        text: 'Exam Schedules',
+                      ),
+                      Tab(
+                        icon: Icon(Icons.rule_rounded, size: 16),
+                        text: 'Attendance Register',
+                      ),
+                      Tab(
+                        icon: Icon(Icons.people_alt_rounded, size: 16),
+                        text: 'PTM Scheduler',
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-        ),
-        body: TabBarView(
-          children: [
-            _buildAcademicTreeTab(isDark),
-            _buildSubjectAssignmentTab(isDark),
-            _buildElectivesStreamsTab(isDark),
-            _buildBatchesTab(isDark),
-            _buildStudentDirectoryTab(isDark),
-            _buildPromotionTab(isDark),
-            _buildTimetableSlotsTab(isDark),
-            _buildClassFeePlansTab(isDark),
-            _buildExamSchedulesTab(isDark),
-            _buildAttendanceRegisterTab(isDark),
-            _buildParentTeacherMeetingsTab(isDark),
+            const Divider(height: 1),
+            Expanded(
+              child: TabBarView(
+                children: [
+                  _buildAcademicTreeTab(isDark),
+                  _buildSubjectAssignmentTab(isDark),
+                  _buildElectivesStreamsTab(isDark),
+                  _buildBatchesTab(isDark),
+                  _buildStudentDirectoryTab(isDark),
+                  _buildPromotionTab(isDark),
+                  _buildTimetableSlotsTab(isDark),
+                  _buildClassFeePlansTab(isDark),
+                  _buildExamSchedulesTab(isDark),
+                  _buildAttendanceRegisterTab(isDark),
+                  _buildParentTeacherMeetingsTab(isDark),
+                ],
+              ),
+            ),
           ],
         ),
       ),

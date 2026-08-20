@@ -405,224 +405,251 @@ class _BranchDetailManagementModalState
 
   // TAB 1: Profile & Contacts (Status, Basic Info, Contact Directory)
   Widget _buildProfileTab(bool isDark) {
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isMobile = constraints.maxWidth < 600;
+
+        final statusWidget = DropdownButtonFormField<String>(
+          initialValue: _status,
+          decoration: const InputDecoration(
+            labelText: 'Branch Lifecycle Status Tracking',
+            prefixIcon: Icon(Icons.track_changes_rounded),
+          ),
+          items: const [
+            DropdownMenuItem(value: 'Active', child: Text('Active (Fully Functional)')),
+            DropdownMenuItem(value: 'Inactive', child: Text('Inactive (Hold)')),
+            DropdownMenuItem(value: 'Trial', child: Text('Trial Sandbox Mode')),
+            DropdownMenuItem(value: 'Suspended', child: Text('Suspended (Compliance Hold)')),
+          ],
+          onChanged: (val) {
+            if (val != null) setState(() => _status = val);
+          },
+        );
+
+        final principalWidget = TextField(
+          controller: _principalController,
+          decoration: const InputDecoration(
+            labelText: 'Principal / Branch Admin Principal',
+            prefixIcon: Icon(Icons.person_pin_rounded),
+          ),
+        );
+
+        final nameWidget = TextField(
+          controller: _nameController,
+          decoration: const InputDecoration(
+            labelText: 'Branch Name',
+            prefixIcon: Icon(Icons.school_rounded),
+          ),
+        );
+
+        final codeWidget = TextField(
+          controller: _codeController,
+          decoration: const InputDecoration(
+            labelText: 'Unique Branch Code',
+            prefixIcon: Icon(Icons.qr_code_rounded),
+          ),
+        );
+
+        return SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: DropdownButtonFormField<String>(
-                  initialValue: _status,
-                  decoration: const InputDecoration(
-                    labelText: 'Branch Lifecycle Status Tracking',
-                    prefixIcon: Icon(Icons.track_changes_rounded),
-                  ),
-                  items: const [
-                    DropdownMenuItem(value: 'Active', child: Text('Active (Fully Functional)')),
-                    DropdownMenuItem(value: 'Inactive', child: Text('Inactive (Hold)')),
-                    DropdownMenuItem(value: 'Trial', child: Text('Trial Sandbox Mode')),
-                    DropdownMenuItem(value: 'Suspended', child: Text('Suspended (Compliance Hold)')),
+              if (isMobile) ...[
+                statusWidget,
+                const SizedBox(height: 12),
+                principalWidget,
+                const SizedBox(height: 12),
+                nameWidget,
+                const SizedBox(height: 12),
+                codeWidget,
+              ] else ...[
+                Row(
+                  children: [
+                    Expanded(child: statusWidget),
+                    const SizedBox(width: 12),
+                    Expanded(child: principalWidget),
                   ],
-                  onChanged: (val) {
-                    if (val != null) setState(() => _status = val);
-                  },
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: TextField(
-                  controller: _principalController,
-                  decoration: const InputDecoration(
-                    labelText: 'Principal / Branch Admin Principal',
-                    prefixIcon: Icon(Icons.person_pin_rounded),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: _nameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Branch Name',
-                    prefixIcon: Icon(Icons.school_rounded),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: TextField(
-                  controller: _codeController,
-                  decoration: const InputDecoration(
-                    labelText: 'Unique Branch Code',
-                    prefixIcon: Icon(Icons.qr_code_rounded),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-
-          // Capacity allocation display
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.people_alt_rounded, color: AppColors.primary, size: 20),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'Branch Allocated Capacities: Max Students Limit: $_maxStudents  |  Max Staff Limit: $_maxStaff',
-                    style: const TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.primary,
-                    ),
-                  ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(child: nameWidget),
+                    const SizedBox(width: 12),
+                    Expanded(child: codeWidget),
+                  ],
                 ),
               ],
-            ),
-          ),
-          const SizedBox(height: 16),
+              const SizedBox(height: 16),
 
-          Text(
-            'Branch Contact Directory:',
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-              color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
-            ),
-          ),
-          const SizedBox(height: 8),
-
-          ListView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: _contactDirectory.length,
-            itemBuilder: (context, idx) {
-              final item = _contactDirectory[idx];
-              return Container(
-                margin: const EdgeInsets.only(bottom: 6),
+              // Capacity allocation display
+              Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: isDark ? AppColors.darkBg : AppColors.lightBg,
+                  color: AppColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                      color: isDark ? AppColors.darkBorder : AppColors.lightBorder),
+                  border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.contact_phone_rounded,
-                        color: AppColors.primary, size: 18),
+                    const Icon(Icons.people_alt_rounded, color: AppColors.primary, size: 20),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(item['title']!,
-                              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12)),
-                          Text('Phone: ${item['phone']} • Email: ${item['email']}',
-                              style: const TextStyle(fontSize: 10, color: Colors.grey)),
-                        ],
+                      child: Text(
+                        'Branch Allocated Capacities: Max Students Limit: $_maxStudents  |  Max Staff Limit: $_maxStaff',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.primary,
+                        ),
                       ),
                     ),
                   ],
                 ),
-              );
-            },
+              ),
+              const SizedBox(height: 16),
+
+              Text(
+                'Branch Contact Directory:',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                ),
+              ),
+              const SizedBox(height: 8),
+
+              ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: _contactDirectory.length,
+                itemBuilder: (context, idx) {
+                  final item = _contactDirectory[idx];
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 6),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: isDark ? AppColors.darkBg : AppColors.lightBg,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                          color: isDark ? AppColors.darkBorder : AppColors.lightBorder),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.contact_phone_rounded,
+                            color: AppColors.primary, size: 18),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(item['title']!,
+                                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12)),
+                              Text('Phone: ${item['phone']} • Email: ${item['email']}',
+                                  style: const TextStyle(fontSize: 10, color: Colors.grey)),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
   // TAB 2: Academics & Compliance (Grading Scale, Exam Pattern, Compliance checklist)
   Widget _buildAcademicsTab(bool isDark) {
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isMobile = constraints.maxWidth < 600;
+
+        final gradingWidget = DropdownButtonFormField<String>(
+          initialValue: _gradingScale,
+          decoration: const InputDecoration(
+            labelText: 'Branch-Wise Grading Scale',
+            prefixIcon: Icon(Icons.grid_goldenratio_rounded),
+          ),
+          items: const [
+            DropdownMenuItem(value: 'CBSE 9-Point Scale', child: Text('CBSE 9-Point Scale')),
+            DropdownMenuItem(value: 'ICSE Percentage Scale', child: Text('ICSE Percentage Scale')),
+            DropdownMenuItem(value: 'IB 7-Point Scale', child: Text('IB 7-Point Standard Scale')),
+            DropdownMenuItem(value: 'US GPA 4.0 Standard', child: Text('US GPA 4.0 Standard')),
+          ],
+          onChanged: (val) {
+            if (val != null) setState(() => _gradingScale = val);
+          },
+        );
+
+        final examPatternWidget = DropdownButtonFormField<String>(
+          initialValue: _examPattern,
+          decoration: const InputDecoration(
+            labelText: 'Branch Exam & Marksheet Pattern',
+            prefixIcon: Icon(Icons.menu_book_rounded),
+          ),
+          items: const [
+            DropdownMenuItem(value: 'Term-based Semester Exam', child: Text('Term-based Semester Exam')),
+            DropdownMenuItem(value: 'Continuous and Comprehensive Evaluation', child: Text('CCE Comprehensive Pattern')),
+            DropdownMenuItem(value: 'Annual Examination Only', child: Text('Annual Examination Only')),
+          ],
+          onChanged: (val) {
+            if (val != null) setState(() => _examPattern = val);
+          },
+        );
+
+        return SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: DropdownButtonFormField<String>(
-                  initialValue: _gradingScale,
-                  decoration: const InputDecoration(
-                    labelText: 'Branch-Wise Grading Scale',
-                    prefixIcon: Icon(Icons.grid_goldenratio_rounded),
-                  ),
-                  items: const [
-                    DropdownMenuItem(value: 'CBSE 9-Point Scale', child: Text('CBSE 9-Point Scale')),
-                    DropdownMenuItem(value: 'ICSE Percentage Scale', child: Text('ICSE Percentage Scale')),
-                    DropdownMenuItem(value: 'IB 7-Point Scale', child: Text('IB 7-Point Standard Scale')),
-                    DropdownMenuItem(value: 'US GPA 4.0 Standard', child: Text('US GPA 4.0 Standard')),
+              if (isMobile) ...[
+                gradingWidget,
+                const SizedBox(height: 12),
+                examPatternWidget,
+              ] else ...[
+                Row(
+                  children: [
+                    Expanded(child: gradingWidget),
+                    const SizedBox(width: 12),
+                    Expanded(child: examPatternWidget),
                   ],
-                  onChanged: (val) {
-                    if (val != null) setState(() => _gradingScale = val);
-                  },
+                ),
+              ],
+              const SizedBox(height: 16),
+
+              Text(
+                'Branch Compliance & Affiliation Settings Checklist:',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
                 ),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: DropdownButtonFormField<String>(
-                  initialValue: _examPattern,
-                  decoration: const InputDecoration(
-                    labelText: 'Branch Exam & Marksheet Pattern',
-                    prefixIcon: Icon(Icons.menu_book_rounded),
-                  ),
-                  items: const [
-                    DropdownMenuItem(value: 'Term-based Semester Exam', child: Text('Term-based Semester Exam')),
-                    DropdownMenuItem(value: 'Continuous and Comprehensive Evaluation', child: Text('CCE Comprehensive Pattern')),
-                    DropdownMenuItem(value: 'Annual Examination Only', child: Text('Annual Examination Only')),
-                  ],
-                  onChanged: (val) {
-                    if (val != null) setState(() => _examPattern = val);
-                  },
-                ),
+              const SizedBox(height: 10),
+
+              Column(
+                children: _complianceChecklist.entries.map((entry) {
+                  return CheckboxListTile(
+                    value: entry.value,
+                    title: Text(entry.key, style: const TextStyle(fontSize: 12)),
+                    activeColor: AppColors.primary,
+                    controlAffinity: ListTileControlAffinity.leading,
+                    onChanged: (val) {
+                      if (val != null) {
+                        setState(() {
+                          _complianceChecklist[entry.key] = val;
+                        });
+                      }
+                    },
+                  );
+                }).toList(),
               ),
             ],
           ),
-          const SizedBox(height: 16),
-
-          Text(
-            'Branch Compliance & Affiliation Settings Checklist:',
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-              color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
-            ),
-          ),
-          const SizedBox(height: 10),
-
-          Column(
-            children: _complianceChecklist.entries.map((entry) {
-              return CheckboxListTile(
-                value: entry.value,
-                title: Text(entry.key, style: const TextStyle(fontSize: 12)),
-                activeColor: AppColors.primary,
-                controlAffinity: ListTileControlAffinity.leading,
-                onChanged: (val) {
-                  if (val != null) {
-                    setState(() {
-                      _complianceChecklist[entry.key] = val;
-                    });
-                  }
-                },
-              );
-            }).toList(),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -635,12 +662,14 @@ class _BranchDetailManagementModalState
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Branch Class and Section Structure:',
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+              Expanded(
+                child: Text(
+                  'Branch Class and Section Structure:',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                  ),
                 ),
               ),
               ElevatedButton.icon(
@@ -735,12 +764,14 @@ class _BranchDetailManagementModalState
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Branch-Wise Custom Departments:',
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+              Expanded(
+                child: Text(
+                  'Branch-Wise Custom Departments:',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                  ),
                 ),
               ),
               ElevatedButton.icon(
@@ -802,12 +833,14 @@ class _BranchDetailManagementModalState
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Independent Branch Fee Structure:',
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+              Expanded(
+                child: Text(
+                  'Independent Branch Fee Structure:',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                  ),
                 ),
               ),
               ElevatedButton.icon(
@@ -929,7 +962,9 @@ class _BranchDetailManagementModalState
             ),
           ),
           const SizedBox(height: 8),
-          Row(
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
             children: [
               ElevatedButton.icon(
                 onPressed: () {
@@ -944,7 +979,6 @@ class _BranchDetailManagementModalState
                 icon: const Icon(Icons.archive_rounded, size: 16),
                 label: const Text('Deactivate & Archive Branch'),
               ),
-              const SizedBox(width: 12),
               OutlinedButton.icon(
                 onPressed: () {
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -966,142 +1000,163 @@ class _BranchDetailManagementModalState
 
   // TAB 5: Branding Override, Custom Fields & Migration Settings
   Widget _buildBrandingTab(bool isDark) {
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          TextField(
-            controller: _customDomainController,
-            decoration: const InputDecoration(
-              labelText: 'Branch White-Labeled Custom Subdomain URL',
-              hintText: 'e.g. delhi.sunrisetrust.edu.in',
-              prefixIcon: Icon(Icons.language_rounded, size: 18),
-            ),
-          ),
-          const SizedBox(height: 16),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isMobile = constraints.maxWidth < 600;
 
-          Row(
+        final brandingBox = Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: isDark ? AppColors.darkBg : AppColors.lightBg,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+                color: isDark ? AppColors.darkBorder : AppColors.lightBorder),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: isDark ? AppColors.darkBg : AppColors.lightBg,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(
-                        color: isDark ? AppColors.darkBorder : AppColors.lightBorder),
+              const Text('Branch branding Override Color',
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  CircleAvatar(
+                    radius: 12,
+                    backgroundColor: Color(int.parse(
+                        widget.branch.brandingOverride['primaryColor']
+                                ?.replaceAll('#', '0xFF') ??
+                            '0xFF6366F1')),
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('Branch branding Override Color',
-                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          CircleAvatar(
-                            radius: 12,
-                            backgroundColor: Color(int.parse(
-                                widget.branch.brandingOverride['primaryColor']
-                                        ?.replaceAll('#', '0xFF') ??
-                                    '0xFF6366F1')),
-                          ),
-                          const SizedBox(width: 10),
-                          Text(
-                            widget.branch.brandingOverride['primaryColor'] ??
-                                '#6366F1',
-                            style: const TextStyle(fontWeight: FontWeight.w800),
-                          ),
-                        ],
-                      ),
-                    ],
+                  const SizedBox(width: 10),
+                  Text(
+                    widget.branch.brandingOverride['primaryColor'] ??
+                        '#6366F1',
+                    style: const TextStyle(fontWeight: FontWeight.w800),
                   ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Custom Branch Logo Updated!')),
-                    );
-                  },
-                  icon: const Icon(Icons.upload_file_rounded, size: 16),
-                  label: const Text('Override Branch Logo'),
-                ),
+                ],
               ),
             ],
           ),
-          const SizedBox(height: 18),
-          const Divider(),
-          const SizedBox(height: 12),
+        );
 
-          // Inter-Organization Branch Migration
-          Text(
-            'Branch Migration Between Organizations:',
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-              color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
-            ),
+        final logoBtn = OutlinedButton.icon(
+          onPressed: () {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Custom Branch Logo Updated!')),
+            );
+          },
+          icon: const Icon(Icons.upload_file_rounded, size: 16),
+          label: const Text('Override Branch Logo'),
+        );
+
+        final migrationField = TextField(
+          decoration: const InputDecoration(
+            labelText: 'Target Parent Organization ID',
+            hintText: 'e.g. ORG-9929-TRUST',
           ),
-          const SizedBox(height: 8),
-          Row(
+          onChanged: (val) => _migrationTargetOrgId = val,
+        );
+
+        final migrationBtn = ElevatedButton.icon(
+          onPressed: () {
+            if (_migrationTargetOrgId.isNotEmpty) {
+              setState(() {
+                _migrationStatus = 'Pending Approval';
+              });
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text(
+                      'Branch Migration request submitted to Parent Trust Super Admin for approval!'),
+                ),
+              );
+            }
+          },
+          icon: const Icon(Icons.send_rounded, size: 16),
+          label: const Text('Initiate Migration'),
+        );
+
+        return SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: TextField(
-                  decoration: const InputDecoration(
-                    labelText: 'Target Parent Organization ID',
-                    hintText: 'e.g. ORG-9929-TRUST',
-                  ),
-                  onChanged: (val) => _migrationTargetOrgId = val,
+              TextField(
+                controller: _customDomainController,
+                decoration: const InputDecoration(
+                  labelText: 'Branch White-Labeled Custom Subdomain URL',
+                  hintText: 'e.g. delhi.sunrisetrust.edu.in',
+                  prefixIcon: Icon(Icons.language_rounded, size: 18),
                 ),
               ),
-              const SizedBox(width: 12),
-              ElevatedButton.icon(
-                onPressed: () {
-                  if (_migrationTargetOrgId.isNotEmpty) {
-                    setState(() {
-                      _migrationStatus = 'Pending Approval';
-                    });
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                            'Branch Migration request submitted to Parent Trust Super Admin for approval!'),
+              const SizedBox(height: 16),
+
+              if (isMobile) ...[
+                brandingBox,
+                const SizedBox(height: 12),
+                SizedBox(width: double.infinity, child: logoBtn),
+              ] else ...[
+                Row(
+                  children: [
+                    Expanded(child: brandingBox),
+                    const SizedBox(width: 12),
+                    Expanded(child: logoBtn),
+                  ],
+                ),
+              ],
+              const SizedBox(height: 18),
+              const Divider(),
+              const SizedBox(height: 12),
+
+              // Inter-Organization Branch Migration
+              Text(
+                'Branch Migration Between Organizations:',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                ),
+              ),
+              const SizedBox(height: 8),
+
+              if (isMobile) ...[
+                migrationField,
+                const SizedBox(height: 8),
+                SizedBox(width: double.infinity, child: migrationBtn),
+              ] else ...[
+                Row(
+                  children: [
+                    Expanded(child: migrationField),
+                    const SizedBox(width: 12),
+                    migrationBtn,
+                  ],
+                ),
+              ],
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  const Text('Migration Status: ', style: TextStyle(fontSize: 11)),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: _migrationStatus == 'Pending Approval'
+                          ? Colors.orange.withValues(alpha: 0.15)
+                          : Colors.grey.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      _migrationStatus,
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                        color: _migrationStatus == 'Pending Approval' ? Colors.orange : Colors.grey,
                       ),
-                    );
-                  }
-                },
-                icon: const Icon(Icons.send_rounded, size: 16),
-                label: const Text('Initiate Migration'),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              const Text('Migration Status: ', style: TextStyle(fontSize: 11)),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: _migrationStatus == 'Pending Approval'
-                      ? Colors.orange.withValues(alpha: 0.15)
-                      : Colors.grey.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  _migrationStatus,
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w800,
-                    color: _migrationStatus == 'Pending Approval' ? Colors.orange : Colors.grey,
+                    ),
                   ),
-                ),
+                ],
               ),
             ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 

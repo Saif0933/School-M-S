@@ -402,7 +402,7 @@ class _StudentAttendanceTab extends ConsumerWidget {
               decoration: BoxDecoration(
                 gradient: AppColors.secondaryGradient,
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: AppColors.secondary.withOpacity(0.4)),
+                border: Border.all(color: AppColors.secondary.withValues(alpha: 0.4)),
               ),
               child: Row(
                 children: [
@@ -1479,17 +1479,15 @@ class _AttendanceReportsTabState extends ConsumerState<_AttendanceReportsTab> {
                       _isDownloading
                           ? const CircularProgressIndicator(strokeWidth: 2)
                           : ElevatedButton.icon(
-                              onPressed: () {
+                              onPressed: () async {
                                 setState(() => _isDownloading = true);
-                                Future.delayed(const Duration(seconds: 2), () {
-                                  if (mounted) {
-                                    setState(() => _isDownloading = false);
-                                    _showSnack(
-                                      context,
-                                      'PDF Register downloaded successfully!',
-                                    );
-                                  }
-                                });
+                                await Future.delayed(const Duration(seconds: 2));
+                                if (!context.mounted) return;
+                                setState(() => _isDownloading = false);
+                                _showSnack(
+                                  context,
+                                  'PDF Register downloaded successfully!',
+                                );
                               },
                               icon: const Icon(
                                 Icons.download_rounded,
@@ -1855,7 +1853,7 @@ class _AttendanceReportsTabState extends ConsumerState<_AttendanceReportsTab> {
         children: [
           CircleAvatar(
             radius: 12,
-            backgroundColor: AppColors.primary.withOpacity(0.12),
+            backgroundColor: AppColors.primary.withValues(alpha: 0.12),
             child: const Icon(
               Icons.person_outline_rounded,
               size: 10,
@@ -1952,7 +1950,7 @@ class _AttendanceReportsTabState extends ConsumerState<_AttendanceReportsTab> {
               Switch(
                 value: true,
                 onChanged: (_) {},
-                activeColor: AppColors.primary,
+                activeThumbColor: AppColors.primary,
               ),
             ],
           ),
@@ -2818,10 +2816,10 @@ class _CorrectionsWorkflowTab extends ConsumerWidget {
                               vertical: 3,
                             ),
                             decoration: BoxDecoration(
-                              color: statusColor.withOpacity(0.12),
+                              color: statusColor.withValues(alpha: 0.12),
                               borderRadius: BorderRadius.circular(6),
                               border: Border.all(
-                                color: statusColor.withOpacity(0.3),
+                                color: statusColor.withValues(alpha: 0.3),
                               ),
                             ),
                             child: Text(
@@ -3107,7 +3105,7 @@ class _StudentAttendanceRow extends StatelessWidget {
                           vertical: 1,
                         ),
                         decoration: BoxDecoration(
-                          color: AppColors.accentAmber.withOpacity(0.2),
+                          color: AppColors.accentAmber.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: const Text(
@@ -3155,12 +3153,12 @@ class _StudentAttendanceRow extends StatelessWidget {
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: isSelected ? chipColor : chipColor.withOpacity(0.1),
+                    color: isSelected ? chipColor : chipColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(6),
                     border: Border.all(
                       color: isSelected
                           ? chipColor
-                          : chipColor.withOpacity(0.3),
+                          : chipColor.withValues(alpha: 0.3),
                     ),
                   ),
                   child: Text(
@@ -3238,7 +3236,7 @@ class _StaffAttendanceRow extends StatelessWidget {
               CircleAvatar(
                 radius: 18,
                 backgroundColor: AppColors.secondaryGradient.colors.first
-                    .withOpacity(0.15),
+                    .withValues(alpha: 0.15),
                 child: Text(
                   staffName.isNotEmpty ? staffName[0] : 'T',
                   style: const TextStyle(
@@ -3275,7 +3273,7 @@ class _StaffAttendanceRow extends StatelessWidget {
                               vertical: 1,
                             ),
                             decoration: BoxDecoration(
-                              color: AppColors.accentAmber.withOpacity(0.2),
+                              color: AppColors.accentAmber.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: const Text(
@@ -3357,12 +3355,12 @@ class _StaffAttendanceRow extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: isSelected
                             ? chipColor
-                            : chipColor.withOpacity(0.1),
+                            : chipColor.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(6),
                         border: Border.all(
                           color: isSelected
                               ? chipColor
-                              : chipColor.withOpacity(0.3),
+                              : chipColor.withValues(alpha: 0.3),
                         ),
                       ),
                       child: Text(
@@ -3451,7 +3449,7 @@ class _DeviceCard extends StatelessWidget {
                           vertical: 3,
                         ),
                         decoration: BoxDecoration(
-                          color: statusColor.withOpacity(0.15),
+                          color: statusColor.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Row(
@@ -3720,7 +3718,7 @@ class _ConfigToggle extends StatelessWidget {
           Switch(
             value: value,
             onChanged: onChanged,
-            activeColor: AppColors.primary,
+            activeThumbColor: AppColors.primary,
           ),
         ],
       ),
@@ -3744,9 +3742,9 @@ class _AttendanceSummaryChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
+        color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Column(
         children: [
@@ -3785,7 +3783,7 @@ class _FilterChipButton extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.primarySurface,
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+          border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,

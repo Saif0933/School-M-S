@@ -61,29 +61,47 @@ class _HRPayrollPageState extends ConsumerState<HRPayrollPage>
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             color: isDark ? Colors.white10 : Colors.grey.withValues(alpha: 0.05),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Campus HR & Payroll Desk: ${user?.activeBranch?.branchName ?? "Primary Campus"}',
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                      ),
-                      Text(
-                        'Active Employees Registered: ${allStaff.length} | Branch Code: ${user?.activeBranch?.branchCode ?? "SIS-DEL"}',
-                        style: const TextStyle(fontSize: 11, color: Colors.grey),
-                      ),
-                    ],
-                  ),
-                ),
-                Text(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final isMobile = constraints.maxWidth < 650;
+
+                final textDetails = Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Campus HR & Payroll Desk: ${user?.activeBranch?.branchName ?? "Primary Campus"}',
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                    ),
+                    Text(
+                      'Active Employees Registered: ${allStaff.length} | Branch Code: ${user?.activeBranch?.branchCode ?? "SIS-DEL"}',
+                      style: const TextStyle(fontSize: 11, color: Colors.grey),
+                    ),
+                  ],
+                );
+
+                final periodText = Text(
                   'Active Period: $_selectedPeriod',
                   style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary, fontSize: 12),
-                ),
-              ],
+                );
+
+                return isMobile
+                    ? Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          textDetails,
+                          const SizedBox(height: 8),
+                          periodText,
+                        ],
+                      )
+                    : Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(child: textDetails),
+                          const SizedBox(width: 16),
+                          periodText,
+                        ],
+                      );
+              },
             ),
           ),
 
@@ -93,6 +111,7 @@ class _HRPayrollPageState extends ConsumerState<HRPayrollPage>
             child: TabBar(
               controller: _tabController,
               isScrollable: true,
+              tabAlignment: TabAlignment.start,
               indicatorColor: AppColors.primary,
               labelColor: AppColors.primary,
               unselectedLabelColor: isDark ? Colors.white70 : Colors.black87,
@@ -180,8 +199,9 @@ class _StructuresTab extends ConsumerWidget {
                   ],
                 ),
                 const Divider(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                Wrap(
+                  spacing: 16,
+                  runSpacing: 10,
                   children: [
                     _breakupText('Basic Pay', struct.basicPay),
                     _breakupText('DA Dues', struct.da),
@@ -302,8 +322,11 @@ class _RunsTab extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Wrap(
+            spacing: 12,
+            runSpacing: 10,
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               DropdownButton<String>(
                 value: period,
@@ -627,8 +650,11 @@ class _LoansTab extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Wrap(
+            spacing: 12,
+            runSpacing: 10,
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               const Text('Disburse Employee Loan Account', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
               if (activeStaff != null)
@@ -728,8 +754,11 @@ class _ComplianceTab extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Wrap(
+            spacing: 12,
+            runSpacing: 10,
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               const Text('Income Tax & Form 16 Projection Desks', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
               ElevatedButton.icon(

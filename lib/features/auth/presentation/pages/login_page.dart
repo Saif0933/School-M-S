@@ -233,18 +233,18 @@ class _LoginPageState extends ConsumerState<LoginPage>
 
   Widget _buildMobileLayout() {
     return ConstrainedBox(
-      constraints: const BoxConstraints(maxWidth: 420),
+      constraints: const BoxConstraints(maxWidth: 440),
       child: Column(
         children: [
           FadeInDown(
             duration: const Duration(milliseconds: 600),
             child: _buildBrandingSectionMobile(),
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: 24),
           FadeInUp(
             duration: const Duration(milliseconds: 600),
             delay: const Duration(milliseconds: 200),
-            child: _buildLoginCard(),
+            child: _buildLoginCard(isMobile: true),
           ),
         ],
       ),
@@ -425,9 +425,9 @@ class _LoginPageState extends ConsumerState<LoginPage>
     );
   }
 
-  Widget _buildLoginCard() {
+  Widget _buildLoginCard({bool isMobile = false}) {
     return Container(
-      padding: const EdgeInsets.all(32),
+      padding: EdgeInsets.all(isMobile ? 20 : 32),
       decoration: BoxDecoration(
         color: AppColors.darkSurface.withValues(alpha: 0.85),
         borderRadius: BorderRadius.circular(24),
@@ -701,7 +701,7 @@ class _LoginPageState extends ConsumerState<LoginPage>
             onTap: () => _quickLogin(
                 platformAccount['email']!, platformAccount['password']!),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
                   colors: [Color(0xFF8B5CF6), Color(0xFF6D28D9)],
@@ -718,14 +718,17 @@ class _LoginPageState extends ConsumerState<LoginPage>
               child: const Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.hub_rounded, color: Colors.white, size: 20),
-                  SizedBox(width: 10),
-                  Text(
-                    '👑 1-Tap SaaS Platform Panel Login (platformadmin@symbosys.com)',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
+                  Icon(Icons.hub_rounded, color: Colors.white, size: 18),
+                  SizedBox(width: 8),
+                  Flexible(
+                    child: Text(
+                      '👑 1-Tap SaaS Platform Panel Login (platformadmin@symbosys.com)',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                      ),
+                      textAlign: TextAlign.center,
                     ),
                   ),
                 ],

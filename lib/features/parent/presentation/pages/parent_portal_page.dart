@@ -46,55 +46,76 @@ class _ParentPortalPageState extends ConsumerState<ParentPortalPage>
               color: isDark ? Colors.white10 : Colors.grey.withValues(alpha: 0.05),
               border: Border(bottom: BorderSide(color: isDark ? Colors.white10 : Colors.black12)),
             ),
-            child: Row(
-              children: [
-                const Icon(Icons.family_restroom_rounded, color: AppColors.primary, size: 24),
-                const SizedBox(width: 12),
-                const Text(
-                  'Parent Ward Directory:',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: children.map((c) {
-                        final isSelected = c.id == activeChildId;
-                        return Padding(
-                          padding: const EdgeInsets.only(right: 12),
-                          child: ChoiceChip(
-                            avatar: CircleAvatar(
-                              radius: 10,
-                              backgroundImage: NetworkImage(c.avatarUrl),
-                            ),
-                            label: Text(
-                              '${c.name} (${c.branchId == "BR-001" ? "Delhi" : "Mumbai"})',
-                              style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: isSelected ? Colors.white : null),
-                            ),
-                            selected: isSelected,
-                            selectedColor: AppColors.primary,
-                            onSelected: (val) {
-                              if (val) {
-                                ref.read(activeChildIdProvider.notifier).state = c.id;
-                                // Switch user active branch dynamically!
-                                ref.read(authStateProvider.notifier).switchBranch(c.branchId);
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text('✓ Switched active ward to ${c.name} (${c.branchId == "BR-001" ? "Delhi Central" : "Mumbai South"} branch scope)'),
-                                    backgroundColor: AppColors.primary,
-                                    duration: const Duration(seconds: 2),
-                                  ),
-                                );
-                              }
-                            },
-                          ),
-                        );
-                      }).toList(),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final isMobile = constraints.maxWidth < 600;
+
+                final headerRow = Row(
+                  children: [
+                    const Icon(Icons.family_restroom_rounded, color: AppColors.primary, size: 24),
+                    const SizedBox(width: 12),
+                    const Text(
+                      'Parent Ward Directory:',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                     ),
+                  ],
+                );
+
+                final selectorChips = SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: children.map((c) {
+                      final isSelected = c.id == activeChildId;
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 12),
+                        child: ChoiceChip(
+                          avatar: CircleAvatar(
+                            radius: 10,
+                            backgroundImage: NetworkImage(c.avatarUrl),
+                          ),
+                          label: Text(
+                            '${c.name} (${c.branchId == "BR-001" ? "Delhi" : "Mumbai"})',
+                            style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: isSelected ? Colors.white : null),
+                          ),
+                          selected: isSelected,
+                          selectedColor: AppColors.primary,
+                          onSelected: (val) {
+                            if (val) {
+                              ref.read(activeChildIdProvider.notifier).state = c.id;
+                              // Switch user active branch dynamically!
+                              ref.read(authStateProvider.notifier).switchBranch(c.branchId);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('✓ Switched active ward to ${c.name} (${c.branchId == "BR-001" ? "Delhi Central" : "Mumbai South"} branch scope)'),
+                                  backgroundColor: AppColors.primary,
+                                  duration: const Duration(seconds: 2),
+                                ),
+                              );
+                            }
+                          },
+                        ),
+                      );
+                    }).toList(),
                   ),
-                ),
-              ],
+                );
+
+                return isMobile
+                    ? Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          headerRow,
+                          const SizedBox(height: 8),
+                          selectorChips,
+                        ],
+                      )
+                    : Row(
+                        children: [
+                          headerRow,
+                          const SizedBox(width: 16),
+                          Expanded(child: selectorChips),
+                        ],
+                      );
+              },
             ),
           ),
 
@@ -104,6 +125,7 @@ class _ParentPortalPageState extends ConsumerState<ParentPortalPage>
             child: TabBar(
               controller: _tabController,
               isScrollable: true,
+              tabAlignment: TabAlignment.start,
               indicatorColor: AppColors.primary,
               labelColor: AppColors.primary,
               unselectedLabelColor: isDark ? Colors.white70 : Colors.black87,
@@ -200,7 +222,7 @@ class _OverviewTab extends ConsumerWidget {
             physics: const NeverScrollableScrollPhysics(),
             mainAxisSpacing: 16,
             crossAxisSpacing: 16,
-            childAspectRatio: 1.5,
+            childAspectRatio: MediaQuery.of(context).size.width < 450 ? 1.2 : 1.5,
             children: [
               _statCard(context, 'Attendance Rate', '94.2%', Icons.check_circle_rounded, Colors.green),
               _statCard(context, 'Fee Outstanding', '₹15,000', Icons.payments_rounded, Colors.red),
@@ -222,13 +244,50 @@ class _OverviewTab extends ConsumerWidget {
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 4),
             child: GlassCard(
-              child: ListTile(
-                leading: const Icon(Icons.campaign_rounded, color: Colors.orange, size: 24),
-                title: const Text('Founders Day Sports meet details shared', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                subtitle: const Text('The sports circular and events schedule list has been dispatched to all parent accounts.', style: TextStyle(fontSize: 11)),
-                trailing: TextButton(
-                  onPressed: () => _viewAttachment(context, 'founders_day_invite.pdf'),
-                  child: const Text('View PDF', style: TextStyle(fontSize: 11)),
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: LayoutBuilder(
+                  builder: (context, cardConstraints) {
+                    final isCardMobile = cardConstraints.maxWidth < 550;
+                    final infoWidget = Row(
+                      children: [
+                        const Icon(Icons.campaign_rounded, color: Colors.orange, size: 24),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text('Founders Day Sports meet details shared', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                              const SizedBox(height: 4),
+                              const Text('The sports circular and events schedule list has been dispatched to all parent accounts.', style: TextStyle(fontSize: 11, color: Colors.grey)),
+                            ],
+                          ),
+                        ),
+                      ],
+                    );
+
+                    final viewButton = TextButton(
+                      onPressed: () => _viewAttachment(context, 'founders_day_invite.pdf'),
+                      child: const Text('View PDF', style: TextStyle(fontSize: 11)),
+                    );
+
+                    return isCardMobile
+                        ? Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              infoWidget,
+                              const SizedBox(height: 8),
+                              SizedBox(width: double.infinity, child: Align(alignment: Alignment.centerRight, child: viewButton)),
+                            ],
+                          )
+                        : Row(
+                            children: [
+                              Expanded(child: infoWidget),
+                              const SizedBox(width: 16),
+                              viewButton,
+                            ],
+                          );
+                  },
                 ),
               ),
             ),

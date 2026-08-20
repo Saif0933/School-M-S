@@ -41,9 +41,11 @@ class _CommunicationManagementPageState extends ConsumerState<CommunicationManag
         // Tab Navigation
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8),
+          color: isDark ? Colors.black12 : Colors.white,
           child: TabBar(
             controller: _tabController,
             isScrollable: true,
+            tabAlignment: TabAlignment.start,
             indicatorColor: AppColors.primary,
             labelColor: AppColors.primary,
             unselectedLabelColor: isDark
@@ -133,174 +135,191 @@ class _ComposeTabState extends State<_ComposeTab> {
     return Consumer(
       builder: (context, ref, child) {
         return Scaffold(
-          body: SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  flex: 3,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Compose Announcement Broadcast',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      DropdownButtonFormField<String>(
-                        initialValue: _selectedScope,
-                        decoration: const InputDecoration(labelText: 'Broadcast Scope'),
-                        items: [
-                          if (widget.isOrg)
-                            const DropdownMenuItem(value: 'Organization-wide', child: Text('Organization-wide (All Branches)')),
-                          const DropdownMenuItem(value: 'Branch-specific', child: Text('Branch-specific (Active Branch Only)')),
-                        ],
-                        onChanged: (val) {
-                          if (val != null) {
-                            setState(() {
-                              _selectedScope = val;
-                            });
-                          }
-                        },
-                      ),
-                      const SizedBox(height: 12),
-                      DropdownButtonFormField<String>(
-                        initialValue: _selectedChannel,
-                        decoration: const InputDecoration(labelText: 'Transmission Channel'),
-                        items: const [
-                          DropdownMenuItem(value: 'SMS', child: Text('SMS Text Message')),
-                          DropdownMenuItem(value: 'Email', child: Text('Email Newsletter')),
-                          DropdownMenuItem(value: 'Push Notification', child: Text('In-App Push Notification')),
-                          DropdownMenuItem(value: 'WhatsApp', child: Text('WhatsApp Business Message')),
-                        ],
-                        onChanged: (val) {
-                          if (val != null) {
-                            setState(() {
-                              _selectedChannel = val;
-                            });
-                          }
-                        },
-                      ),
-                      const SizedBox(height: 12),
-                      TextField(
-                        controller: _recipientCtrl,
-                        decoration: const InputDecoration(labelText: 'Recipient Target Audience'),
-                      ),
-                      const SizedBox(height: 12),
-                      TextField(
-                        controller: _titleCtrl,
-                        decoration: const InputDecoration(labelText: 'Message Subject / Header'),
-                      ),
-                      const SizedBox(height: 12),
-                      TextField(
-                        controller: _msgCtrl,
-                        maxLines: 4,
-                        decoration: const InputDecoration(labelText: 'Message Body Text'),
-                      ),
-                      const SizedBox(height: 16),
-                      Row(
-                        children: [
-                          OutlinedButton.icon(
-                            onPressed: () {
-                              setState(() {
-                                _simulatedAttachment = 'circular_attachment_${DateTime.now().millisecond}.pdf';
-                              });
-                            },
-                            icon: const Icon(Icons.attach_file_rounded),
-                            label: const Text('Simulate Attachment'),
-                          ),
-                          if (_simulatedAttachment != null) ...[
-                            const SizedBox(width: 8),
-                            Chip(
-                              label: Text(_simulatedAttachment!, style: const TextStyle(fontSize: 11)),
-                              onDeleted: () {
-                                setState(() {
-                                  _simulatedAttachment = null;
-                                });
-                              },
-                            ),
-                          ],
-                        ],
-                      ),
-                      const SizedBox(height: 24),
-                      ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                        ),
-                        onPressed: () {
-                          if (_titleCtrl.text.isNotEmpty && _msgCtrl.text.isNotEmpty) {
-                            ref.read(communicationLogsProvider.notifier).sendBroadcast(
-                              CommunicationLogEntity(
-                                id: 'COM-${DateTime.now().millisecondsSinceEpoch}',
-                                scope: _selectedScope,
-                                branchId: _selectedScope == 'Branch-specific' ? widget.branchId : null,
-                                branchName: _selectedScope == 'Branch-specific' ? 'Current Branch' : 'All Branches',
-                                channel: _selectedChannel,
-                                recipientGroup: _recipientCtrl.text,
-                                title: _titleCtrl.text,
-                                message: _msgCtrl.text,
-                                attachmentName: _simulatedAttachment,
-                                dateSent: DateTime.now(),
-                                smsCreditsUsed: _selectedChannel == 'SMS' ? 950 : 0,
-                                deliveryRate: 1.0,
-                                readRate: 0.0,
-                              ),
-                            );
+          body: LayoutBuilder(
+            builder: (context, constraints) {
+              final isMobile = constraints.maxWidth < 768;
 
-                            if (_selectedChannel == 'SMS') {
-                              ref.read(smsCreditPoolsProvider.notifier).consumeCredits(widget.branchId, 950);
-                            }
-
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('🚀 Circular Broadcast Transmitted successfully!'),
-                                backgroundColor: Colors.green,
-                              ),
-                            );
-
-                            _titleCtrl.clear();
-                            _msgCtrl.clear();
-                            setState(() {
-                              _simulatedAttachment = null;
-                            });
-                          }
-                        },
-                        icon: const Icon(Icons.rocket_launch_rounded),
-                        label: const Text('Transmit Broadcast', style: TextStyle(color: Colors.white)),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 16),
-                const Expanded(
-                  flex: 2,
-                  child: Padding(
-                    padding: EdgeInsets.only(top: 40),
-                    child: GlassCard(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Broadcast Guidelines:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.primary)),
-                          SizedBox(height: 8),
-                          Text('1. Scoped Logins: Scopes are locked by role privilege. Branch operators cannot send org-wide campaigns.', style: TextStyle(fontSize: 11)),
-                          SizedBox(height: 6),
-                          Text('2. Credits Consumption: Transmitting bulk SMS deducts credits dynamically from the active branch pool.', style: TextStyle(fontSize: 11)),
-                          SizedBox(height: 6),
-                          Text('3. Attachments: Supports uploads of circulars, syllabus updates, and emergency instructions.', style: TextStyle(fontSize: 11)),
-                        ],
-                      ),
+              final formSection = Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Compose Announcement Broadcast',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
                     ),
                   ),
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<String>(
+                    initialValue: _selectedScope,
+                    decoration: const InputDecoration(labelText: 'Broadcast Scope'),
+                    items: [
+                      if (widget.isOrg)
+                        const DropdownMenuItem(value: 'Organization-wide', child: Text('Organization-wide (All Branches)')),
+                      const DropdownMenuItem(value: 'Branch-specific', child: Text('Branch-specific (Active Branch Only)')),
+                    ],
+                    onChanged: (val) {
+                      if (val != null) {
+                        setState(() {
+                          _selectedScope = val;
+                        });
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<String>(
+                    initialValue: _selectedChannel,
+                    decoration: const InputDecoration(labelText: 'Transmission Channel'),
+                    items: const [
+                      DropdownMenuItem(value: 'SMS', child: Text('SMS Text Message')),
+                      DropdownMenuItem(value: 'Email', child: Text('Email Newsletter')),
+                      DropdownMenuItem(value: 'Push Notification', child: Text('In-App Push Notification')),
+                      DropdownMenuItem(value: 'WhatsApp', child: Text('WhatsApp Business Message')),
+                    ],
+                    onChanged: (val) {
+                      if (val != null) {
+                        setState(() {
+                          _selectedChannel = val;
+                        });
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: _recipientCtrl,
+                    decoration: const InputDecoration(labelText: 'Recipient Target Audience'),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: _titleCtrl,
+                    decoration: const InputDecoration(labelText: 'Message Subject / Header'),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: _msgCtrl,
+                    maxLines: 4,
+                    decoration: const InputDecoration(labelText: 'Message Body Text'),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      OutlinedButton.icon(
+                        onPressed: () {
+                          setState(() {
+                            _simulatedAttachment = 'circular_attachment_${DateTime.now().millisecond}.pdf';
+                          });
+                        },
+                        icon: const Icon(Icons.attach_file_rounded),
+                        label: const Text('Simulate Attachment'),
+                      ),
+                      if (_simulatedAttachment != null) ...[
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Chip(
+                            label: Text(_simulatedAttachment!, style: const TextStyle(fontSize: 11), overflow: TextOverflow.ellipsis),
+                            onDeleted: () {
+                              setState(() {
+                                _simulatedAttachment = null;
+                              });
+                            },
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    ),
+                    onPressed: () {
+                      if (_titleCtrl.text.isNotEmpty && _msgCtrl.text.isNotEmpty) {
+                        ref.read(communicationLogsProvider.notifier).sendBroadcast(
+                          CommunicationLogEntity(
+                            id: 'COM-${DateTime.now().millisecondsSinceEpoch}',
+                            scope: _selectedScope,
+                            branchId: _selectedScope == 'Branch-specific' ? widget.branchId : null,
+                            branchName: _selectedScope == 'Branch-specific' ? 'Current Branch' : 'All Branches',
+                            channel: _selectedChannel,
+                            recipientGroup: _recipientCtrl.text,
+                            title: _titleCtrl.text,
+                            message: _msgCtrl.text,
+                            attachmentName: _simulatedAttachment,
+                            dateSent: DateTime.now(),
+                            smsCreditsUsed: _selectedChannel == 'SMS' ? 950 : 0,
+                            deliveryRate: 1.0,
+                            readRate: 0.0,
+                          ),
+                        );
+
+                        if (_selectedChannel == 'SMS') {
+                          ref.read(smsCreditPoolsProvider.notifier).consumeCredits(widget.branchId, 950);
+                        }
+
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('🚀 Circular Broadcast Transmitted successfully!'),
+                            backgroundColor: Colors.green,
+                          ),
+                        );
+
+                        _titleCtrl.clear();
+                        _msgCtrl.clear();
+                        setState(() {
+                          _simulatedAttachment = null;
+                        });
+                      }
+                    },
+                    icon: const Icon(Icons.rocket_launch_rounded),
+                    label: const Text('Transmit Broadcast', style: TextStyle(color: Colors.white)),
+                  ),
+                ],
+              );
+
+              final guidelinesSection = const GlassCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Broadcast Guidelines:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.primary)),
+                    SizedBox(height: 8),
+                    Text('1. Scoped Logins: Scopes are locked by role privilege. Branch operators cannot send org-wide campaigns.', style: TextStyle(fontSize: 11)),
+                    SizedBox(height: 6),
+                    Text('2. Credits Consumption: Transmitting bulk SMS deducts credits dynamically from the active branch pool.', style: TextStyle(fontSize: 11)),
+                    SizedBox(height: 6),
+                    Text('3. Attachments: Supports uploads of circulars, syllabus updates, and emergency instructions.', style: TextStyle(fontSize: 11)),
+                  ],
                 ),
-              ],
-            ),
+              );
+
+              return SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: isMobile
+                    ? Column(
+                        children: [
+                          guidelinesSection,
+                          const SizedBox(height: 24),
+                          formSection,
+                        ],
+                      )
+                    : Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(flex: 3, child: formSection),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            flex: 2,
+                            child: Padding(
+                              padding: const EdgeInsets.only(top: 40),
+                              child: guidelinesSection,
+                            ),
+                          ),
+                        ],
+                      ),
+              );
+            },
           ),
         );
       },
@@ -433,11 +452,11 @@ class _CreditsTab extends ConsumerWidget {
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: pools.length,
-              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+              gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
                 maxCrossAxisExtent: 400,
                 mainAxisSpacing: 16,
                 crossAxisSpacing: 16,
-                childAspectRatio: 1.6,
+                childAspectRatio: MediaQuery.of(context).size.width < 600 ? 1.3 : 1.6,
               ),
               itemBuilder: (context, index) {
                 final p = pools[index];
@@ -574,11 +593,11 @@ class _TemplatesTab extends ConsumerWidget {
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: templates.length,
-              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+              gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
                 maxCrossAxisExtent: 400,
                 mainAxisSpacing: 16,
                 crossAxisSpacing: 16,
-                childAspectRatio: 1.8,
+                childAspectRatio: MediaQuery.of(context).size.width < 600 ? 1.4 : 1.8,
               ),
               itemBuilder: (context, index) {
                 final t = templates[index];

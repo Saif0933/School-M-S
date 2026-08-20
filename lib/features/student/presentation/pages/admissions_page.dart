@@ -56,38 +56,59 @@ class _AdmissionsManagementPageState extends ConsumerState<AdmissionsManagementP
       body: Column(
         children: [
           // Sub Header with summary & Prospectus Download
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            color: isDark ? Colors.white10 : Colors.grey.withValues(alpha: 0.05),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Campus Admissions Dashboard: ${user?.activeBranch?.branchName ?? "Primary Campus"}',
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                      ),
-                      Text(
-                        'Total Applications Filed: ${applications.length} | Completed: ${applications.where((a) => a.status == "Approved").length}',
-                        style: const TextStyle(fontSize: 11, color: Colors.grey),
-                      ),
-                    ],
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isMobile = constraints.maxWidth < 650;
+              final titleWidget = Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Campus Admissions Dashboard: ${user?.activeBranch?.branchName ?? "Primary Campus"}',
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                   ),
-                ),
-                ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Total Applications Filed: ${applications.length} | Completed: ${applications.where((a) => a.status == "Approved").length}',
+                    style: const TextStyle(fontSize: 11, color: Colors.grey),
                   ),
-                  onPressed: () => _simulateProspectusDownload(context, activeBranchId),
-                  icon: const Icon(Icons.download_rounded, color: Colors.white, size: 16),
-                  label: const Text('Download Branch Prospectus', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+                ],
+              );
+
+              final actionButton = ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 ),
-              ],
-            ),
+                onPressed: () => _simulateProspectusDownload(context, activeBranchId),
+                icon: const Icon(Icons.download_rounded, color: Colors.white, size: 16),
+                label: const Text('Download Branch Prospectus', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+              );
+
+              return Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                color: isDark ? Colors.white10 : Colors.grey.withValues(alpha: 0.05),
+                child: isMobile
+                    ? Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          titleWidget,
+                          const SizedBox(height: 10),
+                          SizedBox(
+                            width: double.infinity,
+                            child: actionButton,
+                          ),
+                        ],
+                      )
+                    : Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(child: titleWidget),
+                          const SizedBox(width: 16),
+                          actionButton,
+                        ],
+                      ),
+              );
+            },
           ),
 
           // Custom TabBar
@@ -96,6 +117,7 @@ class _AdmissionsManagementPageState extends ConsumerState<AdmissionsManagementP
             child: TabBar(
               controller: _tabController,
               isScrollable: true,
+              tabAlignment: TabAlignment.start,
               indicatorColor: AppColors.primary,
               labelColor: AppColors.primary,
               unselectedLabelColor: isDark ? Colors.white70 : Colors.black87,
@@ -148,38 +170,42 @@ class _AdmissionsManagementPageState extends ConsumerState<AdmissionsManagementP
       builder: (context) {
         return AlertDialog(
           title: const Text('New Admission Inquiry / Lead'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(controller: _nameCtrl, decoration: const InputDecoration(labelText: 'Student Full Name')),
-                TextField(controller: _guardianCtrl, decoration: const InputDecoration(labelText: 'Guardian Name')),
-                TextField(controller: _phoneCtrl, decoration: const InputDecoration(labelText: 'Phone Number')),
-                TextField(controller: _emailCtrl, decoration: const InputDecoration(labelText: 'Email address')),
-                TextField(controller: _addressCtrl, decoration: const InputDecoration(labelText: 'Residential Address')),
-                DropdownButtonFormField<String>(
-                  initialValue: _selectedCategory,
-                  decoration: const InputDecoration(labelText: 'Reservation Quota Category'),
-                  items: const [
-                    DropdownMenuItem(value: 'General', child: Text('General')),
-                    DropdownMenuItem(value: 'OBC', child: Text('OBC')),
-                    DropdownMenuItem(value: 'SC', child: Text('SC')),
-                    DropdownMenuItem(value: 'ST', child: Text('ST')),
-                  ],
-                  onChanged: (val) => setState(() => _selectedCategory = val ?? 'General'),
-                ),
-                DropdownButtonFormField<String>(
-                  initialValue: _selectedLeadSource,
-                  decoration: const InputDecoration(labelText: 'Lead Acquisition Source'),
-                  items: const [
-                    DropdownMenuItem(value: 'Website', child: Text('Website')),
-                    DropdownMenuItem(value: 'Social Media', child: Text('Social Media')),
-                    DropdownMenuItem(value: 'Referral', child: Text('Referral')),
-                    DropdownMenuItem(value: 'Newspaper Advert', child: Text('Newspaper Advert')),
-                  ],
-                  onChanged: (val) => setState(() => _selectedLeadSource = val ?? 'Website'),
-                ),
-              ],
+          content: Container(
+            constraints: const BoxConstraints(maxWidth: 450),
+            width: MediaQuery.of(context).size.width * 0.9,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(controller: _nameCtrl, decoration: const InputDecoration(labelText: 'Student Full Name')),
+                  TextField(controller: _guardianCtrl, decoration: const InputDecoration(labelText: 'Guardian Name')),
+                  TextField(controller: _phoneCtrl, decoration: const InputDecoration(labelText: 'Phone Number')),
+                  TextField(controller: _emailCtrl, decoration: const InputDecoration(labelText: 'Email address')),
+                  TextField(controller: _addressCtrl, decoration: const InputDecoration(labelText: 'Residential Address')),
+                  DropdownButtonFormField<String>(
+                    initialValue: _selectedCategory,
+                    decoration: const InputDecoration(labelText: 'Reservation Quota Category'),
+                    items: const [
+                      DropdownMenuItem(value: 'General', child: Text('General')),
+                      DropdownMenuItem(value: 'OBC', child: Text('OBC')),
+                      DropdownMenuItem(value: 'SC', child: Text('SC')),
+                      DropdownMenuItem(value: 'ST', child: Text('ST')),
+                    ],
+                    onChanged: (val) => setState(() => _selectedCategory = val ?? 'General'),
+                  ),
+                  DropdownButtonFormField<String>(
+                    initialValue: _selectedLeadSource,
+                    decoration: const InputDecoration(labelText: 'Lead Acquisition Source'),
+                    items: const [
+                      DropdownMenuItem(value: 'Website', child: Text('Website')),
+                      DropdownMenuItem(value: 'Social Media', child: Text('Social Media')),
+                      DropdownMenuItem(value: 'Referral', child: Text('Referral')),
+                      DropdownMenuItem(value: 'Newspaper Advert', child: Text('Newspaper Advert')),
+                    ],
+                    onChanged: (val) => setState(() => _selectedLeadSource = val ?? 'Website'),
+                  ),
+                ],
+              ),
             ),
           ),
           actions: [
@@ -243,49 +269,118 @@ class _LeadsTab extends ConsumerWidget {
         backgroundColor: AppColors.primary,
         child: const Icon(Icons.add, color: Colors.white),
       ),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: applications.length,
-        itemBuilder: (context, index) {
-          final app = applications[index];
-          return Card(
-            margin: const EdgeInsets.symmetric(vertical: 6),
-            child: ListTile(
-              title: Text('${app.studentName} [${app.id}]', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-              subtitle: Text(
-                'Class: ${app.className} | Category: ${app.reservationCategory}\nSource: ${app.leadSource} | Counselor: ${app.assignedCounselor}',
-                style: const TextStyle(fontSize: 11, color: Colors.grey),
-              ),
-              trailing: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: _getStatusColor(app.status).withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Text(
-                      app.status,
-                      style: TextStyle(fontSize: 9, color: _getStatusColor(app.status), fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  if (app.status == 'Inquiry')
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.teal,
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                        minimumSize: const Size(60, 24),
-                      ),
-                      onPressed: () => _assignCounselor(context, ref, app.id),
-                      child: const Text('Assign Counselor', style: TextStyle(fontSize: 9, color: Colors.white)),
-                    ),
-                ],
-              ),
-            ),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final isMobile = constraints.maxWidth < 600;
+          return ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: applications.length,
+            itemBuilder: (context, index) {
+              final app = applications[index];
+              return Card(
+                margin: const EdgeInsets.symmetric(vertical: 6),
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: isMobile
+                      ? Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    '${app.studentName} [${app.id}]',
+                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                _statusChip(app.status),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Class: ${app.className} | Category: ${app.reservationCategory}\nSource: ${app.leadSource} | Counselor: ${app.assignedCounselor}',
+                              style: const TextStyle(fontSize: 11, color: Colors.grey),
+                            ),
+                            if (app.status == 'Inquiry') ...[
+                              const SizedBox(height: 12),
+                              SizedBox(
+                                width: double.infinity,
+                                child: ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.teal,
+                                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                                    minimumSize: const Size(60, 32),
+                                  ),
+                                  onPressed: () => _assignCounselor(context, ref, app.id),
+                                  child: const Text('Assign Counselor', style: TextStyle(fontSize: 11, color: Colors.white, fontWeight: FontWeight.bold)),
+                                ),
+                              ),
+                            ],
+                          ],
+                        )
+                      : Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    '${app.studentName} [${app.id}]',
+                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    'Class: ${app.className} | Category: ${app.reservationCategory}\nSource: ${app.leadSource} | Counselor: ${app.assignedCounselor}',
+                                    style: const TextStyle(fontSize: 11, color: Colors.grey),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                _statusChip(app.status),
+                                if (app.status == 'Inquiry') ...[
+                                  const SizedBox(height: 8),
+                                  ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.teal,
+                                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                                      minimumSize: const Size(60, 28),
+                                    ),
+                                    onPressed: () => _assignCounselor(context, ref, app.id),
+                                    child: const Text('Assign Counselor', style: TextStyle(fontSize: 10, color: Colors.white)),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ],
+                        ),
+                ),
+              );
+            },
           );
         },
+      ),
+    );
+  }
+
+  Widget _statusChip(String status) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: _getStatusColor(status).withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(
+        status,
+        style: TextStyle(fontSize: 9, color: _getStatusColor(status), fontWeight: FontWeight.bold),
       ),
     );
   }
@@ -347,94 +442,163 @@ class _ExamsTab extends ConsumerWidget {
     final meritList = List<AdmissionApplicationEntity>.from(applications)
       ..sort((a, b) => b.entranceTestScore.compareTo(a.entranceTestScore));
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: const [
-              Text('Schedule Admission Entrance Exams', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-              Text('Status: Isolated per Branch', style: TextStyle(fontSize: 10, color: Colors.grey)),
-            ],
-          ),
-          const SizedBox(height: 12),
-          ListView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: applications.length,
-            itemBuilder: (context, index) {
-              final app = applications[index];
-              return Card(
-                child: ListTile(
-                  dense: true,
-                  title: Text(app.studentName, style: const TextStyle(fontWeight: FontWeight.bold)),
-                  subtitle: Text('Score: ${app.entranceTestScore == -1 ? "Pending" : "${app.entranceTestScore}/100"}'),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (app.status == 'Application Submitted')
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(backgroundColor: Colors.orange, padding: const EdgeInsets.symmetric(horizontal: 8)),
-                          onPressed: () {
-                            ref.read(admissionsProvider.notifier).updateApplicationStatus(app.id, 'Test Scheduled');
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('✓ Entrance test slot scheduled & link dispatched via SMS!')),
-                            );
-                          },
-                          child: const Text('Schedule Test Slot', style: TextStyle(fontSize: 10, color: Colors.white)),
-                        ),
-                      if (app.status == 'Test Scheduled')
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(backgroundColor: Colors.indigo, padding: const EdgeInsets.symmetric(horizontal: 8)),
-                          onPressed: () => _simulateEntranceExam(context, ref, app.id),
-                          child: const Text('Launch Mock Exam', style: TextStyle(fontSize: 10, color: Colors.white)),
-                        ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
-          const SizedBox(height: 24),
-          const Text('🏆 Generated Branch Merit List Rankings', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-          const SizedBox(height: 12),
-          Table(
-            border: TableBorder.all(color: Colors.grey.withValues(alpha: 0.2)),
-            children: [
-              const TableRow(
-                decoration: BoxDecoration(color: Colors.white10),
-                children: [
-                  Padding(padding: EdgeInsets.all(8), child: Text('Rank', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11))),
-                  Padding(padding: EdgeInsets.all(8), child: Text('Student Candidate', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11))),
-                  Padding(padding: EdgeInsets.all(8), child: Text('Exam Score', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11))),
-                  Padding(padding: EdgeInsets.all(8), child: Text('Admissions Status', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11))),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isMobile = constraints.maxWidth < 600;
+
+        final headerWidget = isMobile
+            ? Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: const [
+                  Text('Schedule Admission Entrance Exams', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                  SizedBox(height: 4),
+                  Text('Status: Isolated per Branch', style: TextStyle(fontSize: 10, color: Colors.grey)),
                 ],
-              ),
-              ...meritList.asMap().entries.map((entry) {
-                final idx = entry.key;
-                final app = entry.value;
-                return TableRow(
-                  children: [
-                    Padding(padding: const EdgeInsets.all(8), child: Text('${idx + 1}', style: const TextStyle(fontSize: 11))),
-                    Padding(padding: const EdgeInsets.all(8), child: Text(app.studentName, style: const TextStyle(fontSize: 11))),
-                    Padding(
-                      padding: const EdgeInsets.all(8),
-                      child: Text(
-                        app.entranceTestScore == -1 ? 'Pending' : '${app.entranceTestScore}',
-                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
-                      ),
+              )
+            : Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: const [
+                  Text('Schedule Admission Entrance Exams', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                  Text('Status: Isolated per Branch', style: TextStyle(fontSize: 10, color: Colors.grey)),
+                ],
+              );
+
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              headerWidget,
+              const SizedBox(height: 12),
+              ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: applications.length,
+                itemBuilder: (context, index) {
+                  final app = applications[index];
+                  return Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: isMobile
+                          ? Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(app.studentName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                                const SizedBox(height: 4),
+                                Text('Score: ${app.entranceTestScore == -1 ? "Pending" : "${app.entranceTestScore}/100"}', style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                                if (app.status == 'Application Submitted' || app.status == 'Test Scheduled') ...[
+                                  const SizedBox(height: 8),
+                                  SizedBox(
+                                    width: double.infinity,
+                                    child: _examActionButton(context, ref, app),
+                                  ),
+                                ],
+                              ],
+                            )
+                          : Row(
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(app.studentName, style: const TextStyle(fontWeight: FontWeight.bold)),
+                                      const SizedBox(height: 4),
+                                      Text('Score: ${app.entranceTestScore == -1 ? "Pending" : "${app.entranceTestScore}/100"}', style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                                    ],
+                                  ),
+                                ),
+                                _examActionButton(context, ref, app),
+                              ],
+                            ),
                     ),
-                    Padding(padding: const EdgeInsets.all(8), child: Text(app.status, style: const TextStyle(fontSize: 10, color: Colors.grey))),
-                  ],
-                );
-              }),
+                  );
+                },
+              ),
+              const SizedBox(height: 24),
+              const Text('🏆 Generated Branch Merit List Rankings', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+              const SizedBox(height: 12),
+              isMobile
+                  ? ListView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: meritList.length,
+                      itemBuilder: (context, idx) {
+                        final app = meritList[idx];
+                        return Card(
+                          color: Theme.of(context).brightness == Brightness.dark ? Colors.white10 : Colors.grey.shade50,
+                          margin: const EdgeInsets.symmetric(vertical: 4),
+                          child: ListTile(
+                            dense: true,
+                            leading: CircleAvatar(
+                              radius: 12,
+                              backgroundColor: AppColors.primary,
+                              child: Text('${idx + 1}', style: const TextStyle(fontSize: 10, color: Colors.white, fontWeight: FontWeight.bold)),
+                            ),
+                            title: Text(app.studentName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                            subtitle: Text('Score: ${app.entranceTestScore == -1 ? "Pending" : app.entranceTestScore}  |  Status: ${app.status}', style: const TextStyle(fontSize: 10)),
+                          ),
+                        );
+                      },
+                    )
+                  : Table(
+                      border: TableBorder.all(color: Colors.grey.withValues(alpha: 0.2)),
+                      children: [
+                        const TableRow(
+                          decoration: BoxDecoration(color: Colors.white10),
+                          children: [
+                            Padding(padding: EdgeInsets.all(8), child: Text('Rank', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11))),
+                            Padding(padding: EdgeInsets.all(8), child: Text('Student Candidate', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11))),
+                            Padding(padding: EdgeInsets.all(8), child: Text('Exam Score', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11))),
+                            Padding(padding: EdgeInsets.all(8), child: Text('Admissions Status', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11))),
+                          ],
+                        ),
+                        ...meritList.asMap().entries.map((entry) {
+                          final idx = entry.key;
+                          final app = entry.value;
+                          return TableRow(
+                            children: [
+                              Padding(padding: const EdgeInsets.all(8), child: Text('${idx + 1}', style: const TextStyle(fontSize: 11))),
+                              Padding(padding: const EdgeInsets.all(8), child: Text(app.studentName, style: const TextStyle(fontSize: 11))),
+                              Padding(
+                                padding: const EdgeInsets.all(8),
+                                child: Text(
+                                  app.entranceTestScore == -1 ? 'Pending' : '${app.entranceTestScore}',
+                                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                              Padding(padding: const EdgeInsets.all(8), child: Text(app.status, style: const TextStyle(fontSize: 10, color: Colors.grey))),
+                            ],
+                          );
+                        }),
+                      ],
+                    ),
             ],
           ),
-        ],
-      ),
+        );
+      },
     );
+  }
+
+  Widget _examActionButton(BuildContext context, WidgetRef ref, AdmissionApplicationEntity app) {
+    if (app.status == 'Application Submitted') {
+      return ElevatedButton(
+        style: ElevatedButton.styleFrom(backgroundColor: Colors.orange, padding: const EdgeInsets.symmetric(horizontal: 8)),
+        onPressed: () {
+          ref.read(admissionsProvider.notifier).updateApplicationStatus(app.id, 'Test Scheduled');
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('✓ Entrance test slot scheduled & link dispatched via SMS!')),
+          );
+        },
+        child: const Text('Schedule Test Slot', style: TextStyle(fontSize: 10, color: Colors.white, fontWeight: FontWeight.bold)),
+      );
+    } else if (app.status == 'Test Scheduled') {
+      return ElevatedButton(
+        style: ElevatedButton.styleFrom(backgroundColor: Colors.indigo, padding: const EdgeInsets.symmetric(horizontal: 8)),
+        onPressed: () => _simulateEntranceExam(context, ref, app.id),
+        child: const Text('Launch Mock Exam', style: TextStyle(fontSize: 10, color: Colors.white, fontWeight: FontWeight.bold)),
+      );
+    }
+    return const SizedBox.shrink();
   }
 
   void _simulateEntranceExam(BuildContext context, WidgetRef ref, String appID) {
@@ -448,8 +612,9 @@ class _ExamsTab extends ConsumerWidget {
           builder: (context, setDialogState) {
             return AlertDialog(
               title: const Text('🖥️ Online Entrance Exam Portal'),
-              content: SizedBox(
-                width: 400,
+              content: Container(
+                constraints: const BoxConstraints(maxWidth: 450),
+                width: MediaQuery.of(context).size.width * 0.9,
                 child: ListView.builder(
                   shrinkWrap: true,
                   itemCount: questions.length,
@@ -531,13 +696,27 @@ class _InterviewsTab extends ConsumerWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(app.studentName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                    Chip(label: Text(app.status, style: const TextStyle(fontSize: 9))),
+                    Expanded(
+                      child: Text(app.studentName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(app.status, style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold)),
+                    ),
                   ],
                 ),
+                const SizedBox(height: 6),
                 Text('Reservation Category: ${app.reservationCategory} | Test Score: ${app.entranceTestScore}%', style: const TextStyle(fontSize: 11, color: Colors.grey)),
                 const SizedBox(height: 12),
-                Row(
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
                     if (app.status == 'Test Completed')
                       ElevatedButton(
@@ -548,7 +727,7 @@ class _InterviewsTab extends ConsumerWidget {
                             const SnackBar(content: Text('✓ Panel meeting slot booked on branch calendar.')),
                           );
                         },
-                        child: const Text('Schedule Panel Interview', style: TextStyle(fontSize: 10, color: Colors.white)),
+                        child: const Text('Schedule Panel Interview', style: TextStyle(fontSize: 10, color: Colors.white, fontWeight: FontWeight.bold)),
                       ),
                     if (app.status == 'Interview Scheduled')
                       ElevatedButton(
@@ -559,10 +738,11 @@ class _InterviewsTab extends ConsumerWidget {
                             const SnackBar(content: Text('✓ Checked document vault: Status moved to verification.')),
                           );
                         },
-                        child: const Text('Move to Document Verification', style: TextStyle(fontSize: 10, color: Colors.white)),
+                        child: const Text('Move to Document Verification', style: TextStyle(fontSize: 10, color: Colors.white, fontWeight: FontWeight.bold)),
                       ),
                     if (app.status == 'Verification Pending')
                       Row(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
                           Checkbox(
                             value: app.documentsVerified,
@@ -570,7 +750,9 @@ class _InterviewsTab extends ConsumerWidget {
                               ref.read(admissionsProvider.notifier).updateVerification(app.id, val ?? false);
                             },
                           ),
-                          const Text('Documents Verified (Aadhar/Birth cert)', style: TextStyle(fontSize: 11)),
+                          const Flexible(
+                            child: Text('Documents Verified (Aadhar/Birth cert)', style: TextStyle(fontSize: 11)),
+                          ),
                         ],
                       ),
                   ],
@@ -595,9 +777,15 @@ class _SeatsTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final seats = ref.watch(seatCapacityProvider).where((s) => s.branchId == branchId).toList();
 
-    return ListView.builder(
+    return GridView.builder(
       padding: const EdgeInsets.all(16),
       itemCount: seats.length,
+      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+        maxCrossAxisExtent: 500,
+        mainAxisExtent: 220,
+        crossAxisSpacing: 16,
+        mainAxisSpacing: 16,
+      ),
       itemBuilder: (context, index) {
         final seat = seats[index];
         return GlassCard(
@@ -658,45 +846,98 @@ class _MigrationTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final candidates = applications.where((a) => a.status == 'Verification Pending' || a.status == 'Approved' || a.status == 'Waitlisted').toList();
 
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: candidates.length,
-      itemBuilder: (context, index) {
-        final app = candidates[index];
-        return Card(
-          child: ListTile(
-            title: Text(app.studentName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-            subtitle: Text('Score: ${app.entranceTestScore}% | Documents Verified: ${app.documentsVerified ? "YES" : "NO"}'),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (app.status != 'Approved') ...[
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.teal),
-                    onPressed: app.documentsVerified
-                        ? () => _migrateCandidate(context, ref, app)
-                        : null,
-                    child: const Text('Approve & Migrate', style: TextStyle(fontSize: 10, color: Colors.white)),
-                  ),
-                  const SizedBox(width: 8),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.grey),
-                    onPressed: () {
-                      ref.read(admissionsProvider.notifier).updateApplicationStatus(app.id, 'Waitlisted');
-                    },
-                    child: const Text('Waitlist', style: TextStyle(fontSize: 10, color: Colors.white)),
-                  ),
-                ] else
-                  Chip(
-                    label: Text('Enrolled: ${app.enrollmentNumber}', style: const TextStyle(fontSize: 10, color: Colors.white)),
-                    backgroundColor: Colors.green,
-                  ),
-              ],
-            ),
-          ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isMobile = constraints.maxWidth < 600;
+        return ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: candidates.length,
+          itemBuilder: (context, index) {
+            final app = candidates[index];
+            return Card(
+              margin: const EdgeInsets.symmetric(vertical: 6),
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: isMobile
+                    ? Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(app.studentName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                          const SizedBox(height: 4),
+                          Text('Score: ${app.entranceTestScore}% | Documents Verified: ${app.documentsVerified ? "YES" : "NO"}', style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                          const SizedBox(height: 12),
+                          SizedBox(
+                            width: double.infinity,
+                            child: _migrationActionWidget(context, ref, app, isMobile),
+                          ),
+                        ],
+                      )
+                    : Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(app.studentName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                                const SizedBox(height: 4),
+                                Text('Score: ${app.entranceTestScore}% | Documents Verified: ${app.documentsVerified ? "YES" : "NO"}', style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          _migrationActionWidget(context, ref, app, isMobile),
+                        ],
+                      ),
+              ),
+            );
+          },
         );
       },
     );
+  }
+
+  Widget _migrationActionWidget(BuildContext context, WidgetRef ref, AdmissionApplicationEntity app, bool isMobile) {
+    if (app.status != 'Approved') {
+      final approveButton = ElevatedButton(
+        style: ElevatedButton.styleFrom(backgroundColor: Colors.teal),
+        onPressed: app.documentsVerified
+            ? () => _migrateCandidate(context, ref, app)
+            : null,
+        child: const Text('Approve & Migrate', style: TextStyle(fontSize: 10, color: Colors.white, fontWeight: FontWeight.bold)),
+      );
+
+      final waitlistButton = ElevatedButton(
+        style: ElevatedButton.styleFrom(backgroundColor: Colors.grey),
+        onPressed: () {
+          ref.read(admissionsProvider.notifier).updateApplicationStatus(app.id, 'Waitlisted');
+        },
+        child: const Text('Waitlist', style: TextStyle(fontSize: 10, color: Colors.white, fontWeight: FontWeight.bold)),
+      );
+
+      if (isMobile) {
+        return Column(
+          children: [
+            SizedBox(width: double.infinity, child: approveButton),
+            const SizedBox(height: 8),
+            SizedBox(width: double.infinity, child: waitlistButton),
+          ],
+        );
+      } else {
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            approveButton,
+            const SizedBox(width: 8),
+            waitlistButton,
+          ],
+        );
+      }
+    } else {
+      return Chip(
+        label: Text('Enrolled: ${app.enrollmentNumber}', style: const TextStyle(fontSize: 10, color: Colors.white, fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.green,
+      );
+    }
   }
 
   void _migrateCandidate(BuildContext context, WidgetRef ref, AdmissionApplicationEntity app) {
@@ -775,20 +1016,24 @@ class _OrgAnalyticsTab extends ConsumerWidget {
           // Marketing Source breakdown
           const Text('📈 Lead Generation & Marketing Channel Performance', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
           const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(child: _metricCard('Website Portal', webLeads, Colors.blue)),
-              const SizedBox(width: 12),
-              Expanded(child: _metricCard('Social Media Campaigns', socialLeads, Colors.purple)),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(child: _metricCard('Direct Referral word-of-mouth', referralLeads, Colors.teal)),
-              const SizedBox(width: 12),
-              Expanded(child: _metricCard('Newspaper & Prints', paperLeads, Colors.brown)),
-            ],
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isMobile = constraints.maxWidth < 600;
+              return GridView.count(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                crossAxisCount: isMobile ? 1 : 2,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+                childAspectRatio: isMobile ? 4.5 : 3.5,
+                children: [
+                  _metricCard('Website Portal', webLeads, Colors.blue),
+                  _metricCard('Social Media Campaigns', socialLeads, Colors.purple),
+                  _metricCard('Direct Referral word-of-mouth', referralLeads, Colors.teal),
+                  _metricCard('Newspaper & Prints', paperLeads, Colors.brown),
+                ],
+              );
+            },
           ),
         ],
       ),
@@ -828,9 +1073,11 @@ class _OrgAnalyticsTab extends ConsumerWidget {
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(channel, style: const TextStyle(fontSize: 10, color: Colors.grey)),
-                Text('$value Leads', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                const SizedBox(height: 2),
+                Text('$value Leads', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
               ],
             ),
           ),

@@ -1947,8 +1947,9 @@ class _TimetableManagementPageState
                                     ? AppColors.darkSurface
                                     : Colors.white,
                                 onChanged: (val) {
-                                  if (val != null)
+                                  if (val != null) {
                                     setState(() => _selectedClassId = val);
+                                  }
                                 },
                                 items: classes.map((c) {
                                   return DropdownMenuItem(
@@ -4485,8 +4486,9 @@ class _TimetableManagementPageState
                         );
                       }).toList(),
                       onChanged: (val) {
-                        if (val != null)
+                        if (val != null) {
                           setDialogState(() => selectedSubstTeacher = val);
+                        }
                       },
                     ),
                     const SizedBox(height: 12),
@@ -4782,8 +4784,9 @@ class _TimetableManagementPageState
                         return DropdownMenuItem(value: day, child: Text(day));
                       }).toList(),
                       onChanged: (val) {
-                        if (val != null)
+                        if (val != null) {
                           setDialogState(() => selectedDay = val);
+                        }
                       },
                     ),
                     const SizedBox(height: 12),
@@ -4810,8 +4813,9 @@ class _TimetableManagementPageState
                         );
                       }).toList(),
                       onChanged: (val) {
-                        if (val != null)
+                        if (val != null) {
                           setDialogState(() => selectedPeriodName = val);
+                        }
                       },
                     ),
                     const SizedBox(height: 12),
@@ -4897,8 +4901,9 @@ class _TimetableManagementPageState
                         );
                       }).toList(),
                       onChanged: (val) {
-                        if (val != null)
+                        if (val != null) {
                           setDialogState(() => selectedTeacherName = val);
+                        }
                       },
                     ),
                     const SizedBox(height: 12),
@@ -5102,8 +5107,9 @@ class _TimetableManagementPageState
                     // Conflict Check 2: Classroom Clash
                     if (selectedRoomName.isNotEmpty) {
                       final roomConflictingSlot = allSlots.where((slot) {
-                        if (isEditing && slot.id == existingSlot.id)
+                        if (isEditing && slot.id == existingSlot.id) {
                           return false;
+                        }
                         return slot.branchId == branchId &&
                             slot.shiftName == _selectedShift &&
                             slot.dayOfWeek == selectedDay &&
@@ -5146,8 +5152,9 @@ class _TimetableManagementPageState
                     // Conflict Check 3: Resource Clash
                     for (final resId in selectedResourceIds) {
                       final resourceConflictingSlot = allSlots.where((slot) {
-                        if (isEditing && slot.id == existingSlot.id)
+                        if (isEditing && slot.id == existingSlot.id) {
                           return false;
+                        }
                         return slot.branchId == branchId &&
                             slot.dayOfWeek == selectedDay &&
                             slot.periodName == selectedPeriodName &&
@@ -5487,8 +5494,9 @@ class _TimetableManagementPageState
                         ),
                       ],
                       onChanged: (val) {
-                        if (val != null)
+                        if (val != null) {
                           setDialogState(() => selectedScope = val);
+                        }
                       },
                     ),
                     const SizedBox(height: 12),
@@ -5517,8 +5525,9 @@ class _TimetableManagementPageState
                         ),
                       ],
                       onChanged: (val) {
-                        if (val != null)
+                        if (val != null) {
                           setDialogState(() => selectedFormat = val);
+                        }
                       },
                     ),
                     const SizedBox(height: 16),
