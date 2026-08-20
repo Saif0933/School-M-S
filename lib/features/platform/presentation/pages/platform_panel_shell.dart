@@ -1022,48 +1022,56 @@ class _PlatformPanelShellState extends ConsumerState<PlatformPanelShell> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        gradient: AppColors.primaryGradient,
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      child: const Icon(
-                        Icons.domain_add_rounded,
-                        color: Colors.white,
-                        size: 28,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Onboard New School Organization',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w800,
-                              color: isDark
-                                  ? AppColors.darkTextPrimary
-                                  : AppColors.lightTextPrimary,
-                            ),
+                LayoutBuilder(
+                  builder: (context, headerConstraints) {
+                    final isMobileHeader = headerConstraints.maxWidth < 650;
+                    
+                    final titleAndIcon = Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            gradient: AppColors.primaryGradient,
+                            borderRadius: BorderRadius.circular(14),
                           ),
-                          Text(
-                            'Provision a brand new tenant organization with custom subscription tiers',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: isDark
-                                  ? AppColors.darkTextSecondary
-                                  : AppColors.lightTextSecondary,
-                            ),
+                          child: const Icon(
+                            Icons.domain_add_rounded,
+                            color: Colors.white,
+                            size: 28,
                           ),
-                        ],
-                      ),
-                    ),
-                    ElevatedButton.icon(
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Onboard New School Organization',
+                                style: TextStyle(
+                                  fontSize: isMobileHeader ? 16 : 20,
+                                  fontWeight: FontWeight.w800,
+                                  color: isDark
+                                      ? AppColors.darkTextPrimary
+                                      : AppColors.lightTextPrimary,
+                                ),
+                              ),
+                              Text(
+                                'Provision a brand new tenant organization with custom subscription tiers',
+                                style: TextStyle(
+                                  fontSize: isMobileHeader ? 11 : 13,
+                                  color: isDark
+                                      ? AppColors.darkTextSecondary
+                                      : AppColors.lightTextSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    );
+
+                    final launchButton = ElevatedButton.icon(
                       onPressed: () {
                         showDialog(
                           context: context,
@@ -1073,8 +1081,30 @@ class _PlatformPanelShellState extends ConsumerState<PlatformPanelShell> {
                       },
                       icon: const Icon(Icons.add_rounded, size: 18),
                       label: const Text('Open Wizard Modal'),
-                    ),
-                  ],
+                    );
+
+                    if (isMobileHeader) {
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          titleAndIcon,
+                          const SizedBox(height: 14),
+                          SizedBox(
+                            width: double.infinity,
+                            child: launchButton,
+                          ),
+                        ],
+                      );
+                    }
+
+                    return Row(
+                      children: [
+                        Expanded(child: titleAndIcon),
+                        const SizedBox(width: 16),
+                        launchButton,
+                      ],
+                    );
+                  }
                 ),
                 const SizedBox(height: 24),
                 const Divider(),
@@ -1324,6 +1354,17 @@ class _PlatformPanelShellState extends ConsumerState<PlatformPanelShell> {
                       .toList(),
                 );
               } else {
+                final isMobile = constraints.maxWidth < 650;
+                if (isMobile) {
+                  return Column(
+                    children: tierCards
+                        .map((c) => Padding(
+                              padding: const EdgeInsets.only(bottom: 14),
+                              child: SizedBox(width: double.infinity, child: c),
+                            ))
+                        .toList(),
+                  );
+                }
                 return Wrap(
                   spacing: 14,
                   runSpacing: 14,

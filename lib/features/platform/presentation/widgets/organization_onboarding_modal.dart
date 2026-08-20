@@ -99,6 +99,34 @@ class _OrganizationOnboardingModalState
     );
   }
 
+  Widget _buildResponsiveFieldsRow({
+    required bool isMobile,
+    required Widget left,
+    required Widget right,
+    double spacing = 14,
+    int leftFlex = 1,
+    int rightFlex = 1,
+  }) {
+    if (isMobile) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          left,
+          SizedBox(height: spacing),
+          right,
+        ],
+      );
+    }
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(flex: leftFlex, child: left),
+        SizedBox(width: spacing),
+        Expanded(flex: rightFlex, child: right),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -107,92 +135,95 @@ class _OrganizationOnboardingModalState
     return Dialog(
       backgroundColor: isDark ? AppColors.darkCard : AppColors.lightCard,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 720, maxHeight: 780),
-        child: Column(
-          children: [
-            // ─── Modal Header ────────────────────
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
-              decoration: BoxDecoration(
-                border: Border(
-                  bottom: BorderSide(
-                    color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final isMobile = constraints.maxWidth < 600;
+          return ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 720, maxHeight: 780),
+            child: Column(
+              children: [
+                // ─── Modal Header ────────────────────
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
+                  decoration: BoxDecoration(
+                    border: Border(
+                      bottom: BorderSide(
+                        color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                      ),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          gradient: AppColors.primaryGradient,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(
+                          Icons.domain_add_rounded,
+                          color: Colors.white,
+                          size: 24,
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Onboard New School',
+                              style: TextStyle(
+                                fontSize: isMobile ? 15 : 18,
+                                fontWeight: FontWeight.w700,
+                                color: isDark
+                                    ? AppColors.darkTextPrimary
+                                    : AppColors.lightTextPrimary,
+                              ),
+                            ),
+                            Text(
+                              'Register new tenant, allocate subscription plan & provisions',
+                              style: TextStyle(
+                                fontSize: isMobile ? 10 : 13,
+                                color: isDark
+                                    ? AppColors.darkTextSecondary
+                                    : AppColors.lightTextSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close_rounded),
+                        onPressed: () => Navigator.of(context).pop(),
+                      ),
+                    ],
                   ),
                 ),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      gradient: AppColors.primaryGradient,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(
-                      Icons.domain_add_rounded,
-                      color: Colors.white,
-                      size: 24,
-                    ),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Onboard New School Organization',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700,
-                            color: isDark
-                                ? AppColors.darkTextPrimary
-                                : AppColors.lightTextPrimary,
-                          ),
-                        ),
-                        Text(
-                          'Register new tenant, allocate subscription plan & provisions',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: isDark
-                                ? AppColors.darkTextSecondary
-                                : AppColors.lightTextSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close_rounded),
-                    onPressed: () => Navigator.of(context).pop(),
-                  ),
-                ],
-              ),
-            ),
 
-            // ─── Modal Body ──────────────────────
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Section 1: Subscription Tier Selection
-                      _buildSectionTitle('1. Select SaaS Subscription Plan', isDark),
-                      const SizedBox(height: 12),
-                      _buildTierSelector(isDark),
-                      const SizedBox(height: 24),
-
-                      // Section 2: Organization Details
-                      _buildSectionTitle('2. Organization & Super Admin Details', isDark),
-                      const SizedBox(height: 14),
-                      Row(
+                // ─── Modal Body ──────────────────────
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(24),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Expanded(
-                            flex: 2,
-                            child: _buildTextField(
+                          // Section 1: Subscription Tier Selection
+                          _buildSectionTitle('1. Select SaaS Subscription Plan', isDark),
+                          const SizedBox(height: 12),
+                          _buildTierSelector(isDark, isMobile),
+                          const SizedBox(height: 24),
+
+                          // Section 2: Organization Details
+                          _buildSectionTitle('2. Organization & Super Admin Details', isDark),
+                          const SizedBox(height: 14),
+                          _buildResponsiveFieldsRow(
+                            isMobile: isMobile,
+                            leftFlex: 2,
+                            rightFlex: 1,
+                            left: _buildTextField(
                               controller: _nameController,
                               label: 'Organization Name *',
                               hint: 'e.g. Cambridge International Trust',
@@ -202,11 +233,7 @@ class _OrganizationOnboardingModalState
                                   : null,
                               isDark: isDark,
                             ),
-                          ),
-                          const SizedBox(width: 14),
-                          Expanded(
-                            flex: 1,
-                            child: _buildTextField(
+                            right: _buildTextField(
                               controller: _codeController,
                               label: 'Org Code',
                               hint: 'e.g. CIT-MAIN',
@@ -214,13 +241,10 @@ class _OrganizationOnboardingModalState
                               isDark: isDark,
                             ),
                           ),
-                        ],
-                      ),
-                      const SizedBox(height: 14),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildTextField(
+                          const SizedBox(height: 14),
+                          _buildResponsiveFieldsRow(
+                            isMobile: isMobile,
+                            left: _buildTextField(
                               controller: _superAdminNameController,
                               label: 'Super Admin Full Name *',
                               hint: 'e.g. Dr. Rajesh Sharma',
@@ -230,10 +254,7 @@ class _OrganizationOnboardingModalState
                                   : null,
                               isDark: isDark,
                             ),
-                          ),
-                          const SizedBox(width: 14),
-                          Expanded(
-                            child: _buildTextField(
+                            right: _buildTextField(
                               controller: _superAdminEmailController,
                               label: 'Super Admin Email *',
                               hint: 'e.g. admin@cambridge.edu',
@@ -248,23 +269,17 @@ class _OrganizationOnboardingModalState
                               isDark: isDark,
                             ),
                           ),
-                        ],
-                      ),
-                      const SizedBox(height: 14),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildTextField(
+                          const SizedBox(height: 14),
+                          _buildResponsiveFieldsRow(
+                            isMobile: isMobile,
+                            left: _buildTextField(
                               controller: _phoneController,
                               label: 'Contact Phone Number',
                               hint: 'e.g. +91 9876543210',
                               icon: Icons.phone_outlined,
                               isDark: isDark,
                             ),
-                          ),
-                          const SizedBox(width: 14),
-                          Expanded(
-                            child: _buildTextField(
+                            right: _buildTextField(
                               controller: _addressController,
                               label: 'HQ Address / City',
                               hint: 'e.g. New Delhi, India',
@@ -272,65 +287,84 @@ class _OrganizationOnboardingModalState
                               isDark: isDark,
                             ),
                           ),
-                        ],
-                      ),
-                      const SizedBox(height: 24),
+                          const SizedBox(height: 24),
 
-                      // Section 3: Billing & Capacity Limits
-                      _buildSectionTitle('3. Billing & Allocation Limits', isDark),
-                      const SizedBox(height: 14),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Billing Cycle',
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
-                                    color: isDark
-                                        ? AppColors.darkTextPrimary
-                                        : AppColors.lightTextPrimary,
-                                  ),
-                                ),
-                                const SizedBox(height: 6),
-                                Row(
+                          // Section 3: Billing & Capacity Limits
+                          _buildSectionTitle('3. Billing & Allocation Limits', isDark),
+                          const SizedBox(height: 14),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Expanded(
-                                      child: _buildRadioOption(
-                                        title: 'Yearly (Save 20%)',
-                                        value: 'yearly',
-                                        groupValue: _billingCycle,
-                                        onChanged: (val) =>
-                                            setState(() => _billingCycle = val!),
-                                        isDark: isDark,
+                                    Text(
+                                      'Billing Cycle',
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w600,
+                                        color: isDark
+                                            ? AppColors.darkTextPrimary
+                                            : AppColors.lightTextPrimary,
                                       ),
                                     ),
-                                    const SizedBox(width: 10),
-                                    Expanded(
-                                      child: _buildRadioOption(
-                                        title: 'Monthly',
-                                        value: 'monthly',
-                                        groupValue: _billingCycle,
-                                        onChanged: (val) =>
-                                            setState(() => _billingCycle = val!),
-                                        isDark: isDark,
-                                      ),
-                                    ),
+                                    const SizedBox(height: 6),
+                                    isMobile
+                                        ? Column(
+                                            children: [
+                                              _buildRadioOption(
+                                                title: 'Yearly (Save 20%)',
+                                                value: 'yearly',
+                                                groupValue: _billingCycle,
+                                                onChanged: (val) =>
+                                                    setState(() => _billingCycle = val!),
+                                                isDark: isDark,
+                                              ),
+                                              const SizedBox(height: 10),
+                                              _buildRadioOption(
+                                                title: 'Monthly',
+                                                value: 'monthly',
+                                                groupValue: _billingCycle,
+                                                onChanged: (val) =>
+                                                    setState(() => _billingCycle = val!),
+                                                isDark: isDark,
+                                              ),
+                                            ],
+                                          )
+                                        : Row(
+                                            children: [
+                                              Expanded(
+                                                child: _buildRadioOption(
+                                                  title: 'Yearly (Save 20%)',
+                                                  value: 'yearly',
+                                                  groupValue: _billingCycle,
+                                                  onChanged: (val) =>
+                                                      setState(() => _billingCycle = val!),
+                                                  isDark: isDark,
+                                                ),
+                                              ),
+                                              const SizedBox(width: 10),
+                                              Expanded(
+                                                child: _buildRadioOption(
+                                                  title: 'Monthly',
+                                                  value: 'monthly',
+                                                  groupValue: _billingCycle,
+                                                  onChanged: (val) =>
+                                                      setState(() => _billingCycle = val!),
+                                                  isDark: isDark,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
                                   ],
                                 ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-                      const SizedBox(height: 14),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildTextField(
+                          const SizedBox(height: 14),
+                          _buildResponsiveFieldsRow(
+                            isMobile: isMobile,
+                            left: _buildTextField(
                               controller: _maxBranchesController,
                               label: 'Max Branches Allowed',
                               hint: '1',
@@ -338,10 +372,7 @@ class _OrganizationOnboardingModalState
                               keyboardType: TextInputType.number,
                               isDark: isDark,
                             ),
-                          ),
-                          const SizedBox(width: 14),
-                          Expanded(
-                            child: _buildTextField(
+                            right: _buildTextField(
                               controller: _maxStudentsController,
                               label: 'Max Students Allowed',
                               hint: '500',
@@ -352,74 +383,131 @@ class _OrganizationOnboardingModalState
                           ),
                         ],
                       ),
-                    ],
+                    ),
                   ),
                 ),
-              ),
-            ),
 
-            // ─── Modal Footer / Actions ──────────
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-              decoration: BoxDecoration(
-                border: Border(
-                  top: BorderSide(
-                    color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
-                  ),
-                ),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  OutlinedButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
+                // ─── Modal Footer / Actions ──────────
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                  decoration: BoxDecoration(
+                    border: Border(
+                      top: BorderSide(
+                        color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
                       ),
                     ),
-                    child: const Text('Cancel'),
                   ),
-                  const SizedBox(width: 12),
-                  ElevatedButton(
-                    onPressed: _isSubmitting ? null : _submitForm,
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 24, vertical: 14),
-                      backgroundColor: AppColors.primary,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    child: _isSubmitting
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2,
-                            ),
-                          )
-                        : const Row(
-                            children: [
-                              Icon(Icons.check_rounded, size: 18),
-                              SizedBox(width: 8),
-                              Text(
-                                'Onboard Organization',
-                                style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w600),
+                  child: isMobile
+                      ? Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            SizedBox(
+                              width: double.infinity,
+                              child: OutlinedButton(
+                                onPressed: () => Navigator.of(context).pop(),
+                                style: OutlinedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 20, vertical: 14),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                ),
+                                child: const Text('Cancel'),
                               ),
-                            ],
-                          ),
-                  ),
-                ],
-              ),
+                            ),
+                            const SizedBox(height: 10),
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                onPressed: _isSubmitting ? null : _submitForm,
+                                style: ElevatedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 24, vertical: 14),
+                                  backgroundColor: AppColors.primary,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                ),
+                                child: _isSubmitting
+                                    ? const SizedBox(
+                                        width: 20,
+                                        height: 20,
+                                        child: CircularProgressIndicator(
+                                          color: Colors.white,
+                                          strokeWidth: 2,
+                                        ),
+                                      )
+                                    : Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: const [
+                                          Icon(Icons.check_rounded, size: 18, color: Colors.white),
+                                          SizedBox(width: 8),
+                                          Text(
+                                            'Onboard Organization',
+                                            style: TextStyle(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.w600),
+                                          ),
+                                        ],
+                                      ),
+                              ),
+                            ),
+                          ],
+                        )
+                      : Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            OutlinedButton(
+                              onPressed: () => Navigator.of(context).pop(),
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 20, vertical: 14),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                              child: const Text('Cancel'),
+                            ),
+                            const SizedBox(width: 12),
+                            ElevatedButton(
+                              onPressed: _isSubmitting ? null : _submitForm,
+                              style: ElevatedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 24, vertical: 14),
+                                backgroundColor: AppColors.primary,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                              child: _isSubmitting
+                                  ? const SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(
+                                        color: Colors.white,
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                  : Row(
+                                      children: const [
+                                        Icon(Icons.check_rounded, size: 18, color: Colors.white),
+                                        SizedBox(width: 8),
+                                        Text(
+                                          'Onboard Organization',
+                                          style: TextStyle(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.w600),
+                                        ),
+                                      ],
+                                    ),
+                            ),
+                          ],
+                        ),
+                ),
+              ],
             ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
@@ -435,104 +523,105 @@ class _OrganizationOnboardingModalState
     );
   }
 
-  Widget _buildTierSelector(bool isDark) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return Row(
-          children: SubscriptionTier.values.map((tier) {
-            final isSelected = _selectedTier == tier;
-            Color tierColor;
-            switch (tier) {
-              case SubscriptionTier.basic:
-                tierColor = const Color(0xFF3B82F6);
-                break;
-              case SubscriptionTier.standard:
-                tierColor = const Color(0xFF10B981);
-                break;
-              case SubscriptionTier.premium:
-                tierColor = const Color(0xFF8B5CF6);
-                break;
-              case SubscriptionTier.enterprise:
-                tierColor = const Color(0xFFF59E0B);
-                break;
-            }
+  Widget _buildTierSelector(bool isDark, bool isMobile) {
+    Color getTierColor(SubscriptionTier tier) {
+      switch (tier) {
+        case SubscriptionTier.basic:
+          return const Color(0xFF3B82F6);
+        case SubscriptionTier.standard:
+          return const Color(0xFF10B981);
+        case SubscriptionTier.premium:
+          return const Color(0xFF8B5CF6);
+        case SubscriptionTier.enterprise:
+          return const Color(0xFFF59E0B);
+      }
+    }
 
-            return Expanded(
-              child: GestureDetector(
-                onTap: () => _onTierSelected(tier),
-                child: Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 4),
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? tierColor.withValues(alpha: 0.12)
-                        : (isDark ? AppColors.darkCard : AppColors.lightBg),
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(
-                      color: isSelected
-                          ? tierColor
-                          : (isDark
-                              ? AppColors.darkBorder
-                              : AppColors.lightBorder),
-                      width: isSelected ? 2 : 1,
+    final children = SubscriptionTier.values.map((tier) {
+      final isSelected = _selectedTier == tier;
+      final tierColor = getTierColor(tier);
+
+      return GestureDetector(
+        onTap: () => _onTierSelected(tier),
+        child: Container(
+          margin: isMobile
+              ? const EdgeInsets.symmetric(vertical: 4)
+              : const EdgeInsets.symmetric(horizontal: 4),
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? tierColor.withValues(alpha: 0.12)
+                : (isDark ? AppColors.darkCard : AppColors.lightBg),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: isSelected
+                  ? tierColor
+                  : (isDark ? AppColors.darkBorder : AppColors.lightBorder),
+              width: isSelected ? 2 : 1,
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: tierColor.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      tier.label.toUpperCase(),
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: tierColor,
+                      ),
                     ),
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: tierColor.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Text(
-                              tier.label.toUpperCase(),
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
-                                color: tierColor,
-                              ),
-                            ),
-                          ),
-                          if (isSelected)
-                            Icon(Icons.check_circle_rounded,
-                                color: tierColor, size: 18),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        '\$${tier.monthlyPrice.toInt()}/mo',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w800,
-                          color: isDark
-                              ? AppColors.darkTextPrimary
-                              : AppColors.lightTextPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Up to ${tier.maxBranches} Branch • ${tier.maxStudents} Students',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: isDark
-                              ? AppColors.darkTextSecondary
-                              : AppColors.lightTextSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
+                  if (isSelected)
+                    Icon(Icons.check_circle_rounded,
+                        color: tierColor, size: 18),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '\$${tier.monthlyPrice.toInt()}/mo',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: isDark
+                      ? AppColors.darkTextPrimary
+                      : AppColors.lightTextPrimary,
                 ),
               ),
-            );
-          }).toList(),
-        );
-      },
+              const SizedBox(height: 4),
+              Text(
+                'Up to ${tier.maxBranches} Branch • ${tier.maxStudents} Students',
+                style: TextStyle(
+                  fontSize: 11,
+                  color: isDark
+                      ? AppColors.darkTextSecondary
+                      : AppColors.lightTextSecondary,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }).toList();
+
+    if (isMobile) {
+      return Column(
+        children: children,
+      );
+    }
+
+    return Row(
+      children: children.map((c) => Expanded(child: c)).toList(),
     );
   }
 

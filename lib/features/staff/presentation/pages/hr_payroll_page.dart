@@ -194,7 +194,15 @@ class _StructuresTab extends ConsumerWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(staff.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                    Expanded(
+                      child: Text(
+                        staff.name,
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
                     Text(staff.designation, style: const TextStyle(fontSize: 11, color: Colors.grey)),
                   ],
                 ),
@@ -393,21 +401,66 @@ class _RunsTab extends ConsumerWidget {
           if (slips.isEmpty)
             const Center(child: Padding(padding: EdgeInsets.all(24), child: Text('No salary slips processed for this period.')))
           else
-            ...slips.map((slip) => Card(
-                  child: ListTile(
-                    title: Text(slip.staffName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                    subtitle: Text(
-                      'Gross: ₹${slip.grossEarnings.toStringAsFixed(0)} | Deductions: ₹${slip.totalDeductions.toStringAsFixed(0)}\nNet Disbursed: ₹${slip.netDisbursed.toStringAsFixed(0)}',
-                      style: const TextStyle(fontSize: 11, color: Colors.grey),
-                    ),
-                    trailing: Chip(
-                      label: Text(slip.status, style: const TextStyle(fontSize: 10, color: Colors.white)),
-                      backgroundColor: slip.status == 'Disbursed'
-                          ? Colors.green
-                          : (slip.status == 'Approved' ? Colors.teal : Colors.orange),
-                    ),
+            ...slips.map((slip) {
+              return Card(
+                margin: const EdgeInsets.symmetric(vertical: 6),
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final isMobile = constraints.maxWidth < 600;
+
+                      final nameCol = Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(slip.staffName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Gross: ₹${slip.grossEarnings.toStringAsFixed(0)} | Deductions: ₹${slip.totalDeductions.toStringAsFixed(0)}\nNet Disbursed: ₹${slip.netDisbursed.toStringAsFixed(0)}',
+                            style: const TextStyle(fontSize: 11, color: Colors.grey),
+                          ),
+                        ],
+                      );
+
+                      final statusChip = Chip(
+                        label: Text(slip.status, style: const TextStyle(fontSize: 10, color: Colors.white)),
+                        backgroundColor: slip.status == 'Disbursed'
+                            ? Colors.green
+                            : (slip.status == 'Approved' ? Colors.teal : Colors.orange),
+                      );
+
+                      if (isMobile) {
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            nameCol,
+                            const SizedBox(height: 8),
+                            const Divider(height: 1),
+                            const SizedBox(height: 4),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text('Status:', style: TextStyle(fontSize: 11, color: Colors.grey)),
+                                statusChip,
+                              ],
+                            ),
+                          ],
+                        );
+                      }
+
+                      return Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(child: nameCol),
+                          const SizedBox(width: 16),
+                          statusChip,
+                        ],
+                      );
+                    },
                   ),
-                )),
+                ),
+              );
+            }),
         ],
       ),
     );
@@ -530,14 +583,52 @@ class _AppraisalsTab extends ConsumerWidget {
             itemBuilder: (context, index) {
               final staff = staffList[index];
               return Card(
-                child: ListTile(
-                  dense: true,
-                  title: Text(staff.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                  subtitle: Text(staff.designation),
-                  trailing: ElevatedButton(
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.teal),
-                    onPressed: () => _showAppraisalModal(context, ref, staff),
-                    child: const Text('Log Appraisal', style: TextStyle(fontSize: 10, color: Colors.white)),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final isMobile = constraints.maxWidth < 500;
+
+                      final textCol = Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(staff.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                          const SizedBox(height: 2),
+                          Text(staff.designation, style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                        ],
+                      );
+
+                      final actionButton = ElevatedButton(
+                        style: ElevatedButton.styleFrom(backgroundColor: Colors.teal),
+                        onPressed: () => _showAppraisalModal(context, ref, staff),
+                        child: const Text('Log Appraisal', style: TextStyle(fontSize: 10, color: Colors.white)),
+                      );
+
+                      if (isMobile) {
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            textCol,
+                            const SizedBox(height: 10),
+                            const Divider(height: 1),
+                            const SizedBox(height: 6),
+                            SizedBox(
+                              width: double.infinity,
+                              child: actionButton,
+                            ),
+                          ],
+                        );
+                      }
+
+                      return Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(child: textCol),
+                          const SizedBox(width: 16),
+                          actionButton,
+                        ],
+                      );
+                    },
                   ),
                 ),
               );
@@ -549,16 +640,61 @@ class _AppraisalsTab extends ConsumerWidget {
           if (appraisals.isEmpty)
             const Text('No past appraisals found.')
           else
-            ...appraisals.map((apr) => Card(
-                  child: ListTile(
-                    title: Text('${apr.staffName} (+${apr.percentageIncrement}%)', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-                    subtitle: Text('Review: ${apr.reviewPeriod} | Effective: ${apr.effectiveDate}'),
-                    trailing: Text(
-                      '₹${apr.oldBasicPay.toStringAsFixed(0)} ➔ ₹${apr.newBasicPay.toStringAsFixed(0)}',
-                      style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.green, fontSize: 12),
-                    ),
+            ...appraisals.map((apr) {
+              return Card(
+                margin: const EdgeInsets.symmetric(vertical: 6),
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final isMobile = constraints.maxWidth < 500;
+
+                      final detailsCol = Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('${apr.staffName} (+${apr.percentageIncrement}%)', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                          const SizedBox(height: 4),
+                          Text('Review: ${apr.reviewPeriod} | Effective: ${apr.effectiveDate}', style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                        ],
+                      );
+
+                      final flowText = Text(
+                        '₹${apr.oldBasicPay.toStringAsFixed(0)} ➔ ₹${apr.newBasicPay.toStringAsFixed(0)}',
+                        style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.green, fontSize: 12),
+                      );
+
+                      if (isMobile) {
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            detailsCol,
+                            const SizedBox(height: 8),
+                            const Divider(height: 1),
+                            const SizedBox(height: 6),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text('Salary Jump:', style: TextStyle(fontSize: 11, color: Colors.grey)),
+                                flowText,
+                              ],
+                            ),
+                          ],
+                        );
+                      }
+
+                      return Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(child: detailsCol),
+                          const SizedBox(width: 16),
+                          flowText,
+                        ],
+                      );
+                    },
                   ),
-                )),
+                ),
+              );
+            }),
         ],
       ),
     );
@@ -570,12 +706,14 @@ class _AppraisalsTab extends ConsumerWidget {
       builder: (context) {
         return AlertDialog(
           title: Text('Salary Appraisal: ${staff.name}'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(controller: reviewPeriodCtrl, decoration: const InputDecoration(labelText: 'Review Period Title')),
-              TextField(controller: percentCtrl, decoration: const InputDecoration(labelText: 'Percentage Increment (e.g. 10.5)')),
-            ],
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(controller: reviewPeriodCtrl, decoration: const InputDecoration(labelText: 'Review Period Title')),
+                TextField(controller: percentCtrl, decoration: const InputDecoration(labelText: 'Percentage Increment (e.g. 10.5)')),
+              ],
+            ),
           ),
           actions: [
             TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
@@ -673,15 +811,58 @@ class _LoansTab extends ConsumerWidget {
             itemBuilder: (context, index) {
               final loan = loans[index];
               return Card(
-                child: ListTile(
-                  title: Text(loan.staffName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                  subtitle: Text(
-                    'Principal: ₹${loan.principalAmount.toStringAsFixed(0)} | Monthly EMI: ₹${loan.monthlyEmi.toStringAsFixed(0)}\nOutstanding: ₹${loan.outstandingAmount.toStringAsFixed(0)}',
-                    style: const TextStyle(fontSize: 11, color: Colors.grey),
-                  ),
-                  trailing: Chip(
-                    label: Text(loan.status, style: const TextStyle(fontSize: 10, color: Colors.white)),
-                    backgroundColor: loan.status == 'Settled' ? Colors.green : Colors.blue,
+                margin: const EdgeInsets.symmetric(vertical: 6),
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final isMobile = constraints.maxWidth < 500;
+
+                      final loanCol = Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(loan.staffName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Principal: ₹${loan.principalAmount.toStringAsFixed(0)} | Monthly EMI: ₹${loan.monthlyEmi.toStringAsFixed(0)}\nOutstanding: ₹${loan.outstandingAmount.toStringAsFixed(0)}',
+                            style: const TextStyle(fontSize: 11, color: Colors.grey),
+                          ),
+                        ],
+                      );
+
+                      final statusChip = Chip(
+                        label: Text(loan.status, style: const TextStyle(fontSize: 10, color: Colors.white)),
+                        backgroundColor: loan.status == 'Settled' ? Colors.green : Colors.blue,
+                      );
+
+                      if (isMobile) {
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            loanCol,
+                            const SizedBox(height: 8),
+                            const Divider(height: 1),
+                            const SizedBox(height: 6),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text('Status:', style: TextStyle(fontSize: 11, color: Colors.grey)),
+                                statusChip,
+                              ],
+                            ),
+                          ],
+                        );
+                      }
+
+                      return Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(child: loanCol),
+                          const SizedBox(width: 16),
+                          statusChip,
+                        ],
+                      );
+                    },
                   ),
                 ),
               );
@@ -698,12 +879,14 @@ class _LoansTab extends ConsumerWidget {
       builder: (context) {
         return AlertDialog(
           title: Text('Log New Loan: ${staff.name}'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(controller: principalCtrl, decoration: const InputDecoration(labelText: 'Principal Amount (₹)')),
-              TextField(controller: emiCtrl, decoration: const InputDecoration(labelText: 'Monthly EMI Deduction (₹)')),
-            ],
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(controller: principalCtrl, decoration: const InputDecoration(labelText: 'Principal Amount (₹)')),
+                TextField(controller: emiCtrl, decoration: const InputDecoration(labelText: 'Monthly EMI Deduction (₹)')),
+              ],
+            ),
           ),
           actions: [
             TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
@@ -771,27 +954,33 @@ class _ComplianceTab extends ConsumerWidget {
           const SizedBox(height: 20),
           const Text('PF & ESI Compliance Report', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
           const SizedBox(height: 12),
-          Table(
-            border: TableBorder.all(color: Colors.grey.withValues(alpha: 0.2)),
-            children: [
-              const TableRow(
-                decoration: BoxDecoration(color: Colors.white10),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minWidth: 500),
+              child: Table(
+                border: TableBorder.all(color: Colors.grey.withValues(alpha: 0.2)),
                 children: [
-                  Padding(padding: EdgeInsets.all(8), child: Text('Staff ID', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11))),
-                  Padding(padding: EdgeInsets.all(8), child: Text('PF Deduction (12%)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11))),
-                  Padding(padding: EdgeInsets.all(8), child: Text('ESI Deduction (0.75%)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11))),
-                  Padding(padding: EdgeInsets.all(8), child: Text('TDS flat rate', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11))),
+                  const TableRow(
+                    decoration: BoxDecoration(color: Colors.white10),
+                    children: [
+                      Padding(padding: EdgeInsets.all(8), child: Text('Staff ID', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11))),
+                      Padding(padding: EdgeInsets.all(8), child: Text('PF Deduction (12%)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11))),
+                      Padding(padding: EdgeInsets.all(8), child: Text('ESI Deduction (0.75%)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11))),
+                      Padding(padding: EdgeInsets.all(8), child: Text('TDS flat rate', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11))),
+                    ],
+                  ),
+                  ...structures.map((s) => TableRow(
+                        children: [
+                          Padding(padding: const EdgeInsets.all(8), child: Text(s.staffId, style: const TextStyle(fontSize: 11))),
+                          Padding(padding: const EdgeInsets.all(8), child: Text('₹${s.pfDeduction.toStringAsFixed(0)}', style: const TextStyle(fontSize: 11))),
+                          Padding(padding: const EdgeInsets.all(8), child: Text('₹${s.esiDeduction.toStringAsFixed(0)}', style: const TextStyle(fontSize: 11))),
+                          Padding(padding: const EdgeInsets.all(8), child: Text('₹${s.tdsDeduction.toStringAsFixed(0)}', style: const TextStyle(fontSize: 11))),
+                        ],
+                      )),
                 ],
               ),
-              ...structures.map((s) => TableRow(
-                    children: [
-                      Padding(padding: const EdgeInsets.all(8), child: Text(s.staffId, style: const TextStyle(fontSize: 11))),
-                      Padding(padding: const EdgeInsets.all(8), child: Text('₹${s.pfDeduction.toStringAsFixed(0)}', style: const TextStyle(fontSize: 11))),
-                      Padding(padding: const EdgeInsets.all(8), child: Text('₹${s.esiDeduction.toStringAsFixed(0)}', style: const TextStyle(fontSize: 11))),
-                      Padding(padding: const EdgeInsets.all(8), child: Text('₹${s.tdsDeduction.toStringAsFixed(0)}', style: const TextStyle(fontSize: 11))),
-                    ],
-                  )),
-            ],
+            ),
           ),
         ],
       ),
@@ -855,7 +1044,15 @@ class _AnalyticsTab extends ConsumerWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(label, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
+            Expanded(
+              child: Text(
+                label,
+                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const SizedBox(width: 8),
             Text('₹${cost.toStringAsFixed(0)} / Month', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
           ],
         ),

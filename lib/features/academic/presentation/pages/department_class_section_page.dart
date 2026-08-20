@@ -1558,165 +1558,182 @@ class _DepartmentClassSectionPageState
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // STREAMS MANAGEMENT
-              Expanded(
-                child: GlassCard(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Branch Streams (Science/Commerce/Arts)',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: isDark
-                              ? AppColors.darkTextPrimary
-                              : AppColors.lightTextPrimary,
-                        ),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isMobile = constraints.maxWidth < 650;
+
+              final streamsCard = GlassCard(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Branch Streams (Science/Commerce/Arts)',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: isDark
+                            ? AppColors.darkTextPrimary
+                            : AppColors.lightTextPrimary,
                       ),
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: TextField(
-                              controller: _streamNameController,
-                              style: const TextStyle(fontSize: 11),
-                              decoration: const InputDecoration(
-                                labelText: 'New Stream Name',
-                                isDense: true,
-                              ),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _streamNameController,
+                            style: const TextStyle(fontSize: 11),
+                            decoration: const InputDecoration(
+                              labelText: 'New Stream Name',
+                              isDense: true,
                             ),
                           ),
-                          const SizedBox(width: 8),
-                          ElevatedButton(
-                            onPressed: () {
-                              if (_streamNameController.text
-                                  .trim()
-                                  .isNotEmpty) {
-                                ref
-                                    .read(academicStreamsProvider.notifier)
-                                    .addStream(
-                                      _selectedBranchId!,
-                                      _streamNameController.text.trim(),
-                                    );
-                                _streamNameController.clear();
-                              }
-                            },
-                            child: const Icon(Icons.add, size: 16),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      if (streams.isEmpty)
-                        const Text(
-                          'No streams configured.',
-                          style: TextStyle(fontSize: 10, color: Colors.grey),
-                        )
-                      else
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: streams.map((s) {
-                            return Chip(
-                              label: Text(
-                                s.name,
-                                style: const TextStyle(fontSize: 10),
-                              ),
-                              deleteIcon: const Icon(
-                                Icons.close_rounded,
-                                size: 12,
-                              ),
-                              onDeleted: () {
-                                ref
-                                    .read(academicStreamsProvider.notifier)
-                                    .removeStream(s.id);
-                              },
-                            );
-                          }).toList(),
                         ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(width: 16),
-
-              // ELECTIVE GROUPS
-              Expanded(
-                child: GlassCard(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Elective Subject Groups',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: isDark
-                              ? AppColors.darkTextPrimary
-                              : AppColors.lightTextPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      TextField(
-                        controller: _electiveNameController,
-                        style: const TextStyle(fontSize: 11),
-                        decoration: const InputDecoration(
-                          labelText: 'Group Name (e.g. Elective Group A)',
-                          isDense: true,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      TextField(
-                        controller: _electiveSubjectsController,
-                        style: const TextStyle(fontSize: 11),
-                        decoration: const InputDecoration(
-                          labelText: 'Subjects (comma-separated)',
-                          isDense: true,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
+                        const SizedBox(width: 8),
+                        ElevatedButton(
                           onPressed: () {
-                            if (_electiveNameController.text
-                                    .trim()
-                                    .isNotEmpty &&
-                                _electiveSubjectsController.text
-                                    .trim()
-                                    .isNotEmpty) {
-                              final subjs = _electiveSubjectsController.text
-                                  .split(',')
-                                  .map((s) => s.trim())
-                                  .where((s) => s.isNotEmpty)
-                                  .toList();
+                            if (_streamNameController.text
+                                .trim()
+                                .isNotEmpty) {
                               ref
-                                  .read(academicElectivesProvider.notifier)
-                                  .addElectiveGroup(
+                                  .read(academicStreamsProvider.notifier)
+                                  .addStream(
                                     _selectedBranchId!,
-                                    _electiveNameController.text.trim(),
-                                    subjs,
+                                    _streamNameController.text.trim(),
                                   );
-                              _electiveNameController.clear();
-                              _electiveSubjectsController.clear();
+                              _streamNameController.clear();
                             }
                           },
-                          child: const Text(
-                            'Add Elective Group',
-                            style: TextStyle(fontSize: 11),
-                          ),
+                          child: const Icon(Icons.add, size: 16),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    if (streams.isEmpty)
+                      const Text(
+                        'No streams configured.',
+                        style: TextStyle(fontSize: 10, color: Colors.grey),
+                      )
+                    else
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: streams.map((s) {
+                          return Chip(
+                            label: Text(
+                              s.name,
+                              style: const TextStyle(fontSize: 10),
+                            ),
+                            deleteIcon: const Icon(
+                              Icons.close_rounded,
+                              size: 12,
+                            ),
+                            onDeleted: () {
+                              ref
+                                  .read(academicStreamsProvider.notifier)
+                                  .removeStream(s.id);
+                            },
+                          );
+                        }).toList(),
+                      ),
+                  ],
+                ),
+              );
+
+              final electivesCard = GlassCard(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Elective Subject Groups',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: isDark
+                            ? AppColors.darkTextPrimary
+                            : AppColors.lightTextPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: _electiveNameController,
+                      style: const TextStyle(fontSize: 11),
+                      decoration: const InputDecoration(
+                        labelText: 'Group Name (e.g. Elective Group A)',
+                        isDense: true,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    TextField(
+                      controller: _electiveSubjectsController,
+                      style: const TextStyle(fontSize: 11),
+                      decoration: const InputDecoration(
+                        labelText: 'Subjects (comma-separated)',
+                        isDense: true,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          if (_electiveNameController.text
+                                  .trim()
+                                  .isNotEmpty &&
+                              _electiveSubjectsController.text
+                                  .trim()
+                                  .isNotEmpty) {
+                            final subjs = _electiveSubjectsController.text
+                                .split(',')
+                                .map((s) => s.trim())
+                                .where((s) => s.isNotEmpty)
+                                .toList();
+                            ref
+                                .read(academicElectivesProvider.notifier)
+                                .addElectiveGroup(
+                                  _selectedBranchId!,
+                                  _electiveNameController.text.trim(),
+                                  subjs,
+                                );
+                            _electiveNameController.clear();
+                            _electiveSubjectsController.clear();
+                          }
+                        },
+                        child: const Text(
+                          'Add Elective Group',
+                          style: TextStyle(fontSize: 11),
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-              ),
-            ],
+              );
+
+              if (isMobile) {
+                return Column(
+                  children: [
+                    streamsCard,
+                    const SizedBox(height: 16),
+                    electivesCard,
+                  ],
+                );
+              }
+
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: streamsCard,
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: electivesCard,
+                  ),
+                ],
+              );
+            },
           ),
           const SizedBox(height: 16),
 
@@ -3637,103 +3654,121 @@ class _DepartmentClassSectionPageState
           // Filter Bar
           GlassCard(
             padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Expanded(
-                  child: DropdownButtonFormField<String>(
-                    initialValue: _attClassId,
-                    decoration: const InputDecoration(
-                      labelText: 'Class',
-                      isDense: true,
-                    ),
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: isDark
-                          ? AppColors.darkTextPrimary
-                          : AppColors.lightTextPrimary,
-                    ),
-                    items: classes.map((c) {
-                      return DropdownMenuItem(
-                        value: c.id,
-                        child: Text(
-                          c.name,
-                          style: const TextStyle(fontSize: 11),
-                        ),
-                      );
-                    }).toList(),
-                    onChanged: (val) {
-                      setState(() {
-                        _attClassId = val;
-                        _attSectionId = null;
-                        _tempAttendanceMap.clear();
-                      });
-                    },
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final isMobile = constraints.maxWidth < 600;
+
+                final classDropdown = DropdownButtonFormField<String>(
+                  initialValue: _attClassId,
+                  decoration: const InputDecoration(
+                    labelText: 'Class',
+                    isDense: true,
                   ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: DropdownButtonFormField<String>(
-                    initialValue: _attSectionId,
-                    decoration: const InputDecoration(
-                      labelText: 'Section Scope',
-                      isDense: true,
-                    ),
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: isDark
-                          ? AppColors.darkTextPrimary
-                          : AppColors.lightTextPrimary,
-                    ),
-                    items: classSections.map((s) {
-                      return DropdownMenuItem(
-                        value: s.id,
-                        child: Text(
-                          'Section ${s.name}',
-                          style: const TextStyle(fontSize: 11),
-                        ),
-                      );
-                    }).toList(),
-                    onChanged: (val) {
-                      setState(() {
-                        _attSectionId = val;
-                        _tempAttendanceMap.clear();
-                        // Populate temp mapping from saved register if any
-                        for (final s in filteredStudents) {
-                          final saved = attendanceRecords.firstWhere(
-                            (r) =>
-                                r.studentId == s.id &&
-                                r.date == _attDateController.text.trim(),
-                            orElse: () => const AttendanceRecordEntity(
-                              id: '',
-                              branchId: '',
-                              studentId: '',
-                              date: '',
-                              status: 'Present',
-                            ),
-                          );
-                          _tempAttendanceMap[s.id] = saved.status;
-                        }
-                      });
-                    },
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: isDark
+                        ? AppColors.darkTextPrimary
+                        : AppColors.lightTextPrimary,
                   ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: TextField(
-                    controller: _attDateController,
-                    style: const TextStyle(fontSize: 11),
-                    decoration: const InputDecoration(
-                      labelText: 'Date (YYYY-MM-DD)',
-                      isDense: true,
-                    ),
-                    onChanged: (val) {
-                      setState(() {
-                        _tempAttendanceMap.clear();
-                      });
-                    },
+                  items: classes.map((c) {
+                    return DropdownMenuItem(
+                      value: c.id,
+                      child: Text(
+                        c.name,
+                        style: const TextStyle(fontSize: 11),
+                      ),
+                    );
+                  }).toList(),
+                  onChanged: (val) {
+                    setState(() {
+                      _attClassId = val;
+                      _attSectionId = null;
+                      _tempAttendanceMap.clear();
+                    });
+                  },
+                );
+
+                final sectionDropdown = DropdownButtonFormField<String>(
+                  initialValue: _attSectionId,
+                  decoration: const InputDecoration(
+                    labelText: 'Section Scope',
+                    isDense: true,
                   ),
-                ),
-              ],
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: isDark
+                        ? AppColors.darkTextPrimary
+                        : AppColors.lightTextPrimary,
+                  ),
+                  items: classSections.map((s) {
+                    return DropdownMenuItem(
+                      value: s.id,
+                      child: Text(
+                        'Section ${s.name}',
+                        style: const TextStyle(fontSize: 11),
+                      ),
+                    );
+                  }).toList(),
+                  onChanged: (val) {
+                    setState(() {
+                      _attSectionId = val;
+                      _tempAttendanceMap.clear();
+                      // Populate temp mapping from saved register if any
+                      for (final s in filteredStudents) {
+                        final saved = attendanceRecords.firstWhere(
+                          (r) =>
+                              r.studentId == s.id &&
+                              r.date == _attDateController.text.trim(),
+                          orElse: () => const AttendanceRecordEntity(
+                            id: '',
+                            branchId: '',
+                            studentId: '',
+                            date: '',
+                            status: 'Present',
+                          ),
+                        );
+                        _tempAttendanceMap[s.id] = saved.status;
+                      }
+                    });
+                  },
+                );
+
+                final dateField = TextField(
+                  controller: _attDateController,
+                  style: const TextStyle(fontSize: 11),
+                  decoration: const InputDecoration(
+                    labelText: 'Date (YYYY-MM-DD)',
+                    isDense: true,
+                  ),
+                  onChanged: (val) {
+                    setState(() {
+                      _tempAttendanceMap.clear();
+                    });
+                  },
+                );
+
+                if (isMobile) {
+                  return Column(
+                    children: [
+                      classDropdown,
+                      const SizedBox(height: 12),
+                      sectionDropdown,
+                      const SizedBox(height: 12),
+                      dateField,
+                    ],
+                  );
+                }
+
+                return Row(
+                  children: [
+                    Expanded(child: classDropdown),
+                    const SizedBox(width: 10),
+                    Expanded(child: sectionDropdown),
+                    const SizedBox(width: 10),
+                    Expanded(child: dateField),
+                  ],
+                );
+              },
             ),
           ),
           const SizedBox(height: 16),

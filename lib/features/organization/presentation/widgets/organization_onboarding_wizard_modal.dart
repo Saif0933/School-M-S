@@ -199,148 +199,206 @@ class _OrganizationOnboardingWizardModalState
     return Dialog(
       backgroundColor: isDark ? AppColors.darkCard : AppColors.lightCard,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 880, maxHeight: 820),
-        child: Column(
-          children: [
-            // Modal Header
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
-              decoration: BoxDecoration(
-                border: Border(
-                  bottom: BorderSide(
-                    color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
-                  ),
-                ),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      gradient: AppColors.primaryGradient,
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: const Icon(
-                      Icons.domain_add_rounded,
-                      color: Colors.white,
-                      size: 26,
-                    ),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '6-Step Organization & Branch Onboarding Wizard',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w800,
-                            color: isDark
-                                ? AppColors.darkTextPrimary
-                                : AppColors.lightTextPrimary,
-                          ),
-                        ),
-                        Text(
-                          'Level 1 Trust Registration → Branch Isolation → Master Setup',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: isDark
-                                ? AppColors.darkTextSecondary
-                                : AppColors.lightTextSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close_rounded),
-                    onPressed: () => Navigator.of(context).pop(),
-                  ),
-                ],
-              ),
-            ),
-
-            // Step Progress Indicator Bar
-            _buildStepIndicator(isDark),
-
-            // Modal Body Step Content
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
-                child: Form(
-                  key: _formKey,
-                  child: _buildCurrentStepView(isDark),
-                ),
-              ),
-            ),
-
-            // Modal Footer Actions
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-              decoration: BoxDecoration(
-                border: Border(
-                  top: BorderSide(
-                    color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
-                  ),
-                ),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  if (_currentStep > 0)
-                    OutlinedButton.icon(
-                      onPressed: _prevStep,
-                      icon: const Icon(Icons.arrow_back_rounded, size: 16),
-                      label: const Text('Previous Step'),
-                    )
-                  else
-                    const SizedBox.shrink(),
-
-                  Row(
-                    children: [
-                      OutlinedButton(
-                        onPressed: () => Navigator.of(context).pop(),
-                        child: const Text('Cancel'),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final isMobile = constraints.maxWidth < 650;
+          return ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 880, maxHeight: 820),
+            child: Column(
+              children: [
+                // Modal Header
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
+                  decoration: BoxDecoration(
+                    border: Border(
+                      bottom: BorderSide(
+                        color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
                       ),
-                      const SizedBox(width: 12),
-                      ElevatedButton.icon(
-                        onPressed: _isSubmitting ? null : _nextStep,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 22, vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          gradient: AppColors.primaryGradient,
+                          borderRadius: BorderRadius.circular(14),
                         ),
-                        icon: Icon(
-                          _currentStep == 5
-                              ? Icons.verified_rounded
-                              : Icons.arrow_forward_rounded,
-                          size: 18,
+                        child: const Icon(
+                          Icons.domain_add_rounded,
+                          color: Colors.white,
+                          size: 26,
                         ),
-                        label: Text(
-                          _currentStep == 5
-                              ? 'Provision & Activate Trust'
-                              : 'Next Step',
-                          style: const TextStyle(fontWeight: FontWeight.w700),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '6-Step Onboarding Wizard',
+                              style: TextStyle(
+                                fontSize: isMobile ? 14 : 18,
+                                fontWeight: FontWeight.w800,
+                                color: isDark
+                                    ? AppColors.darkTextPrimary
+                                    : AppColors.lightTextPrimary,
+                              ),
+                            ),
+                            Text(
+                              'Level 1 Trust Registration → Branch Isolation → Master Setup',
+                              style: TextStyle(
+                                fontSize: isMobile ? 10 : 12,
+                                color: isDark
+                                    ? AppColors.darkTextSecondary
+                                    : AppColors.lightTextSecondary,
+                              ),
+                            ),
+                          ],
                         ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close_rounded),
+                        onPressed: () => Navigator.of(context).pop(),
                       ),
                     ],
                   ),
-                ],
-              ),
+                ),
+
+                // Step Progress Indicator Bar
+                _buildStepIndicator(isDark, isMobile),
+
+                // Modal Body Step Content
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(24),
+                    child: Form(
+                      key: _formKey,
+                      child: _buildCurrentStepView(isDark, isMobile),
+                    ),
+                  ),
+                ),
+
+                // Modal Footer Actions
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                  decoration: BoxDecoration(
+                    border: Border(
+                      top: BorderSide(
+                        color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                      ),
+                    ),
+                  ),
+                  child: isMobile
+                      ? Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Row(
+                              children: [
+                                if (_currentStep > 0)
+                                  Expanded(
+                                    child: OutlinedButton.icon(
+                                      onPressed: _prevStep,
+                                      icon: const Icon(Icons.arrow_back_rounded, size: 16),
+                                      label: const Text('Previous'),
+                                    ),
+                                  ),
+                                if (_currentStep > 0) const SizedBox(width: 12),
+                                Expanded(
+                                  child: OutlinedButton(
+                                    onPressed: () => Navigator.of(context).pop(),
+                                    child: const Text('Cancel'),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 10),
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton.icon(
+                                onPressed: _isSubmitting ? null : _nextStep,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.primary,
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 22, vertical: 14),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                ),
+                                icon: Icon(
+                                  _currentStep == 5
+                                      ? Icons.verified_rounded
+                                      : Icons.arrow_forward_rounded,
+                                  size: 18,
+                                ),
+                                label: Text(
+                                  _currentStep == 5
+                                      ? 'Provision & Activate Trust'
+                                      : 'Next Step',
+                                  style: const TextStyle(fontWeight: FontWeight.w700),
+                                ),
+                              ),
+                            ),
+                          ],
+                        )
+                      : Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            if (_currentStep > 0)
+                              OutlinedButton.icon(
+                                onPressed: _prevStep,
+                                icon: const Icon(Icons.arrow_back_rounded, size: 16),
+                                label: const Text('Previous Step'),
+                              )
+                            else
+                              const SizedBox.shrink(),
+
+                            Row(
+                              children: [
+                                OutlinedButton(
+                                  onPressed: () => Navigator.of(context).pop(),
+                                  child: const Text('Cancel'),
+                                ),
+                                const SizedBox(width: 12),
+                                ElevatedButton.icon(
+                                  onPressed: _isSubmitting ? null : _nextStep,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppColors.primary,
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 22, vertical: 14),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                  ),
+                                  icon: Icon(
+                                    _currentStep == 5
+                                        ? Icons.verified_rounded
+                                        : Icons.arrow_forward_rounded,
+                                    size: 18,
+                                  ),
+                                  label: Text(
+                                    _currentStep == 5
+                                        ? 'Provision & Activate Trust'
+                                        : 'Next Step',
+                                    style: const TextStyle(fontWeight: FontWeight.w700),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                ),
+              ],
             ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
 
-  Widget _buildStepIndicator(bool isDark) {
+  Widget _buildStepIndicator(bool isDark, bool isMobile) {
     final stepLabels = [
       'Trust Profile',
       'Super Admin',
@@ -349,6 +407,58 @@ class _OrganizationOnboardingWizardModalState
       'Master Data',
       'Branding & API',
     ];
+
+    if (isMobile) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.darkBg : AppColors.lightBg,
+          border: Border(
+            bottom: BorderSide(
+              color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+            ),
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Step ${_currentStep + 1} of 6',
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.primary,
+                  ),
+                ),
+                Text(
+                  stepLabels[_currentStep],
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: isDark
+                        ? AppColors.darkTextPrimary
+                        : AppColors.lightTextPrimary,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: LinearProgressIndicator(
+                value: (_currentStep + 1) / 6,
+                backgroundColor: isDark ? Colors.white10 : Colors.grey[200],
+                color: AppColors.primary,
+                minHeight: 6,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
@@ -434,103 +544,113 @@ class _OrganizationOnboardingWizardModalState
     );
   }
 
-  Widget _buildCurrentStepView(bool isDark) {
+  Widget _buildResponsiveFieldsRow({
+    required bool isMobile,
+    required Widget left,
+    required Widget right,
+    double spacing = 14,
+    int leftFlex = 1,
+    int rightFlex = 1,
+  }) {
+    if (isMobile) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          left,
+          SizedBox(height: spacing),
+          right,
+        ],
+      );
+    }
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(flex: leftFlex, child: left),
+        SizedBox(width: spacing),
+        Expanded(flex: rightFlex, child: right),
+      ],
+    );
+  }
+
+  Widget _buildCurrentStepView(bool isDark, bool isMobile) {
     switch (_currentStep) {
       case 0:
-        return _buildStep1Profile(isDark);
+        return _buildStep1Profile(isDark, isMobile);
       case 1:
-        return _buildStep2SuperAdmin(isDark);
+        return _buildStep2SuperAdmin(isDark, isMobile);
       case 2:
-        return _buildStep3Subscription(isDark);
+        return _buildStep3Subscription(isDark, isMobile);
       case 3:
-        return _buildStep4InitialBranch(isDark);
+        return _buildStep4InitialBranch(isDark, isMobile);
       case 4:
-        return _buildStep5MasterData(isDark);
+        return _buildStep5MasterData(isDark, isMobile);
       case 5:
       default:
-        return _buildStep6Branding(isDark);
+        return _buildStep6Branding(isDark, isMobile);
     }
   }
 
   // STEP 1: TRUST / ORGANIZATION PROFILE
-  Widget _buildStep1Profile(bool isDark) {
+  Widget _buildStep1Profile(bool isDark, bool isMobile) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildSectionHeader('Step 1: Trust / Chain Profile Information', isDark),
         const SizedBox(height: 16),
-        Row(
-          children: [
-            Expanded(
-              flex: 2,
-              child: _buildTextField(
-                controller: _orgNameController,
-                label: 'Trust / Group Name *',
-                hint: 'e.g. Sunrise Education Trust',
-                icon: Icons.account_balance_rounded,
-                isDark: isDark,
-              ),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              flex: 1,
-              child: _buildTextField(
-                controller: _regNoController,
-                label: 'Registration Number',
-                hint: 'e.g. REG-2018-SET-8849',
-                icon: Icons.assignment_turned_in_rounded,
-                isDark: isDark,
-              ),
-            ),
-          ],
+        _buildResponsiveFieldsRow(
+          isMobile: isMobile,
+          leftFlex: 2,
+          rightFlex: 1,
+          left: _buildTextField(
+            controller: _orgNameController,
+            label: 'Trust / Group Name *',
+            hint: 'e.g. Sunrise Education Trust',
+            icon: Icons.account_balance_rounded,
+            isDark: isDark,
+          ),
+          right: _buildTextField(
+            controller: _regNoController,
+            label: 'Registration Number',
+            hint: 'e.g. REG-2018-SET-8849',
+            icon: Icons.assignment_turned_in_rounded,
+            isDark: isDark,
+          ),
         ),
         const SizedBox(height: 14),
-        Row(
-          children: [
-            Expanded(
-              child: _buildTextField(
-                controller: _taxNoController,
-                label: 'Tax ID / PAN / GSTIN',
-                hint: 'e.g. GSTIN-07AAATS8849K1Z5',
-                icon: Icons.receipt_long_rounded,
-                isDark: isDark,
-              ),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: _buildTextField(
-                controller: _subdomainController,
-                label: 'Dedicated SaaS Subdomain',
-                hint: 'e.g. sunrise (sunrise.symbosys.com)',
-                icon: Icons.language_rounded,
-                isDark: isDark,
-              ),
-            ),
-          ],
+        _buildResponsiveFieldsRow(
+          isMobile: isMobile,
+          left: _buildTextField(
+            controller: _taxNoController,
+            label: 'Tax ID / PAN / GSTIN',
+            hint: 'e.g. GSTIN-07AAATS8849K1Z5',
+            icon: Icons.receipt_long_rounded,
+            isDark: isDark,
+          ),
+          right: _buildTextField(
+            controller: _subdomainController,
+            label: 'Dedicated SaaS Subdomain',
+            hint: 'e.g. sunrise (sunrise.symbosys.com)',
+            icon: Icons.language_rounded,
+            isDark: isDark,
+          ),
         ),
         const SizedBox(height: 14),
-        Row(
-          children: [
-            Expanded(
-              child: _buildTextField(
-                controller: _emailController,
-                label: 'Official Corporate Email *',
-                hint: 'info@sunrisetrust.edu.in',
-                icon: Icons.email_outlined,
-                isDark: isDark,
-              ),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: _buildTextField(
-                controller: _phoneController,
-                label: 'Contact Phone Number',
-                hint: '+91 11 4567 8900',
-                icon: Icons.phone_outlined,
-                isDark: isDark,
-              ),
-            ),
-          ],
+        _buildResponsiveFieldsRow(
+          isMobile: isMobile,
+          left: _buildTextField(
+            controller: _emailController,
+            label: 'Official Corporate Email *',
+            hint: 'info@sunrisetrust.edu.in',
+            icon: Icons.email_outlined,
+            isDark: isDark,
+          ),
+          right: _buildTextField(
+            controller: _phoneController,
+            label: 'Contact Phone Number',
+            hint: '+91 11 4567 8900',
+            icon: Icons.phone_outlined,
+            isDark: isDark,
+          ),
         ),
         const SizedBox(height: 14),
         _buildTextField(
@@ -545,58 +665,46 @@ class _OrganizationOnboardingWizardModalState
   }
 
   // STEP 2: SUPER ADMIN & ROLES
-  Widget _buildStep2SuperAdmin(bool isDark) {
+  Widget _buildStep2SuperAdmin(bool isDark, bool isMobile) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildSectionHeader('Step 2: Organization Super Admin Credentials', isDark),
         const SizedBox(height: 16),
-        Row(
-          children: [
-            Expanded(
-              child: _buildTextField(
-                controller: _adminNameController,
-                label: 'Super Admin Full Name *',
-                hint: 'Dr. Rajesh Kumar Sharma',
-                icon: Icons.person_rounded,
-                isDark: isDark,
-              ),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: _buildTextField(
-                controller: _adminEmailController,
-                label: 'Super Admin Email (Login ID) *',
-                hint: 'superadmin@symbosys.com',
-                icon: Icons.mark_email_read_rounded,
-                isDark: isDark,
-              ),
-            ),
-          ],
+        _buildResponsiveFieldsRow(
+          isMobile: isMobile,
+          left: _buildTextField(
+            controller: _adminNameController,
+            label: 'Super Admin Full Name *',
+            hint: 'Dr. Rajesh Kumar Sharma',
+            icon: Icons.person_rounded,
+            isDark: isDark,
+          ),
+          right: _buildTextField(
+            controller: _adminEmailController,
+            label: 'Super Admin Email (Login ID) *',
+            hint: 'superadmin@symbosys.com',
+            icon: Icons.mark_email_read_rounded,
+            isDark: isDark,
+          ),
         ),
         const SizedBox(height: 14),
-        Row(
-          children: [
-            Expanded(
-              child: _buildTextField(
-                controller: _adminPhoneController,
-                label: 'Super Admin Mobile',
-                hint: '+91 9876543210',
-                icon: Icons.smartphone_rounded,
-                isDark: isDark,
-              ),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: _buildTextField(
-                controller: _billingEmailController,
-                label: 'Billing Contact Email',
-                hint: 'billing@sunrisetrust.edu.in',
-                icon: Icons.payment_rounded,
-                isDark: isDark,
-              ),
-            ),
-          ],
+        _buildResponsiveFieldsRow(
+          isMobile: isMobile,
+          left: _buildTextField(
+            controller: _adminPhoneController,
+            label: 'Super Admin Mobile',
+            hint: '+91 9876543210',
+            icon: Icons.smartphone_rounded,
+            isDark: isDark,
+          ),
+          right: _buildTextField(
+            controller: _billingEmailController,
+            label: 'Billing Contact Email',
+            hint: 'billing@sunrisetrust.edu.in',
+            icon: Icons.payment_rounded,
+            isDark: isDark,
+          ),
         ),
         const SizedBox(height: 14),
         _buildTextField(
@@ -611,23 +719,17 @@ class _OrganizationOnboardingWizardModalState
   }
 
   // STEP 3: SUBSCRIPTION & CREDITS
-  Widget _buildStep3Subscription(bool isDark) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildSectionHeader('Step 3: SaaS Subscription & Credit Pools', isDark),
-        const SizedBox(height: 16),
-
-        // Plan Selector Row
-        Row(
-          children: SubscriptionTier.values.map((tier) {
-            final isSelected = _selectedTier == tier;
-            return Expanded(
-              child: GestureDetector(
+  Widget _buildStep3Subscription(bool isDark, bool isMobile) {
+    final planSelector = isMobile
+        ? Column(
+            children: SubscriptionTier.values.map((tier) {
+              final isSelected = _selectedTier == tier;
+              return GestureDetector(
                 onTap: () => setState(() => _selectedTier = tier),
                 child: Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 4),
+                  margin: const EdgeInsets.symmetric(vertical: 6),
                   padding: const EdgeInsets.all(12),
+                  width: double.infinity,
                   decoration: BoxDecoration(
                     color: isSelected
                         ? AppColors.primary.withValues(alpha: 0.15)
@@ -665,118 +767,149 @@ class _OrganizationOnboardingWizardModalState
                     ],
                   ),
                 ),
-              ),
-            );
-          }).toList(),
-        ),
-        const SizedBox(height: 20),
+              );
+            }).toList(),
+          )
+        : Row(
+            children: SubscriptionTier.values.map((tier) {
+              final isSelected = _selectedTier == tier;
+              return Expanded(
+                child: GestureDetector(
+                  onTap: () => setState(() => _selectedTier = tier),
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? AppColors.primary.withValues(alpha: 0.15)
+                          : (isDark ? AppColors.darkCard : AppColors.lightBg),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: isSelected
+                            ? AppColors.primary
+                            : (isDark
+                                ? AppColors.darkBorder
+                                : AppColors.lightBorder),
+                        width: isSelected ? 2 : 1,
+                      ),
+                    ),
+                    child: Column(
+                      children: [
+                        Text(
+                          tier.label,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: isDark
+                                ? AppColors.darkTextPrimary
+                                : AppColors.lightTextPrimary,
+                          ),
+                        ),
+                        Text(
+                          '\$${tier.monthlyPrice.toInt()}/mo',
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          );
 
-        Row(
-          children: [
-            Expanded(
-              child: _buildTextField(
-                controller: _maxBranchesController,
-                label: 'Max Branch Limit',
-                hint: '10',
-                icon: Icons.account_tree_rounded,
-                isDark: isDark,
-              ),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: _buildTextField(
-                controller: _maxStudentsController,
-                label: 'Max Student License Pool',
-                hint: '5000',
-                icon: Icons.groups_rounded,
-                isDark: isDark,
-              ),
-            ),
-          ],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionHeader('Step 3: SaaS Subscription & Credit Pools', isDark),
+        const SizedBox(height: 16),
+        planSelector,
+        const SizedBox(height: 20),
+        _buildResponsiveFieldsRow(
+          isMobile: isMobile,
+          left: _buildTextField(
+            controller: _maxBranchesController,
+            label: 'Max Branch Limit',
+            hint: '10',
+            icon: Icons.account_tree_rounded,
+            isDark: isDark,
+          ),
+          right: _buildTextField(
+            controller: _maxStudentsController,
+            label: 'Max Student License Pool',
+            hint: '5000',
+            icon: Icons.groups_rounded,
+            isDark: isDark,
+          ),
         ),
         const SizedBox(height: 14),
-        Row(
-          children: [
-            Expanded(
-              child: _buildTextField(
-                controller: _smsCreditsController,
-                label: 'Initial SMS Credit Pool',
-                hint: '50000',
-                icon: Icons.sms_rounded,
-                isDark: isDark,
-              ),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: _buildTextField(
-                controller: _emailCreditsController,
-                label: 'Initial Email Credit Pool',
-                hint: '200000',
-                icon: Icons.email_rounded,
-                isDark: isDark,
-              ),
-            ),
-          ],
+        _buildResponsiveFieldsRow(
+          isMobile: isMobile,
+          left: _buildTextField(
+            controller: _smsCreditsController,
+            label: 'Initial SMS Credit Pool',
+            hint: '50000',
+            icon: Icons.sms_rounded,
+            isDark: isDark,
+          ),
+          right: _buildTextField(
+            controller: _emailCreditsController,
+            label: 'Initial Email Credit Pool',
+            hint: '200000',
+            icon: Icons.email_rounded,
+            isDark: isDark,
+          ),
         ),
       ],
     );
   }
 
   // STEP 4: INITIAL BRANCH PROVISIONING
-  Widget _buildStep4InitialBranch(bool isDark) {
+  Widget _buildStep4InitialBranch(bool isDark, bool isMobile) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildSectionHeader('Step 4: Provision Initial Branch (School)', isDark),
         const SizedBox(height: 16),
-        Row(
-          children: [
-            Expanded(
-              flex: 2,
-              child: _buildTextField(
-                controller: _branchNameController,
-                label: 'First Branch Name *',
-                hint: 'e.g. Sunrise International School - Delhi',
-                icon: Icons.school_rounded,
-                isDark: isDark,
-              ),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              flex: 1,
-              child: _buildTextField(
-                controller: _branchCodeController,
-                label: 'Branch Code',
-                hint: 'e.g. SIS-DEL',
-                icon: Icons.tag_rounded,
-                isDark: isDark,
-              ),
-            ),
-          ],
+        _buildResponsiveFieldsRow(
+          isMobile: isMobile,
+          leftFlex: 2,
+          rightFlex: 1,
+          left: _buildTextField(
+            controller: _branchNameController,
+            label: 'First Branch Name *',
+            hint: 'e.g. Sunrise International School - Delhi',
+            icon: Icons.school_rounded,
+            isDark: isDark,
+          ),
+          right: _buildTextField(
+            controller: _branchCodeController,
+            label: 'Branch Code',
+            hint: 'e.g. SIS-DEL',
+            icon: Icons.tag_rounded,
+            isDark: isDark,
+          ),
         ),
         const SizedBox(height: 14),
-        Row(
-          children: [
-            Expanded(
-              child: _buildTextField(
-                controller: _branchBoardController,
-                label: 'Affiliation Board',
-                hint: 'CBSE / ICSE / IB / State Board',
-                icon: Icons.workspace_premium_rounded,
-                isDark: isDark,
-              ),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: _buildTextField(
-                controller: _principalNameController,
-                label: 'Branch Principal Name',
-                hint: 'Dr. Meenakshi Sundaram',
-                icon: Icons.person_outline_rounded,
-                isDark: isDark,
-              ),
-            ),
-          ],
+        _buildResponsiveFieldsRow(
+          isMobile: isMobile,
+          left: _buildTextField(
+            controller: _branchBoardController,
+            label: 'Affiliation Board',
+            hint: 'CBSE / ICSE / IB / State Board',
+            icon: Icons.workspace_premium_rounded,
+            isDark: isDark,
+          ),
+          right: _buildTextField(
+            controller: _principalNameController,
+            label: 'Branch Principal Name',
+            hint: 'Dr. Meenakshi Sundaram',
+            icon: Icons.person_outline_rounded,
+            isDark: isDark,
+          ),
         ),
         const SizedBox(height: 14),
         _buildTextField(
@@ -791,7 +924,7 @@ class _OrganizationOnboardingWizardModalState
   }
 
   // STEP 5: MASTER DATA SETUP
-  Widget _buildStep5MasterData(bool isDark) {
+  Widget _buildStep5MasterData(bool isDark, bool isMobile) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -866,7 +999,7 @@ class _OrganizationOnboardingWizardModalState
   }
 
   // STEP 6: WHITE-LABEL BRANDING & ACTIVATION
-  Widget _buildStep6Branding(bool isDark) {
+  Widget _buildStep6Branding(bool isDark, bool isMobile) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -898,7 +1031,9 @@ class _OrganizationOnboardingWizardModalState
                       ),
                     ),
                     const SizedBox(height: 10),
-                    Row(
+                    Wrap(
+                      spacing: 10,
+                      runSpacing: 10,
                       children: [
                         for (final color in [
                           '#6366F1',
@@ -910,7 +1045,6 @@ class _OrganizationOnboardingWizardModalState
                           GestureDetector(
                             onTap: () => setState(() => _primaryColorHex = color),
                             child: Container(
-                              margin: const EdgeInsets.only(right: 10),
                               width: 32,
                               height: 32,
                               decoration: BoxDecoration(

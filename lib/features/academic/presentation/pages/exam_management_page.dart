@@ -507,54 +507,88 @@ class _ExamSchedulesTabState extends ConsumerState<_ExamSchedulesTab> {
                   ],
                 ),
                 const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _FormField(
-                        controller: _startTimeCtrl,
-                        label: 'Start Time',
-                        isDark: isDark,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: _FormField(
-                        controller: _endTimeCtrl,
-                        label: 'End Time',
-                        isDark: isDark,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: _FormField(
-                        controller: _roomCtrl,
-                        label: 'Room/Lab No.',
-                        isDark: isDark,
-                      ),
-                    ),
-                  ],
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final isMobile = constraints.maxWidth < 550;
+
+                    final startTimeField = _FormField(
+                      controller: _startTimeCtrl,
+                      label: 'Start Time',
+                      isDark: isDark,
+                    );
+
+                    final endTimeField = _FormField(
+                      controller: _endTimeCtrl,
+                      label: 'End Time',
+                      isDark: isDark,
+                    );
+
+                    final roomField = _FormField(
+                      controller: _roomCtrl,
+                      label: 'Room/Lab No.',
+                      isDark: isDark,
+                    );
+
+                    if (isMobile) {
+                      return Column(
+                        children: [
+                          startTimeField,
+                          const SizedBox(height: 8),
+                          endTimeField,
+                          const SizedBox(height: 8),
+                          roomField,
+                        ],
+                      );
+                    }
+
+                    return Row(
+                      children: [
+                        Expanded(child: startTimeField),
+                        const SizedBox(width: 8),
+                        Expanded(child: endTimeField),
+                        const SizedBox(width: 8),
+                        Expanded(child: roomField),
+                      ],
+                    );
+                  },
                 ),
                 const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _FormField(
-                        controller: _maxMarksCtrl,
-                        label: 'Max Marks',
-                        isDark: isDark,
-                        keyboardType: TextInputType.number,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: _FormField(
-                        controller: _passMarksCtrl,
-                        label: 'Passing Marks',
-                        isDark: isDark,
-                        keyboardType: TextInputType.number,
-                      ),
-                    ),
-                  ],
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final isMobile = constraints.maxWidth < 550;
+
+                    final maxMarksField = _FormField(
+                      controller: _maxMarksCtrl,
+                      label: 'Max Marks',
+                      isDark: isDark,
+                      keyboardType: TextInputType.number,
+                    );
+
+                    final passMarksField = _FormField(
+                      controller: _passMarksCtrl,
+                      label: 'Passing Marks',
+                      isDark: isDark,
+                      keyboardType: TextInputType.number,
+                    );
+
+                    if (isMobile) {
+                      return Column(
+                        children: [
+                          maxMarksField,
+                          const SizedBox(height: 8),
+                          passMarksField,
+                        ],
+                      );
+                    }
+
+                    return Row(
+                      children: [
+                        Expanded(child: maxMarksField),
+                        const SizedBox(width: 8),
+                        Expanded(child: passMarksField),
+                      ],
+                    );
+                  },
                 ),
                 const SizedBox(height: 16),
                 ElevatedButton.icon(

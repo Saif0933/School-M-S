@@ -196,118 +196,120 @@ class _TimetableManagementPageState
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           color: isDark ? AppColors.darkBg : Colors.grey[100],
-          child: Row(
-            children: [
-              const Icon(
-                Icons.schedule_rounded,
-                color: AppColors.primary,
-                size: 20,
-              ),
-              const SizedBox(width: 8),
-              const Text(
-                'Active Shift:',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
-              ),
-              const SizedBox(width: 12),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final isMobile = constraints.maxWidth < 950;
 
-              // Shift Selector Chips
-              SegmentedButton<String>(
-                segments: const [
-                  ButtonSegment(
-                    value: 'Morning Shift',
-                    label: Text(
-                      'Morning Shift (08:00 AM - 01:30 PM)',
-                      style: TextStyle(fontSize: 10),
-                    ),
-                    icon: Icon(Icons.wb_sunny_outlined, size: 14),
+              final shiftWidget = Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.schedule_rounded,
+                    color: AppColors.primary,
+                    size: 20,
                   ),
-                  ButtonSegment(
-                    value: 'Afternoon Shift',
-                    label: Text(
-                      'Afternoon/Evening Shift (01:30 PM - 06:30 PM)',
-                      style: TextStyle(fontSize: 10),
-                    ),
-                    icon: Icon(Icons.wb_twilight_rounded, size: 14),
+                  const SizedBox(width: 8),
+                  const Text(
+                    'Active Shift:',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
                   ),
-                ],
-                selected: {_selectedShift},
-                onSelectionChanged: (Set<String> newSelection) {
-                  setState(() {
-                    _selectedShift = newSelection.first;
-                  });
-                },
-                style: const ButtonStyle(
-                  visualDensity: VisualDensity.compact,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
-              ),
-              const Spacer(),
-
-              // Org Admin Cross-Branch Selector
-              if (isOrgAdmin && allBranches.isNotEmpty) ...[
-                Container(
-                  height: 34,
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  decoration: BoxDecoration(
-                    color: isDark ? AppColors.darkSurface : Colors.white,
-                    borderRadius: BorderRadius.circular(6),
-                    border: Border.all(
-                      color: isReadOnly
-                          ? Colors.amber
-                          : (isDark
-                                ? AppColors.darkBorder
-                                : AppColors.lightBorder),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.corporate_fare_rounded,
-                        size: 14,
-                        color: isReadOnly ? Colors.amber : AppColors.primary,
-                      ),
-                      const SizedBox(width: 6),
-                      DropdownButtonHideUnderline(
-                        child: DropdownButton<String>(
-                          value: effectiveBranchId,
-                          style: TextStyle(
-                            color: isDark ? Colors.white : Colors.black,
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          dropdownColor: isDark
-                              ? AppColors.darkSurface
-                              : Colors.white,
-                          onChanged: (val) {
-                            if (val != null) {
-                              setState(() {
-                                _overrideBranchId = val;
-                                _selectedClassId = null;
-                                _selectedSectionId = null;
-                                _selectedTeacherName = null;
-                                _substTeacherName = null;
-                              });
-                            }
-                          },
-                          items: allBranches.map((b) {
-                            final isHome = b.id == userHomeBranchId;
-                            return DropdownMenuItem(
-                              value: b.id,
-                              child: Text(
-                                '${b.name} ${isHome ? '(Home Branch)' : '(Read-Only View)'}',
-                              ),
-                            );
-                          }).toList(),
+                  const SizedBox(width: 12),
+                  SegmentedButton<String>(
+                    segments: const [
+                      ButtonSegment(
+                        value: 'Morning Shift',
+                        label: Text(
+                          'Morning Shift (08:00 AM - 01:30 PM)',
+                          style: TextStyle(fontSize: 10),
                         ),
+                        icon: Icon(Icons.wb_sunny_outlined, size: 14),
+                      ),
+                      ButtonSegment(
+                        value: 'Afternoon Shift',
+                        label: Text(
+                          'Afternoon/Evening Shift (01:30 PM - 06:30 PM)',
+                          style: TextStyle(fontSize: 10),
+                        ),
+                        icon: Icon(Icons.wb_twilight_rounded, size: 14),
                       ),
                     ],
+                    selected: {_selectedShift},
+                    onSelectionChanged: (Set<String> newSelection) {
+                      setState(() {
+                        _selectedShift = newSelection.first;
+                      });
+                    },
+                    style: const ButtonStyle(
+                      visualDensity: VisualDensity.compact,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
                   ),
-                ),
-                const SizedBox(width: 8),
-              ],
+                ],
+              );
 
-              // Version History Action Button
-              OutlinedButton.icon(
+              final branchSwitcherWidget = (isOrgAdmin && allBranches.isNotEmpty)
+                  ? Container(
+                      height: 34,
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      decoration: BoxDecoration(
+                        color: isDark ? AppColors.darkSurface : Colors.white,
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(
+                          color: isReadOnly
+                              ? Colors.amber
+                              : (isDark
+                                    ? AppColors.darkBorder
+                                    : AppColors.lightBorder),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.corporate_fare_rounded,
+                            size: 14,
+                            color: isReadOnly ? Colors.amber : AppColors.primary,
+                          ),
+                          const SizedBox(width: 6),
+                          DropdownButtonHideUnderline(
+                            child: DropdownButton<String>(
+                              value: effectiveBranchId,
+                              style: TextStyle(
+                                color: isDark ? Colors.white : Colors.black,
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              dropdownColor: isDark
+                                  ? AppColors.darkSurface
+                                  : Colors.white,
+                              onChanged: (val) {
+                                if (val != null) {
+                                  setState(() {
+                                    _overrideBranchId = val;
+                                    _selectedClassId = null;
+                                    _selectedSectionId = null;
+                                    _selectedTeacherName = null;
+                                    _substTeacherName = null;
+                                  });
+                                }
+                              },
+                              items: allBranches.map((b) {
+                                final isHome = b.id == userHomeBranchId;
+                                return DropdownMenuItem(
+                                  value: b.id,
+                                  child: Text(
+                                    '${b.name} ${isHome ? '(Home Branch)' : '(Read-Only View)'}',
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : const SizedBox.shrink();
+
+              final versionHistoryBtn = OutlinedButton.icon(
                 onPressed: () => _showVersionHistoryDialog(
                   context,
                   isDark,
@@ -329,11 +331,9 @@ class _TimetableManagementPageState
                     vertical: 8,
                   ),
                 ),
-              ),
-              const SizedBox(width: 8),
+              );
 
-              // Clash Report Button
-              Consumer(
+              final clashReportBtn = Consumer(
                 builder: (context, ref, child) {
                   final currentSlots = ref
                       .watch(timetableSlotsProvider)
@@ -376,11 +376,9 @@ class _TimetableManagementPageState
                     ),
                   );
                 },
-              ),
-              const SizedBox(width: 8),
+              );
 
-              // Org Master Templates Button
-              ElevatedButton.icon(
+              final masterTemplatesBtn = ElevatedButton.icon(
                 onPressed: () => _showOrgTemplatesDialog(
                   context,
                   isDark,
@@ -398,14 +396,46 @@ class _TimetableManagementPageState
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
                   visualDensity: VisualDensity.compact,
                   padding: const EdgeInsets.symmetric(
                     horizontal: 10,
                     vertical: 8,
                   ),
                 ),
-              ),
-            ],
+              );
+
+              if (isMobile) {
+                return Wrap(
+                  spacing: 12,
+                  runSpacing: 12,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    shiftWidget,
+                    if (isOrgAdmin && allBranches.isNotEmpty) branchSwitcherWidget,
+                    versionHistoryBtn,
+                    clashReportBtn,
+                    masterTemplatesBtn,
+                  ],
+                );
+              }
+
+              return Row(
+                children: [
+                  shiftWidget,
+                  const Spacer(),
+                  if (isOrgAdmin && allBranches.isNotEmpty) ...[
+                    branchSwitcherWidget,
+                    const SizedBox(width: 8),
+                  ],
+                  versionHistoryBtn,
+                  const SizedBox(width: 8),
+                  clashReportBtn,
+                  const SizedBox(width: 8),
+                  masterTemplatesBtn,
+                ],
+              );
+            },
           ),
         ),
 
@@ -577,113 +607,129 @@ class _TimetableManagementPageState
           // Filter Board (Class & Section)
           GlassCard(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Row(
-              children: [
-                const Icon(
-                  Icons.filter_list_rounded,
-                  color: AppColors.primary,
-                  size: 20,
-                ),
-                const SizedBox(width: 12),
-                const Text(
-                  'Target Class & Section:',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
-                ),
-                const SizedBox(width: 24),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final isMobile = constraints.maxWidth < 750;
 
-                // Class Selection
-                Text(
-                  'Class: ',
-                  style: TextStyle(
-                    color: isDark ? Colors.grey[300] : Colors.grey[700],
-                    fontSize: 11,
-                  ),
-                ),
-                const SizedBox(width: 6),
-                Container(
-                  height: 34,
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  decoration: BoxDecoration(
-                    color: isDark ? AppColors.darkBg : Colors.grey[200],
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButton<String>(
-                      value: _selectedClassId,
-                      style: TextStyle(
-                        color: isDark ? Colors.white : Colors.black,
-                        fontSize: 11,
-                      ),
-                      dropdownColor: isDark
-                          ? AppColors.darkSurface
-                          : Colors.white,
-                      onChanged: (val) {
-                        setState(() {
-                          _selectedClassId = val;
-                          final list = ref
-                              .read(academicSectionsProvider)
-                              .where((s) => s.classId == val)
-                              .toList();
-                          _selectedSectionId = list.isNotEmpty
-                              ? list.first.id
-                              : null;
-                        });
-                      },
-                      items: classes.map((c) {
-                        return DropdownMenuItem(
-                          value: c.id,
-                          child: Text(c.name),
-                        );
-                      }).toList(),
+                final filters = Wrap(
+                  spacing: 12,
+                  runSpacing: 8,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.filter_list_rounded,
+                          color: AppColors.primary,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 12),
+                        const Text(
+                          'Target Class & Section:',
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                        ),
+                      ],
                     ),
-                  ),
-                ),
-                const SizedBox(width: 20),
-
-                // Section Selection
-                Text(
-                  'Section: ',
-                  style: TextStyle(
-                    color: isDark ? Colors.grey[300] : Colors.grey[700],
-                    fontSize: 11,
-                  ),
-                ),
-                const SizedBox(width: 6),
-                Container(
-                  height: 34,
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  decoration: BoxDecoration(
-                    color: isDark ? AppColors.darkBg : Colors.grey[200],
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButton<String>(
-                      value: _selectedSectionId,
-                      style: TextStyle(
-                        color: isDark ? Colors.white : Colors.black,
-                        fontSize: 11,
-                      ),
-                      dropdownColor: isDark
-                          ? AppColors.darkSurface
-                          : Colors.white,
-                      onChanged: (val) {
-                        setState(() {
-                          _selectedSectionId = val;
-                        });
-                      },
-                      items: sections.map((s) {
-                        return DropdownMenuItem(
-                          value: s.id,
-                          child: Text('Section ${s.name}'),
-                        );
-                      }).toList(),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'Class: ',
+                          style: TextStyle(
+                            color: isDark ? Colors.grey[300] : Colors.grey[700],
+                            fontSize: 11,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Container(
+                          height: 34,
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          decoration: BoxDecoration(
+                            color: isDark ? AppColors.darkBg : Colors.grey[200],
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: DropdownButtonHideUnderline(
+                            child: DropdownButton<String>(
+                              value: _selectedClassId,
+                              style: TextStyle(
+                                color: isDark ? Colors.white : Colors.black,
+                                fontSize: 11,
+                              ),
+                              dropdownColor: isDark
+                                  ? AppColors.darkSurface
+                                  : Colors.white,
+                              onChanged: (val) {
+                                setState(() {
+                                  _selectedClassId = val;
+                                  final list = ref
+                                      .read(academicSectionsProvider)
+                                      .where((s) => s.classId == val)
+                                      .toList();
+                                  _selectedSectionId = list.isNotEmpty
+                                      ? list.first.id
+                                      : null;
+                                });
+                              },
+                              items: classes.map((c) {
+                                return DropdownMenuItem(
+                                  value: c.id,
+                                  child: Text(c.name),
+                                );
+                              }).toList(),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                ),
-                const Spacer(),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'Section: ',
+                          style: TextStyle(
+                            color: isDark ? Colors.grey[300] : Colors.grey[700],
+                            fontSize: 11,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Container(
+                          height: 34,
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          decoration: BoxDecoration(
+                            color: isDark ? AppColors.darkBg : Colors.grey[200],
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: DropdownButtonHideUnderline(
+                            child: DropdownButton<String>(
+                              value: _selectedSectionId,
+                              style: TextStyle(
+                                color: isDark ? Colors.white : Colors.black,
+                                fontSize: 11,
+                              ),
+                              dropdownColor: isDark
+                                  ? AppColors.darkSurface
+                                  : Colors.white,
+                              onChanged: (val) {
+                                setState(() {
+                                  _selectedSectionId = val;
+                                });
+                              },
+                              items: sections.map((s) {
+                                return DropdownMenuItem(
+                                  value: s.id,
+                                  child: Text('Section ${s.name}'),
+                                );
+                              }).toList(),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                );
 
-                // Add Schedule Button
-                ElevatedButton.icon(
+                final actionBtn = ElevatedButton.icon(
                   onPressed: () => _showScheduleDialog(
                     context,
                     isDark,
@@ -709,8 +755,27 @@ class _TimetableManagementPageState
                       borderRadius: BorderRadius.circular(6),
                     ),
                   ),
-                ),
-              ],
+                );
+
+                if (isMobile) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      filters,
+                      const SizedBox(height: 12),
+                      actionBtn,
+                    ],
+                  );
+                }
+
+                return Row(
+                  children: [
+                    Expanded(child: filters),
+                    const SizedBox(width: 12),
+                    actionBtn,
+                  ],
+                );
+              },
             ),
           ),
           _buildToolbarActions(context, isDark, branchId, settings),
@@ -1023,54 +1088,65 @@ class _TimetableManagementPageState
         children: [
           GlassCard(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Row(
-              children: [
-                const Icon(
-                  Icons.badge_rounded,
-                  color: AppColors.primary,
-                  size: 20,
-                ),
-                const SizedBox(width: 12),
-                const Text(
-                  'Select Branch Teacher:',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
-                ),
-                const SizedBox(width: 16),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final isMobile = constraints.maxWidth < 650;
 
-                Container(
-                  height: 36,
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                  decoration: BoxDecoration(
-                    color: isDark ? AppColors.darkBg : Colors.grey[200],
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButton<String>(
-                      value: _selectedTeacherName,
-                      style: TextStyle(
-                        color: isDark ? Colors.white : Colors.black,
-                        fontSize: 11,
-                      ),
-                      dropdownColor: isDark
-                          ? AppColors.darkSurface
-                          : Colors.white,
-                      onChanged: (val) {
-                        setState(() {
-                          _selectedTeacherName = val;
-                        });
-                      },
-                      items: branchTeachers.map((t) {
-                        return DropdownMenuItem(
-                          value: t.name,
-                          child: Text('${t.name} (${t.designation})'),
-                        );
-                      }).toList(),
+                final teacherSelector = Wrap(
+                  spacing: 12,
+                  runSpacing: 8,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.badge_rounded,
+                          color: AppColors.primary,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 12),
+                        const Text(
+                          'Select Branch Teacher:',
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                        ),
+                      ],
                     ),
-                  ),
-                ),
-                const Spacer(),
+                    Container(
+                      height: 36,
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      decoration: BoxDecoration(
+                        color: isDark ? AppColors.darkBg : Colors.grey[200],
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          value: _selectedTeacherName,
+                          style: TextStyle(
+                            color: isDark ? Colors.white : Colors.black,
+                            fontSize: 11,
+                          ),
+                          dropdownColor: isDark
+                              ? AppColors.darkSurface
+                              : Colors.white,
+                          onChanged: (val) {
+                            setState(() {
+                              _selectedTeacherName = val;
+                            });
+                          },
+                          items: branchTeachers.map((t) {
+                            return DropdownMenuItem(
+                              value: t.name,
+                              child: Text('${t.name} (${t.designation})'),
+                            );
+                          }).toList(),
+                        ),
+                      ),
+                    ),
+                  ],
+                );
 
-                Container(
+                final workloadBadge = Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 12,
                     vertical: 6,
@@ -1090,8 +1166,27 @@ class _TimetableManagementPageState
                       color: AppColors.primary,
                     ),
                   ),
-                ),
-              ],
+                );
+
+                if (isMobile) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      teacherSelector,
+                      const SizedBox(height: 12),
+                      workloadBadge,
+                    ],
+                  );
+                }
+
+                return Row(
+                  children: [
+                    Expanded(child: teacherSelector),
+                    const SizedBox(width: 12),
+                    workloadBadge,
+                  ],
+                );
+              },
             ),
           ),
           const SizedBox(height: 16),
@@ -1601,9 +1696,11 @@ class _TimetableManagementPageState
           // AI Generator Hero Banner
           GlassCard(
             padding: const EdgeInsets.all(20),
-            child: Row(
-              children: [
-                Container(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final isMobile = constraints.maxWidth < 750;
+
+                final leadingIcon = Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: AppColors.primarySurface,
@@ -1614,32 +1711,30 @@ class _TimetableManagementPageState
                     color: AppColors.primary,
                     size: 32,
                   ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'AI Timetable Optimization Engine (Branch Scoped)',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                        ),
+                );
+
+                final infoTexts = Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'AI Timetable Optimization Engine (Branch Scoped)',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Automatically generate a complete, 100% conflict-free weekly schedule across all classes and sections using branch subject quotas, working days, lab allocations, and teacher pools.',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: isDark ? Colors.grey[300] : Colors.grey[700],
-                        ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Automatically generate a complete, 100% conflict-free weekly schedule across all classes and sections using branch subject quotas, working days, lab allocations, and teacher pools.',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: isDark ? Colors.grey[300] : Colors.grey[700],
                       ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 16),
-                ElevatedButton.icon(
+                    ),
+                  ],
+                );
+
+                final generateBtn = ElevatedButton.icon(
                   onPressed: () {
                     if (allocations.isEmpty) {
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -1684,429 +1779,503 @@ class _TimetableManagementPageState
                       borderRadius: BorderRadius.circular(8),
                     ),
                   ),
-                ),
-              ],
+                );
+
+                if (isMobile) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Row(
+                        children: [
+                          leadingIcon,
+                          const SizedBox(width: 16),
+                          Expanded(child: infoTexts),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      generateBtn,
+                    ],
+                  );
+                }
+
+                return Row(
+                  children: [
+                    leadingIcon,
+                    const SizedBox(width: 16),
+                    Expanded(child: infoTexts),
+                    const SizedBox(width: 16),
+                    generateBtn,
+                  ],
+                );
+              },
             ),
           ),
           const SizedBox(height: 20),
 
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Branch Subject Master List & Branch Labs
-              Expanded(
-                flex: 4,
-                child: Column(
-                  children: [
-                    GlassCard(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              const Text(
-                                'Branch Subjects Master',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 13,
-                                ),
-                              ),
-                              IconButton(
-                                icon: const Icon(
-                                  Icons.add_circle_outline_rounded,
-                                  color: AppColors.primary,
-                                  size: 18,
-                                ),
-                                padding: EdgeInsets.zero,
-                                constraints: const BoxConstraints(),
-                                onPressed: () => _showAddSubjectDialog(
-                                  context,
-                                  isDark,
-                                  branchId,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isMobile = constraints.maxWidth < 950;
 
-                          if (subjects.isEmpty)
-                            const Padding(
-                              padding: EdgeInsets.symmetric(vertical: 20),
-                              child: Center(
-                                child: Text(
-                                  'No subjects added for this branch.',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: Colors.grey,
-                                  ),
-                                ),
+              final leftColumn = Column(
+                children: [
+                  GlassCard(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              'Branch Subjects Master',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
                               ),
-                            )
-                          else
-                            ...subjects.map((sub) {
-                              return Container(
-                                margin: const EdgeInsets.symmetric(vertical: 4),
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 8,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: isDark
-                                      ? AppColors.darkBg
-                                      : Colors.grey[100],
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          sub.name,
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 11,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 2),
-                                        Text(
-                                          '${sub.code} • ${sub.category}',
-                                          style: const TextStyle(
-                                            fontSize: 9,
-                                            color: Colors.grey,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    IconButton(
-                                      icon: const Icon(
-                                        Icons.delete_outline_rounded,
-                                        color: Colors.redAccent,
-                                        size: 16,
-                                      ),
-                                      padding: EdgeInsets.zero,
-                                      constraints: const BoxConstraints(),
-                                      onPressed: () {
-                                        ref
-                                            .read(
-                                              branchSubjectsProvider.notifier,
-                                            )
-                                            .removeSubject(sub.id);
-                                      },
-                                    ),
-                                  ],
-                                ),
-                              );
-                            }),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Branch Science & IT Labs List
-                    GlassCard(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              const Text(
-                                'Branch Labs & Practical Rooms',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 13,
-                                ),
-                              ),
-                              IconButton(
-                                icon: const Icon(
-                                  Icons.add_circle_outline_rounded,
-                                  color: AppColors.primary,
-                                  size: 18,
-                                ),
-                                padding: EdgeInsets.zero,
-                                constraints: const BoxConstraints(),
-                                onPressed: () => _showAddLabDialog(
-                                  context,
-                                  isDark,
-                                  branchId,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-
-                          if (labs.isEmpty)
-                            const Padding(
-                              padding: EdgeInsets.symmetric(vertical: 16),
-                              child: Center(
-                                child: Text(
-                                  'No labs registered for this branch.',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: Colors.grey,
-                                  ),
-                                ),
-                              ),
-                            )
-                          else
-                            ...labs.map((lab) {
-                              return Container(
-                                margin: const EdgeInsets.symmetric(vertical: 4),
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 8,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: isDark
-                                      ? AppColors.darkBg
-                                      : Colors.grey[100],
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: Row(
-                                  children: [
-                                    const Icon(
-                                      Icons.science_rounded,
-                                      size: 16,
-                                      color: AppColors.primary,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          lab.name,
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 11,
-                                          ),
-                                        ),
-                                        Text(
-                                          '${lab.building} (Cap: ${lab.capacity})',
-                                          style: const TextStyle(
-                                            fontSize: 9,
-                                            color: Colors.grey,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              );
-                            }),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 16),
-
-              // Class-Wise Subject Quota Allocation
-              Expanded(
-                flex: 6,
-                child: GlassCard(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Subject Period Allocation — ${selectedAllocClass.name}',
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 13,
                             ),
-                          ),
-                          Container(
-                            height: 32,
-                            padding: const EdgeInsets.symmetric(horizontal: 8),
-                            decoration: BoxDecoration(
-                              color: isDark
-                                  ? AppColors.darkBg
-                                  : Colors.grey[200],
-                              borderRadius: BorderRadius.circular(6),
+                            IconButton(
+                              icon: const Icon(
+                                Icons.add_circle_outline_rounded,
+                                color: AppColors.primary,
+                                size: 18,
+                              ),
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                              onPressed: () => _showAddSubjectDialog(
+                                context,
+                                isDark,
+                                branchId,
+                              ),
                             ),
-                            child: DropdownButtonHideUnderline(
-                              child: DropdownButton<String>(
-                                value: selectedAllocClass.id,
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+
+                        if (subjects.isEmpty)
+                          const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 20),
+                            child: Center(
+                              child: Text(
+                                'No subjects added for this branch.',
                                 style: TextStyle(
-                                  color: isDark ? Colors.white : Colors.black,
                                   fontSize: 11,
+                                  color: Colors.grey,
                                 ),
-                                dropdownColor: isDark
-                                    ? AppColors.darkSurface
-                                    : Colors.white,
-                                onChanged: (val) {
-                                  if (val != null) {
-                                    setState(() => _selectedClassId = val);
-                                  }
-                                },
-                                items: classes.map((c) {
-                                  return DropdownMenuItem(
-                                    value: c.id,
-                                    child: Text(c.name),
-                                  );
-                                }).toList(),
                               ),
                             ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-
-                      ...subjects.map((sub) {
-                        final alloc = allocations.firstWhere(
-                          (a) =>
-                              a.classId == selectedAllocClass.id &&
-                              a.subjectName == sub.name,
-                          orElse: () => SubjectAllocationEntity(
-                            id: '',
-                            branchId: branchId,
-                            classId: selectedAllocClass.id,
-                            subjectName: sub.name,
-                            periodsPerWeek: 4,
-                            assignedTeacherName: branchTeachers.isNotEmpty
-                                ? branchTeachers.first.name
-                                : '',
-                          ),
-                        );
-
-                        final periodsCtrl = TextEditingController(
-                          text: alloc.periodsPerWeek.toString(),
-                        );
-                        String selectedTeacher =
-                            alloc.assignedTeacherName.isNotEmpty
-                            ? alloc.assignedTeacherName
-                            : (branchTeachers.isNotEmpty
-                                  ? branchTeachers.first.name
-                                  : '');
-
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 6),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                flex: 3,
-                                child: Text(
-                                  sub.name,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 11,
-                                  ),
-                                ),
+                          )
+                        else
+                          ...subjects.map((sub) {
+                            return Container(
+                              margin: const EdgeInsets.symmetric(vertical: 4),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 8,
                               ),
-                              Expanded(
-                                flex: 2,
-                                child: SizedBox(
-                                  height: 32,
-                                  child: TextField(
-                                    controller: periodsCtrl,
-                                    keyboardType: TextInputType.number,
-                                    style: const TextStyle(fontSize: 11),
-                                    decoration: const InputDecoration(
-                                      labelText: 'Periods/Wk',
-                                      isDense: true,
+                              decoration: BoxDecoration(
+                                color: isDark
+                                    ? AppColors.darkBg
+                                    : Colors.grey[100],
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        sub.name,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 11,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        '${sub.code} • ${sub.category}',
+                                        style: const TextStyle(
+                                          fontSize: 9,
+                                          color: Colors.grey,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(
+                                      Icons.delete_outline_rounded,
+                                      color: Colors.redAccent,
+                                      size: 16,
                                     ),
-                                    onSubmitted: (val) {
-                                      final numPeriods = int.tryParse(val) ?? 4;
+                                    padding: EdgeInsets.zero,
+                                    constraints: const BoxConstraints(),
+                                    onPressed: () {
                                       ref
                                           .read(
-                                            subjectAllocationsProvider.notifier,
+                                            branchSubjectsProvider.notifier,
+                                          )
+                                          .removeSubject(sub.id);
+                                    },
+                                  ),
+                                ],
+                              ),
+                            );
+                          }),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Branch Science & IT Labs List
+                  GlassCard(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              'Branch Labs & Practical Rooms',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                              ),
+                            ),
+                            IconButton(
+                              icon: const Icon(
+                                Icons.add_circle_outline_rounded,
+                                color: AppColors.primary,
+                                size: 18,
+                              ),
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                              onPressed: () => _showAddLabDialog(
+                                context,
+                                isDark,
+                                branchId,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+
+                        if (labs.isEmpty)
+                          const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 16),
+                            child: Center(
+                              child: Text(
+                                'No labs registered for this branch.',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            ),
+                          )
+                        else
+                          ...labs.map((lab) {
+                            return Container(
+                              margin: const EdgeInsets.symmetric(vertical: 4),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 8,
+                              ),
+                              decoration: BoxDecoration(
+                                color: isDark
+                                    ? AppColors.darkBg
+                                    : Colors.grey[100],
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(
+                                    Icons.science_rounded,
+                                    size: 16,
+                                    color: AppColors.primary,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        lab.name,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 11,
+                                        ),
+                                      ),
+                                      Text(
+                                        '${lab.building} (Cap: ${lab.capacity})',
+                                        style: const TextStyle(
+                                          fontSize: 9,
+                                          color: Colors.grey,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            );
+                          }),
+                      ],
+                    ),
+                  ),
+                ],
+              );
+
+              final rightColumn = GlassCard(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Subject Period Allocation — ${selectedAllocClass.name}',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                          ),
+                        ),
+                        Container(
+                          height: 32,
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          decoration: BoxDecoration(
+                            color: isDark
+                                ? AppColors.darkBg
+                                : Colors.grey[200],
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: DropdownButtonHideUnderline(
+                            child: DropdownButton<String>(
+                              value: selectedAllocClass.id,
+                              style: TextStyle(
+                                color: isDark ? Colors.white : Colors.black,
+                                fontSize: 11,
+                              ),
+                              dropdownColor: isDark
+                                  ? AppColors.darkSurface
+                                  : Colors.white,
+                              onChanged: (val) {
+                                if (val != null) {
+                                  setState(() => _selectedClassId = val);
+                                }
+                              },
+                              items: classes.map((c) {
+                                return DropdownMenuItem(
+                                  value: c.id,
+                                  child: Text(c.name),
+                                );
+                              }).toList(),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+
+                    ...subjects.map((sub) {
+                      final alloc = allocations.firstWhere(
+                        (a) =>
+                            a.classId == selectedAllocClass.id &&
+                            a.subjectName == sub.name,
+                        orElse: () => SubjectAllocationEntity(
+                          id: '',
+                          branchId: branchId,
+                          classId: selectedAllocClass.id,
+                          subjectName: sub.name,
+                          periodsPerWeek: 4,
+                          assignedTeacherName: branchTeachers.isNotEmpty
+                              ? branchTeachers.first.name
+                              : '',
+                        ),
+                      );
+
+                      final periodsCtrl = TextEditingController(
+                        text: alloc.periodsPerWeek.toString(),
+                      );
+                      String selectedTeacher =
+                          alloc.assignedTeacherName.isNotEmpty
+                          ? alloc.assignedTeacherName
+                          : (branchTeachers.isNotEmpty
+                                ? branchTeachers.first.name
+                                : '');
+
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 6),
+                        child: LayoutBuilder(
+                          builder: (context, rowConstraints) {
+                            final isRowMobile = rowConstraints.maxWidth < 450;
+
+                            final subjectNameWidget = Text(
+                              sub.name,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 11,
+                              ),
+                            );
+
+                            final periodField = SizedBox(
+                              height: 32,
+                              child: TextField(
+                                controller: periodsCtrl,
+                                keyboardType: TextInputType.number,
+                                style: const TextStyle(fontSize: 11),
+                                decoration: const InputDecoration(
+                                  labelText: 'Periods/Wk',
+                                  isDense: true,
+                                ),
+                                onSubmitted: (val) {
+                                  final numPeriods = int.tryParse(val) ?? 4;
+                                  ref
+                                      .read(
+                                        subjectAllocationsProvider.notifier,
+                                      )
+                                      .setAllocation(
+                                        branchId: branchId,
+                                        classId: selectedAllocClass.id,
+                                        subjectName: sub.name,
+                                        periodsPerWeek: numPeriods,
+                                        assignedTeacherName:
+                                            selectedTeacher,
+                                      );
+                                },
+                              ),
+                            );
+
+                            final teacherDropdown = Container(
+                              height: 32,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: isDark
+                                    ? AppColors.darkBg
+                                    : Colors.grey[200],
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: DropdownButtonHideUnderline(
+                                child: DropdownButton<String>(
+                                  value:
+                                      branchTeachers.any(
+                                        (t) => t.name == selectedTeacher,
+                                      )
+                                      ? selectedTeacher
+                                      : (branchTeachers.isNotEmpty
+                                            ? branchTeachers.first.name
+                                            : null),
+                                  style: TextStyle(
+                                    color: isDark
+                                        ? Colors.white
+                                        : Colors.black,
+                                    fontSize: 10,
+                                  ),
+                                  dropdownColor: isDark
+                                      ? AppColors.darkSurface
+                                      : Colors.white,
+                                  onChanged: (val) {
+                                    if (val != null) {
+                                      ref
+                                          .read(
+                                            subjectAllocationsProvider
+                                                .notifier,
                                           )
                                           .setAllocation(
                                             branchId: branchId,
                                             classId: selectedAllocClass.id,
                                             subjectName: sub.name,
-                                            periodsPerWeek: numPeriods,
-                                            assignedTeacherName:
-                                                selectedTeacher,
+                                            periodsPerWeek:
+                                                int.tryParse(
+                                                  periodsCtrl.text,
+                                                ) ??
+                                                4,
+                                            assignedTeacherName: val,
                                           );
-                                    },
-                                  ),
+                                    }
+                                  },
+                                  items: branchTeachers.map((t) {
+                                    return DropdownMenuItem(
+                                      value: t.name,
+                                      child: Text(t.name),
+                                    );
+                                  }).toList(),
                                 ),
                               ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                flex: 4,
-                                child: Container(
-                                  height: 32,
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 6,
+                            );
+
+                            if (isRowMobile) {
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  subjectNameWidget,
+                                  const SizedBox(height: 6),
+                                  Row(
+                                    children: [
+                                      Expanded(child: periodField),
+                                      const SizedBox(width: 8),
+                                      Expanded(child: teacherDropdown),
+                                    ],
                                   ),
-                                  decoration: BoxDecoration(
-                                    color: isDark
-                                        ? AppColors.darkBg
-                                        : Colors.grey[200],
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  child: DropdownButtonHideUnderline(
-                                    child: DropdownButton<String>(
-                                      value:
-                                          branchTeachers.any(
-                                            (t) => t.name == selectedTeacher,
-                                          )
-                                          ? selectedTeacher
-                                          : (branchTeachers.isNotEmpty
-                                                ? branchTeachers.first.name
-                                                : null),
-                                      style: TextStyle(
-                                        color: isDark
-                                            ? Colors.white
-                                            : Colors.black,
-                                        fontSize: 10,
-                                      ),
-                                      dropdownColor: isDark
-                                          ? AppColors.darkSurface
-                                          : Colors.white,
-                                      onChanged: (val) {
-                                        if (val != null) {
-                                          ref
-                                              .read(
-                                                subjectAllocationsProvider
-                                                    .notifier,
-                                              )
-                                              .setAllocation(
-                                                branchId: branchId,
-                                                classId: selectedAllocClass.id,
-                                                subjectName: sub.name,
-                                                periodsPerWeek:
-                                                    int.tryParse(
-                                                      periodsCtrl.text,
-                                                    ) ??
-                                                    4,
-                                                assignedTeacherName: val,
-                                              );
-                                        }
-                                      },
-                                      items: branchTeachers.map((t) {
-                                        return DropdownMenuItem(
-                                          value: t.name,
-                                          child: Text(t.name),
-                                        );
-                                      }).toList(),
-                                    ),
-                                  ),
+                                  const Divider(height: 12),
+                                ],
+                              );
+                            }
+
+                            return Row(
+                              children: [
+                                Expanded(
+                                  flex: 3,
+                                  child: subjectNameWidget,
                                 ),
-                              ),
-                            ],
-                          ),
-                        );
-                      }),
-                    ],
-                  ),
+                                Expanded(
+                                  flex: 2,
+                                  child: periodField,
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  flex: 4,
+                                  child: teacherDropdown,
+                                ),
+                              ],
+                            );
+                          },
+                        ),
+                      );
+                    }),
+                  ],
                 ),
-              ),
-            ],
+              );
+
+              if (isMobile) {
+                return Column(
+                  children: [
+                    leftColumn,
+                    const SizedBox(height: 16),
+                    rightColumn,
+                  ],
+                );
+              }
+
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    flex: 4,
+                    child: leftColumn,
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    flex: 6,
+                    child: rightColumn,
+                  ),
+                ],
+              );
+            },
           ),
         ],
       ),
@@ -2148,21 +2317,27 @@ class _TimetableManagementPageState
         children: [
           GlassCard(
             padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                const Icon(
-                  Icons.published_with_changes_rounded,
-                  color: AppColors.primary,
-                  size: 22,
-                ),
-                const SizedBox(width: 12),
-                const Text(
-                  'Select Absent / On-Leave Teacher:',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
-                ),
-                const SizedBox(width: 16),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final isMobile = constraints.maxWidth < 650;
 
-                Container(
+                final textAndIcon = Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.published_with_changes_rounded,
+                      color: AppColors.primary,
+                      size: 22,
+                    ),
+                    const SizedBox(width: 12),
+                    const Text(
+                      'Select Absent / On-Leave Teacher:',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                    ),
+                  ],
+                );
+
+                final dropdown = Container(
                   height: 36,
                   padding: const EdgeInsets.symmetric(horizontal: 10),
                   decoration: BoxDecoration(
@@ -2190,250 +2365,292 @@ class _TimetableManagementPageState
                       }).toList(),
                     ),
                   ),
-                ),
-                const SizedBox(width: 24),
-                Text(
+                );
+
+                final dateText = Text(
                   'Date: $_substDate',
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 11,
                   ),
-                ),
-              ],
+                );
+
+                if (isMobile) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      textAndIcon,
+                      const SizedBox(height: 12),
+                      dropdown,
+                      const SizedBox(height: 12),
+                      dateText,
+                    ],
+                  );
+                }
+
+                return Row(
+                  children: [
+                    textAndIcon,
+                    const SizedBox(width: 16),
+                    dropdown,
+                    const SizedBox(width: 24),
+                    dateText,
+                  ],
+                );
+              },
             ),
           ),
           const SizedBox(height: 16),
 
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                flex: 5,
-                child: GlassCard(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Affected Lectures for $_substTeacherName',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 13,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isMobile = constraints.maxWidth < 800;
 
-                      if (absentTeacherSlots.isEmpty)
-                        const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 20),
-                          child: Center(
-                            child: Text(
-                              'No scheduled lectures for this teacher.',
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: Colors.grey,
-                              ),
+              final affectedLecturesCard = GlassCard(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Affected Lectures for $_substTeacherName',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+
+                    if (absentTeacherSlots.isEmpty)
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 20),
+                        child: Center(
+                          child: Text(
+                            'No scheduled lectures for this teacher.',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.grey,
                             ),
                           ),
-                        )
-                      else
-                        ...absentTeacherSlots.map((slot) {
-                          final cls = classes.firstWhere(
-                            (c) => c.id == slot.classId,
-                            orElse: () => ClassEntity(
-                              id: '',
-                              branchId: '',
-                              departmentId: '',
-                              name: 'Class',
-                              code: '',
-                              maxStudentsCapacity: 0,
-                            ),
-                          );
-                          final sec = sections.firstWhere(
-                            (s) => s.id == slot.sectionId,
-                            orElse: () => SectionEntity(
-                              id: '',
-                              classId: '',
-                              name: 'A',
-                              roomNumber: '',
-                              classTeacher: '',
-                              maxStudentsCapacity: 0,
-                            ),
-                          );
-
-                          return Container(
-                            margin: const EdgeInsets.symmetric(vertical: 4),
-                            padding: const EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                              color: isDark
-                                  ? AppColors.darkBg
-                                  : Colors.grey[100],
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(
-                                color: isDark
-                                    ? AppColors.darkBorder
-                                    : AppColors.lightBorder,
-                              ),
-                            ),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        '${slot.dayOfWeek} • ${slot.periodName} (${slot.startTime})',
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 11,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 2),
-                                      Text(
-                                        '${cls.name} Section ${sec.name} — ${slot.subjectName}',
-                                        style: const TextStyle(
-                                          fontSize: 10,
-                                          color: AppColors.primary,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                ElevatedButton(
-                                  onPressed: () => _showAssignSubstituteDialog(
-                                    context,
-                                    isDark,
-                                    branchId,
-                                    slot,
-                                    branchTeachers,
-                                  ),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: AppColors.primary,
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 10,
-                                      vertical: 6,
-                                    ),
-                                  ),
-                                  child: const Text(
-                                    'Assign Sub',
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        }),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(width: 16),
-
-              Expanded(
-                flex: 5,
-                child: GlassCard(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Assigned Substitutions Log',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 13,
                         ),
-                      ),
-                      const SizedBox(height: 12),
+                      )
+                    else
+                      ...absentTeacherSlots.map((slot) {
+                        final cls = classes.firstWhere(
+                          (c) => c.id == slot.classId,
+                          orElse: () => ClassEntity(
+                            id: '',
+                            branchId: '',
+                            departmentId: '',
+                            name: 'Class',
+                            code: '',
+                            maxStudentsCapacity: 0,
+                          ),
+                        );
+                        final sec = sections.firstWhere(
+                          (s) => s.id == slot.sectionId,
+                          orElse: () => SectionEntity(
+                            id: '',
+                            classId: '',
+                            name: 'A',
+                            roomNumber: '',
+                            classTeacher: '',
+                            maxStudentsCapacity: 0,
+                          ),
+                        );
 
-                      if (substitutions.isEmpty)
-                        const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 20),
-                          child: Center(
-                            child: Text(
-                              'No substitution adjustments logged.',
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: Colors.grey,
-                              ),
+                        return Container(
+                          margin: const EdgeInsets.symmetric(vertical: 4),
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: isDark
+                                ? AppColors.darkBg
+                                : Colors.grey[100],
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: isDark
+                                  ? AppColors.darkBorder
+                                  : AppColors.lightBorder,
                             ),
                           ),
-                        )
-                      else
-                        ...substitutions.map((subst) {
-                          return Container(
-                            margin: const EdgeInsets.symmetric(vertical: 4),
-                            padding: const EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                              color: isDark
-                                  ? AppColors.darkBg
-                                  : Colors.grey[100],
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      '${subst.dayOfWeek} • ${subst.periodName}',
+                                      '${slot.dayOfWeek} • ${slot.periodName} (${slot.startTime})',
                                       style: const TextStyle(
                                         fontWeight: FontWeight.bold,
                                         fontSize: 11,
                                       ),
                                     ),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 6,
-                                        vertical: 2,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: Colors.green.withValues(
-                                          alpha: 0.2,
-                                        ),
-                                        borderRadius: BorderRadius.circular(4),
-                                      ),
-                                      child: Text(
-                                        subst.status,
-                                        style: const TextStyle(
-                                          fontSize: 9,
-                                          color: Colors.green,
-                                          fontWeight: FontWeight.bold,
-                                        ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      '${cls.name} Section ${sec.name} — ${slot.subjectName}',
+                                      style: const TextStyle(
+                                        fontSize: 10,
+                                        color: AppColors.primary,
                                       ),
                                     ),
                                   ],
                                 ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  'Original: ${subst.originalTeacherName} ➔ Substitute: ${subst.substituteTeacherName}',
-                                  style: const TextStyle(
+                              ),
+                              ElevatedButton(
+                                onPressed: () => _showAssignSubstituteDialog(
+                                  context,
+                                  isDark,
+                                  branchId,
+                                  slot,
+                                  branchTeachers,
+                                ),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.primary,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 6,
+                                  ),
+                                ),
+                                child: const Text(
+                                  'Assign Sub',
+                                  style: TextStyle(
                                     fontSize: 10,
-                                    color: AppColors.primary,
+                                    color: Colors.white,
                                   ),
                                 ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  'Reason: ${subst.reason}',
-                                  style: const TextStyle(
-                                    fontSize: 9,
-                                    color: Colors.grey,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        }),
-                    ],
-                  ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }),
+                  ],
                 ),
-              ),
-            ],
+              );
+
+              final substitutionsLogCard = GlassCard(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Assigned Substitutions Log',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+
+                    if (substitutions.isEmpty)
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 20),
+                        child: Center(
+                          child: Text(
+                            'No substitution adjustments logged.',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        ),
+                      )
+                    else
+                      ...substitutions.map((subst) {
+                        return Container(
+                          margin: const EdgeInsets.symmetric(vertical: 4),
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: isDark
+                                ? AppColors.darkBg
+                                : Colors.grey[100],
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    '${subst.dayOfWeek} • ${subst.periodName}',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 11,
+                                    ),
+                                  ),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 2,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.green.withValues(
+                                        alpha: 0.2,
+                                      ),
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: Text(
+                                      subst.status,
+                                      style: const TextStyle(
+                                        fontSize: 9,
+                                        color: Colors.green,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Original: ${subst.originalTeacherName} ➔ Substitute: ${subst.substituteTeacherName}',
+                                style: const TextStyle(
+                                  fontSize: 10,
+                                  color: AppColors.primary,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                'Reason: ${subst.reason}',
+                                style: const TextStyle(
+                                  fontSize: 9,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }),
+                  ],
+                ),
+              );
+
+              if (isMobile) {
+                return Column(
+                  children: [
+                    affectedLecturesCard,
+                    const SizedBox(height: 16),
+                    substitutionsLogCard,
+                  ],
+                );
+              }
+
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    flex: 5,
+                    child: affectedLecturesCard,
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    flex: 5,
+                    child: substitutionsLogCard,
+                  ),
+                ],
+              );
+            },
           ),
         ],
       ),
@@ -2472,378 +2689,394 @@ class _TimetableManagementPageState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Working Days & Weekend Policy
-              Expanded(
-                flex: 4,
-                child: GlassCard(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Working Days & Weekend Policy',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 13,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      const Text(
-                        'Configure branch working days and Saturday off policy.',
-                        style: TextStyle(fontSize: 10, color: Colors.grey),
-                      ),
-                      const SizedBox(height: 12),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isMobile = constraints.maxWidth < 900;
 
-                      DropdownButtonFormField<String>(
-                        initialValue: settings.weekendPolicy,
-                        style: TextStyle(
-                          color: isDark ? Colors.white : Colors.black,
-                          fontSize: 11,
-                        ),
-                        decoration: const InputDecoration(
-                          labelText: 'Saturday Policy',
-                          isDense: true,
-                        ),
-                        dropdownColor: isDark
-                            ? AppColors.darkSurface
-                            : Colors.white,
-                        items: const [
-                          DropdownMenuItem(
-                            value: 'All Saturdays On',
-                            child: Text('All Saturdays Active'),
-                          ),
-                          DropdownMenuItem(
-                            value: '2nd & 4th Saturday Off',
-                            child: Text('2nd & 4th Saturday Off'),
-                          ),
-                          DropdownMenuItem(
-                            value: 'All Saturdays Off',
-                            child: Text('All Saturdays Off'),
-                          ),
-                        ],
-                        onChanged: (val) {
-                          if (val != null) {
-                            ref
-                                .read(branchTimetableSettingsProvider.notifier)
-                                .updateSettings(
-                                  settings.copyWith(weekendPolicy: val),
-                                );
-                          }
-                        },
-                      ),
-                      const SizedBox(height: 12),
-
-                      ...[
-                        'Monday',
-                        'Tuesday',
-                        'Wednesday',
-                        'Thursday',
-                        'Friday',
-                        'Saturday',
-                        'Sunday',
-                      ].map((day) {
-                        final isActive = settings.workingDays.contains(day);
-                        return CheckboxListTile(
-                          title: Text(
-                            day,
-                            style: const TextStyle(fontSize: 11),
-                          ),
-                          value: isActive,
-                          dense: true,
-                          visualDensity: VisualDensity.compact,
-                          activeColor: AppColors.primary,
-                          onChanged: (checked) {
-                            var newList = List<String>.from(
-                              settings.workingDays,
-                            );
-                            if (checked == true && !newList.contains(day)) {
-                              newList.add(day);
-                            } else if (checked == false) {
-                              newList.remove(day);
-                            }
-                            ref
-                                .read(branchTimetableSettingsProvider.notifier)
-                                .updateSettings(
-                                  settings.copyWith(workingDays: newList),
-                                );
-                          },
-                        );
-                      }),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(width: 16),
-
-              Expanded(
-                flex: 5,
+              final workingDaysCard = GlassCard(
+                padding: const EdgeInsets.all(16),
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Assembly & Timings
-                    GlassCard(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Assembly & Period Timings',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 13,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-
-                          // Assembly Timings
-                          Row(
-                            children: [
-                              Expanded(
-                                flex: 5,
-                                child: TextField(
-                                  controller: assemblyStartCtrl,
-                                  style: const TextStyle(fontSize: 11),
-                                  decoration: const InputDecoration(
-                                    labelText: 'Assembly Start Time',
-                                    isDense: true,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                flex: 5,
-                                child: TextField(
-                                  controller: assemblyEndCtrl,
-                                  style: const TextStyle(fontSize: 11),
-                                  decoration: const InputDecoration(
-                                    labelText: 'Assembly End Time',
-                                    isDense: true,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-
-                          Row(
-                            children: [
-                              const Expanded(
-                                flex: 4,
-                                child: Text(
-                                  'School Day Start Time:',
-                                  style: TextStyle(fontSize: 11),
-                                ),
-                              ),
-                              Expanded(
-                                flex: 5,
-                                child: TextField(
-                                  controller: startController,
-                                  style: const TextStyle(fontSize: 11),
-                                  decoration: const InputDecoration(
-                                    labelText: 'e.g. 08:15 AM',
-                                    isDense: true,
-                                    suffixIcon: Icon(
-                                      Icons.access_time_rounded,
-                                      size: 16,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-
-                          Row(
-                            children: [
-                              const Expanded(
-                                flex: 4,
-                                child: Text(
-                                  'Period Duration (mins):',
-                                  style: TextStyle(fontSize: 11),
-                                ),
-                              ),
-                              Expanded(
-                                flex: 5,
-                                child: TextField(
-                                  controller: durationController,
-                                  keyboardType: TextInputType.number,
-                                  style: const TextStyle(fontSize: 11),
-                                  decoration: const InputDecoration(
-                                    labelText: 'e.g. 45',
-                                    isDense: true,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-
-                          SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton(
-                              onPressed: () {
-                                ref
-                                    .read(
-                                      branchTimetableSettingsProvider.notifier,
-                                    )
-                                    .updateSettings(
-                                      settings.copyWith(
-                                        assemblyStartTime: assemblyStartCtrl
-                                            .text
-                                            .trim(),
-                                        assemblyEndTime: assemblyEndCtrl.text
-                                            .trim(),
-                                        schoolStartTime: startController.text
-                                            .trim(),
-                                        periodDurationMinutes:
-                                            int.tryParse(
-                                              durationController.text,
-                                            ) ??
-                                            45,
-                                      ),
-                                    );
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text(
-                                      'Assembly & Period timings updated.',
-                                    ),
-                                  ),
-                                );
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.primary,
-                                foregroundColor: Colors.white,
-                                textStyle: const TextStyle(fontSize: 11),
-                              ),
-                              child: const Text('Save Timings Config'),
-                            ),
-                          ),
-                        ],
+                    const Text(
+                      'Working Days & Weekend Policy',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 4),
+                    const Text(
+                      'Configure branch working days and Saturday off policy.',
+                      style: TextStyle(fontSize: 10, color: Colors.grey),
+                    ),
+                    const SizedBox(height: 12),
 
-                    // Breaks & Holidays
-                    GlassCard(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              const Text(
-                                'School Breaks / Recess',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 13,
-                                ),
-                              ),
-                              IconButton(
-                                icon: const Icon(
-                                  Icons.add_circle_outline_rounded,
-                                  color: AppColors.primary,
-                                  size: 18,
-                                ),
-                                padding: EdgeInsets.zero,
-                                constraints: const BoxConstraints(),
-                                onPressed: () => _showAddBreakDialog(
-                                  context,
-                                  isDark,
-                                  branchId,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-
-                          if (settings.breaks.isEmpty)
-                            const Padding(
-                              padding: EdgeInsets.symmetric(vertical: 12),
-                              child: Center(
-                                child: Text(
-                                  'No breaks configured. Add recess or lunch breaks.',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: Colors.grey,
-                                  ),
-                                ),
-                              ),
-                            )
-                          else
-                            ...settings.breaks.map((brk) {
-                              return Container(
-                                margin: const EdgeInsets.symmetric(vertical: 4),
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 8,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: isDark
-                                      ? AppColors.darkBg
-                                      : Colors.grey[100],
-                                  borderRadius: BorderRadius.circular(6),
-                                  border: Border.all(
-                                    color: isDark
-                                        ? AppColors.darkBorder
-                                        : AppColors.lightBorder,
-                                  ),
-                                ),
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          brk.name,
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 11,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 2),
-                                        Text(
-                                          '${brk.startTime} - ${brk.endTime} (After Period ${brk.afterPeriodNumber})',
-                                          style: const TextStyle(
-                                            fontSize: 9,
-                                            color: Colors.grey,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    IconButton(
-                                      icon: const Icon(
-                                        Icons.delete_outline_rounded,
-                                        color: Colors.redAccent,
-                                        size: 16,
-                                      ),
-                                      padding: EdgeInsets.zero,
-                                      constraints: const BoxConstraints(),
-                                      onPressed: () {
-                                        ref
-                                            .read(
-                                              branchTimetableSettingsProvider
-                                                  .notifier,
-                                            )
-                                            .removeBreak(branchId, brk.id);
-                                      },
-                                    ),
-                                  ],
-                                ),
+                    DropdownButtonFormField<String>(
+                      initialValue: settings.weekendPolicy,
+                      style: TextStyle(
+                        color: isDark ? Colors.white : Colors.black,
+                        fontSize: 11,
+                      ),
+                      decoration: const InputDecoration(
+                        labelText: 'Saturday Policy',
+                        isDense: true,
+                      ),
+                      dropdownColor: isDark
+                          ? AppColors.darkSurface
+                          : Colors.white,
+                      items: const [
+                        DropdownMenuItem(
+                          value: 'All Saturdays On',
+                          child: Text('All Saturdays Active'),
+                        ),
+                        DropdownMenuItem(
+                          value: '2nd & 4th Saturday Off',
+                          child: Text('2nd & 4th Saturday Off'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'All Saturdays Off',
+                          child: Text('All Saturdays Off'),
+                        ),
+                      ],
+                      onChanged: (val) {
+                        if (val != null) {
+                          ref
+                              .read(branchTimetableSettingsProvider.notifier)
+                              .updateSettings(
+                                settings.copyWith(weekendPolicy: val),
                               );
-                            }),
-                        ],
-                      ),
+                        }
+                      },
                     ),
+                    const SizedBox(height: 12),
+
+                    ...[
+                      'Monday',
+                      'Tuesday',
+                      'Wednesday',
+                      'Thursday',
+                      'Friday',
+                      'Saturday',
+                      'Sunday',
+                    ].map((day) {
+                      final isActive = settings.workingDays.contains(day);
+                      return CheckboxListTile(
+                        title: Text(
+                          day,
+                          style: const TextStyle(fontSize: 11),
+                        ),
+                        value: isActive,
+                        dense: true,
+                        visualDensity: VisualDensity.compact,
+                        activeColor: AppColors.primary,
+                        onChanged: (checked) {
+                          var newList = List<String>.from(
+                            settings.workingDays,
+                          );
+                          if (checked == true && !newList.contains(day)) {
+                            newList.add(day);
+                          } else if (checked == false) {
+                            newList.remove(day);
+                          }
+                          ref
+                              .read(branchTimetableSettingsProvider.notifier)
+                              .updateSettings(
+                                settings.copyWith(workingDays: newList),
+                              );
+                        },
+                      );
+                    }),
                   ],
                 ),
-              ),
-            ],
+              );
+
+              final configColumn = Column(
+                children: [
+                  // Assembly & Timings
+                  GlassCard(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Assembly & Period Timings',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+
+                        // Assembly Timings
+                        Row(
+                          children: [
+                            Expanded(
+                              flex: 5,
+                              child: TextField(
+                                controller: assemblyStartCtrl,
+                                style: const TextStyle(fontSize: 11),
+                                decoration: const InputDecoration(
+                                  labelText: 'Assembly Start Time',
+                                  isDense: true,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              flex: 5,
+                              child: TextField(
+                                controller: assemblyEndCtrl,
+                                style: const TextStyle(fontSize: 11),
+                                decoration: const InputDecoration(
+                                  labelText: 'Assembly End Time',
+                                  isDense: true,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+
+                        Row(
+                          children: [
+                            const Expanded(
+                              flex: 4,
+                              child: Text(
+                                'School Day Start Time:',
+                                style: TextStyle(fontSize: 11),
+                              ),
+                            ),
+                            Expanded(
+                              flex: 5,
+                              child: TextField(
+                                controller: startController,
+                                style: const TextStyle(fontSize: 11),
+                                decoration: const InputDecoration(
+                                  labelText: 'e.g. 08:15 AM',
+                                  isDense: true,
+                                  suffixIcon: Icon(
+                                    Icons.access_time_rounded,
+                                    size: 16,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+
+                        Row(
+                          children: [
+                            const Expanded(
+                              flex: 4,
+                              child: Text(
+                                'Period Duration (mins):',
+                                style: TextStyle(fontSize: 11),
+                              ),
+                            ),
+                            Expanded(
+                              flex: 5,
+                              child: TextField(
+                                controller: durationController,
+                                keyboardType: TextInputType.number,
+                                style: const TextStyle(fontSize: 11),
+                                decoration: const InputDecoration(
+                                  labelText: 'e.g. 45',
+                                  isDense: true,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              ref
+                                  .read(
+                                    branchTimetableSettingsProvider.notifier,
+                                  )
+                                  .updateSettings(
+                                    settings.copyWith(
+                                      assemblyStartTime: assemblyStartCtrl
+                                          .text
+                                          .trim(),
+                                      assemblyEndTime: assemblyEndCtrl.text
+                                          .trim(),
+                                      schoolStartTime: startController.text
+                                          .trim(),
+                                      periodDurationMinutes:
+                                          int.tryParse(
+                                            durationController.text,
+                                          ) ??
+                                          45,
+                                    ),
+                                  );
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    'Assembly & Period timings updated.',
+                                  ),
+                                ),
+                              );
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              foregroundColor: Colors.white,
+                              textStyle: const TextStyle(fontSize: 11),
+                            ),
+                            child: const Text('Save Timings Config'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Breaks & Holidays
+                  GlassCard(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              'School Breaks / Recess',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold, fontSize: 13),
+                            ),
+                            IconButton(
+                              icon: const Icon(
+                                Icons.add_circle_outline_rounded,
+                                color: AppColors.primary,
+                                size: 18,
+                              ),
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                              onPressed: () => _showAddBreakDialog(
+                                context,
+                                isDark,
+                                branchId,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+
+                        if (settings.breaks.isEmpty)
+                          const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 12),
+                            child: Center(
+                              child: Text(
+                                'No breaks configured. Add recess or lunch breaks.',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            ),
+                          )
+                        else
+                          ...settings.breaks.map((brk) {
+                            return Container(
+                              margin: const EdgeInsets.symmetric(vertical: 4),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 8,
+                              ),
+                              decoration: BoxDecoration(
+                                color: isDark
+                                    ? AppColors.darkBg
+                                    : Colors.grey[100],
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(
+                                  color: isDark
+                                      ? AppColors.darkBorder
+                                      : AppColors.lightBorder,
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        brk.name,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 11,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        '${brk.startTime} - ${brk.endTime} (After Period ${brk.afterPeriodNumber})',
+                                        style: const TextStyle(
+                                          fontSize: 9,
+                                          color: Colors.grey,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(
+                                      Icons.delete_outline_rounded,
+                                      color: Colors.redAccent,
+                                      size: 16,
+                                    ),
+                                    padding: EdgeInsets.zero,
+                                    constraints: const BoxConstraints(),
+                                    onPressed: () {
+                                      ref
+                                          .read(
+                                            branchTimetableSettingsProvider
+                                                .notifier,
+                                          )
+                                          .removeBreak(branchId, brk.id);
+                                    },
+                                  ),
+                                ],
+                              ),
+                            );
+                          }),
+                      ],
+                    ),
+                  ),
+                ],
+              );
+
+              if (isMobile) {
+                return Column(
+                  children: [
+                    workingDaysCard,
+                    const SizedBox(height: 16),
+                    configColumn,
+                  ],
+                );
+              }
+
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    flex: 4,
+                    child: workingDaysCard,
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    flex: 5,
+                    child: configColumn,
+                  ),
+                ],
+              );
+            },
           ),
           const SizedBox(height: 24),
 

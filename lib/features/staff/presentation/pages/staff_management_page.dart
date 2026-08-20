@@ -1045,684 +1045,705 @@ class _StaffManagementPageState extends ConsumerState<StaffManagementPage>
         .where((c) => c.branchId == branchId)
         .toList();
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Left: Direct Enrollment
-          Expanded(
-            flex: 4,
-            child: GlassCard(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isMobile = constraints.maxWidth < 900;
+
+        final enrollmentCard = GlassCard(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Staff Registration & Direct Onboarding',
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+              ),
+              const Text(
+                'Complete the recruitment onboarding form. Employee ID auto-generates with branch prefix.',
+                style: TextStyle(fontSize: 10, color: Colors.grey),
+              ),
+              const SizedBox(height: 16),
+              Row(
                 children: [
-                  const Text(
-                    'Staff Registration & Direct Onboarding',
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
-                  ),
-                  const Text(
-                    'Complete the recruitment onboarding form. Employee ID auto-generates with branch prefix.',
-                    style: TextStyle(fontSize: 10, color: Colors.grey),
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: _nameCtrl,
-                          style: const TextStyle(fontSize: 11),
-                          decoration: const InputDecoration(
-                            labelText: 'Full Name *',
-                            isDense: true,
-                          ),
-                        ),
+                  Expanded(
+                    child: TextField(
+                      controller: _nameCtrl,
+                      style: const TextStyle(fontSize: 11),
+                      decoration: const InputDecoration(
+                        labelText: 'Full Name *',
+                        isDense: true,
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: TextField(
-                          controller: _designationCtrl,
-                          style: const TextStyle(fontSize: 11),
-                          decoration: const InputDecoration(
-                            labelText: 'Designation *',
-                            isDense: true,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: DropdownButtonFormField<String>(
-                          initialValue: _selectedDeptId,
-                          decoration: const InputDecoration(
-                            labelText: 'Department *',
-                            isDense: true,
-                          ),
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: isDark
-                                ? AppColors.darkTextPrimary
-                                : AppColors.lightTextPrimary,
-                          ),
-                          items: depts
-                              .map(
-                                (d) => DropdownMenuItem(
-                                  value: d.id,
-                                  child: Text(
-                                    d.name,
-                                    style: const TextStyle(fontSize: 10),
-                                  ),
-                                ),
-                              )
-                              .toList(),
-                          onChanged: (v) => setState(() => _selectedDeptId = v),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: DropdownButtonFormField<String>(
-                          initialValue: _role,
-                          decoration: const InputDecoration(
-                            labelText: 'System Role *',
-                            isDense: true,
-                          ),
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: isDark
-                                ? AppColors.darkTextPrimary
-                                : AppColors.lightTextPrimary,
-                          ),
-                          items: const [
-                            DropdownMenuItem(
-                              value: 'Teacher',
-                              child: Text(
-                                'Teacher',
-                                style: TextStyle(fontSize: 10),
-                              ),
-                            ),
-                            DropdownMenuItem(
-                              value: 'HOD',
-                              child: Text(
-                                'HOD',
-                                style: TextStyle(fontSize: 10),
-                              ),
-                            ),
-                            DropdownMenuItem(
-                              value: 'branchAdmin',
-                              child: Text(
-                                'Branch Admin',
-                                style: TextStyle(fontSize: 10),
-                              ),
-                            ),
-                          ],
-                          onChanged: (v) {
-                            if (v != null) setState(() => _role = v);
-                          },
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: DropdownButtonFormField<String>(
-                          initialValue: _gender,
-                          decoration: const InputDecoration(
-                            labelText: 'Gender',
-                            isDense: true,
-                          ),
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: isDark
-                                ? AppColors.darkTextPrimary
-                                : AppColors.lightTextPrimary,
-                          ),
-                          items: const [
-                            DropdownMenuItem(
-                              value: 'Male',
-                              child: Text(
-                                'Male',
-                                style: TextStyle(fontSize: 10),
-                              ),
-                            ),
-                            DropdownMenuItem(
-                              value: 'Female',
-                              child: Text(
-                                'Female',
-                                style: TextStyle(fontSize: 10),
-                              ),
-                            ),
-                            DropdownMenuItem(
-                              value: 'Other',
-                              child: Text(
-                                'Other',
-                                style: TextStyle(fontSize: 10),
-                              ),
-                            ),
-                          ],
-                          onChanged: (v) {
-                            if (v != null) setState(() => _gender = v);
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: _phoneCtrl,
-                          style: const TextStyle(fontSize: 11),
-                          decoration: const InputDecoration(
-                            labelText: 'Phone *',
-                            isDense: true,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: TextField(
-                          controller: _emailCtrl,
-                          style: const TextStyle(fontSize: 11),
-                          decoration: const InputDecoration(
-                            labelText: 'Email *',
-                            isDense: true,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: _dobCtrl,
-                          style: const TextStyle(fontSize: 11),
-                          decoration: const InputDecoration(
-                            labelText: 'Date of Birth *',
-                            isDense: true,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: TextField(
-                          controller: _dojCtrl,
-                          style: const TextStyle(fontSize: 11),
-                          decoration: const InputDecoration(
-                            labelText: 'Date of Joining *',
-                            isDense: true,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: _addressCtrl,
-                    style: const TextStyle(fontSize: 11),
-                    decoration: const InputDecoration(
-                      labelText: 'Address *',
-                      isDense: true,
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  const Divider(),
-                  const Text(
-                    'Qualifications & Experience',
-                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: _qualCtrl,
-                          style: const TextStyle(fontSize: 11),
-                          decoration: const InputDecoration(
-                            labelText: 'Qualification * (e.g. M.Ed)',
-                            isDense: true,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: TextField(
-                          controller: _specCtrl,
-                          style: const TextStyle(fontSize: 11),
-                          decoration: const InputDecoration(
-                            labelText: 'Specialization',
-                            isDense: true,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: _instCtrl,
-                          style: const TextStyle(fontSize: 11),
-                          decoration: const InputDecoration(
-                            labelText: 'University/College *',
-                            isDense: true,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: TextField(
-                          controller: _expCtrl,
-                          style: const TextStyle(fontSize: 11),
-                          decoration: const InputDecoration(
-                            labelText: 'Years of Experience *',
-                            isDense: true,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: _prevEmpCtrl,
-                    style: const TextStyle(fontSize: 11),
-                    decoration: const InputDecoration(
-                      labelText: 'Previous Employer',
-                      isDense: true,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                      ),
-                      onPressed: () {
-                        if (_nameCtrl.text.trim().isEmpty ||
-                            _designationCtrl.text.trim().isEmpty ||
-                            _phoneCtrl.text.trim().isEmpty ||
-                            _emailCtrl.text.trim().isEmpty ||
-                            _qualCtrl.text.trim().isEmpty ||
-                            _instCtrl.text.trim().isEmpty ||
-                            _selectedDeptId == null) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                'Please fill all mandatory fields.',
-                              ),
-                            ),
-                          );
-                          return;
-                        }
-                        ref
-                            .read(staffProvider.notifier)
-                            .registerStaff(
-                              branchId: branchId,
-                              name: _nameCtrl.text.trim(),
-                              designation: _designationCtrl.text.trim(),
-                              role: _role,
-                              dateOfJoining: _dojCtrl.text.trim(),
-                              gender: _gender,
-                              dateOfBirth: _dobCtrl.text.trim(),
-                              bloodGroup: _bloodGroup,
-                              phone: _phoneCtrl.text.trim(),
-                              email: _emailCtrl.text.trim(),
-                              address: _addressCtrl.text.trim(),
-                              qualification: _qualCtrl.text.trim(),
-                              specialization: _specCtrl.text.trim(),
-                              institution: _instCtrl.text.trim(),
-                              yearsOfExperience:
-                                  int.tryParse(_expCtrl.text.trim()) ?? 0,
-                              previousEmployer: _prevEmpCtrl.text.trim(),
-                              departmentId: _selectedDeptId!,
-                            );
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              'Staff registered & onboarded successfully!',
-                            ),
-                          ),
-                        );
-                        _nameCtrl.clear();
-                        _designationCtrl.clear();
-                        _phoneCtrl.clear();
-                        _emailCtrl.clear();
-                        _addressCtrl.clear();
-                        _qualCtrl.clear();
-                        _specCtrl.clear();
-                        _instCtrl.clear();
-                        _prevEmpCtrl.clear();
-                        setState(() {
-                          _selectedDeptId = null;
-                        });
-                        _tabController.animateTo(0);
-                      },
-                      icon: const Icon(Icons.check_circle_rounded, size: 18),
-                      label: const Text(
-                        'Complete Enrollment & Generate Employee ID',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 11,
-                        ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: TextField(
+                      controller: _designationCtrl,
+                      style: const TextStyle(fontSize: 11),
+                      decoration: const InputDecoration(
+                        labelText: 'Designation *',
+                        isDense: true,
                       ),
                     ),
                   ),
                 ],
               ),
-            ),
-          ),
-          const SizedBox(width: 16),
-          // Right: Recruitment Pipeline
-          Expanded(
-            flex: 5,
-            child: GlassCard(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              const SizedBox(height: 12),
+              Row(
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Recruitment & Hiring Pipeline',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          Text(
-                            'Manage applicants, interview stages, and onboarding checklists.',
-                            style: TextStyle(fontSize: 10, color: Colors.grey),
-                          ),
-                        ],
+                  Expanded(
+                    child: DropdownButtonFormField<String>(
+                      initialValue: _selectedDeptId,
+                      decoration: const InputDecoration(
+                        labelText: 'Department *',
+                        isDense: true,
                       ),
-                      IconButton(
-                        icon: const Icon(
-                          Icons.person_add_rounded,
-                          color: Colors.green,
-                          size: 20,
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: isDark
+                            ? AppColors.darkTextPrimary
+                            : AppColors.lightTextPrimary,
+                      ),
+                      items: depts
+                          .map(
+                            (d) => DropdownMenuItem(
+                              value: d.id,
+                              child: Text(
+                                d.name,
+                                style: const TextStyle(fontSize: 10),
+                              ),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: (v) => setState(() => _selectedDeptId = v),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: DropdownButtonFormField<String>(
+                      initialValue: _role,
+                      decoration: const InputDecoration(
+                        labelText: 'System Role *',
+                        isDense: true,
+                      ),
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: isDark
+                            ? AppColors.darkTextPrimary
+                            : AppColors.lightTextPrimary,
+                      ),
+                      items: const [
+                        DropdownMenuItem(
+                          value: 'Teacher',
+                          child: Text(
+                            'Teacher',
+                            style: TextStyle(fontSize: 10),
+                          ),
                         ),
-                        tooltip: 'Add Candidate to Pipeline',
-                        onPressed: () =>
-                            _showAddCandidateDialog(context, branchId),
+                        DropdownMenuItem(
+                          value: 'HOD',
+                          child: Text(
+                            'HOD',
+                            style: TextStyle(fontSize: 10),
+                          ),
+                        ),
+                        DropdownMenuItem(
+                          value: 'branchAdmin',
+                          child: Text(
+                            'Branch Admin',
+                            style: TextStyle(fontSize: 10),
+                          ),
+                        ),
+                      ],
+                      onChanged: (v) {
+                        if (v != null) setState(() => _role = v);
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: DropdownButtonFormField<String>(
+                      initialValue: _gender,
+                      decoration: const InputDecoration(
+                        labelText: 'Gender',
+                        isDense: true,
+                      ),
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: isDark
+                            ? AppColors.darkTextPrimary
+                            : AppColors.lightTextPrimary,
+                      ),
+                      items: const [
+                        DropdownMenuItem(
+                          value: 'Male',
+                          child: Text(
+                            'Male',
+                            style: TextStyle(fontSize: 10),
+                          ),
+                        ),
+                        DropdownMenuItem(
+                          value: 'Female',
+                          child: Text(
+                            'Female',
+                            style: TextStyle(fontSize: 10),
+                          ),
+                        ),
+                        DropdownMenuItem(
+                          value: 'Other',
+                          child: Text(
+                            'Other',
+                            style: TextStyle(fontSize: 10),
+                          ),
+                        ),
+                      ],
+                      onChanged: (v) {
+                        if (v != null) setState(() => _gender = v);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _phoneCtrl,
+                      style: const TextStyle(fontSize: 11),
+                      decoration: const InputDecoration(
+                        labelText: 'Phone *',
+                        isDense: true,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: TextField(
+                      controller: _emailCtrl,
+                      style: const TextStyle(fontSize: 11),
+                      decoration: const InputDecoration(
+                        labelText: 'Email *',
+                        isDense: true,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _dobCtrl,
+                      style: const TextStyle(fontSize: 11),
+                      decoration: const InputDecoration(
+                        labelText: 'Date of Birth *',
+                        isDense: true,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: TextField(
+                      controller: _dojCtrl,
+                      style: const TextStyle(fontSize: 11),
+                      decoration: const InputDecoration(
+                        labelText: 'Date of Joining *',
+                        isDense: true,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _addressCtrl,
+                style: const TextStyle(fontSize: 11),
+                decoration: const InputDecoration(
+                  labelText: 'Address *',
+                  isDense: true,
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Divider(),
+              const Text(
+                'Qualifications & Experience',
+                style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _qualCtrl,
+                      style: const TextStyle(fontSize: 11),
+                      decoration: const InputDecoration(
+                        labelText: 'Qualification * (e.g. M.Ed)',
+                        isDense: true,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: TextField(
+                      controller: _specCtrl,
+                      style: const TextStyle(fontSize: 11),
+                      decoration: const InputDecoration(
+                        labelText: 'Specialization',
+                        isDense: true,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _instCtrl,
+                      style: const TextStyle(fontSize: 11),
+                      decoration: const InputDecoration(
+                        labelText: 'University/College *',
+                        isDense: true,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: TextField(
+                      controller: _expCtrl,
+                      style: const TextStyle(fontSize: 11),
+                      decoration: const InputDecoration(
+                        labelText: 'Years of Experience *',
+                        isDense: true,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _prevEmpCtrl,
+                style: const TextStyle(fontSize: 11),
+                decoration: const InputDecoration(
+                  labelText: 'Previous Employer',
+                  isDense: true,
+                ),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                  onPressed: () {
+                    if (_nameCtrl.text.trim().isEmpty ||
+                        _designationCtrl.text.trim().isEmpty ||
+                        _phoneCtrl.text.trim().isEmpty ||
+                        _emailCtrl.text.trim().isEmpty ||
+                        _qualCtrl.text.trim().isEmpty ||
+                        _instCtrl.text.trim().isEmpty ||
+                        _selectedDeptId == null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'Please fill all mandatory fields.',
+                          ),
+                        ),
+                      );
+                      return;
+                    }
+                    ref
+                        .read(staffProvider.notifier)
+                        .registerStaff(
+                          branchId: branchId,
+                          name: _nameCtrl.text.trim(),
+                          designation: _designationCtrl.text.trim(),
+                          role: _role,
+                          dateOfJoining: _dojCtrl.text.trim(),
+                          gender: _gender,
+                          dateOfBirth: _dobCtrl.text.trim(),
+                          bloodGroup: _bloodGroup,
+                          phone: _phoneCtrl.text.trim(),
+                          email: _emailCtrl.text.trim(),
+                          address: _addressCtrl.text.trim(),
+                          qualification: _qualCtrl.text.trim(),
+                          specialization: _specCtrl.text.trim(),
+                          institution: _instCtrl.text.trim(),
+                          yearsOfExperience:
+                              int.tryParse(_expCtrl.text.trim()) ?? 0,
+                          previousEmployer: _prevEmpCtrl.text.trim(),
+                          departmentId: _selectedDeptId!,
+                        );
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'Staff registered & onboarded successfully!',
+                        ),
+                      ),
+                    );
+                    _nameCtrl.clear();
+                    _designationCtrl.clear();
+                    _phoneCtrl.clear();
+                    _emailCtrl.clear();
+                    _addressCtrl.clear();
+                    _qualCtrl.clear();
+                    _specCtrl.clear();
+                    _instCtrl.clear();
+                    _prevEmpCtrl.clear();
+                    setState(() {
+                      _selectedDeptId = null;
+                    });
+                    _tabController.animateTo(0);
+                  },
+                  icon: const Icon(Icons.check_circle_rounded, size: 18),
+                  label: const Text(
+                    'Complete Enrollment & Generate Employee ID',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 11,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+
+        final pipelineCard = GlassCard(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Recruitment & Hiring Pipeline',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        'Manage applicants, interview stages, and onboarding checklists.',
+                        style: TextStyle(fontSize: 10, color: Colors.grey),
                       ),
                     ],
                   ),
-                  const Divider(),
-                  if (candidates.isEmpty)
-                    const Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(40),
-                        child: Text('No active candidates in the pipeline.'),
-                      ),
-                    )
-                  else
-                    ListView.separated(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: candidates.length,
-                      separatorBuilder: (_, index) => const SizedBox(height: 8),
-                      itemBuilder: (context, index) {
-                        final c = candidates[index];
-                        final isHired = c.stage == 'Hired';
-                        Color stageColor = Colors.blue;
-                        if (c.stage == 'Interviewing')
-                          stageColor = Colors.orange;
-                        if (c.stage == 'Offered') stageColor = Colors.purple;
-                        if (c.stage == 'Onboarding') stageColor = Colors.teal;
-                        if (isHired) stageColor = Colors.green;
+                  IconButton(
+                    icon: const Icon(
+                      Icons.person_add_rounded,
+                      color: Colors.green,
+                      size: 20,
+                    ),
+                    tooltip: 'Add Candidate to Pipeline',
+                    onPressed: () =>
+                        _showAddCandidateDialog(context, branchId),
+                  ),
+                ],
+              ),
+              const Divider(),
+              if (candidates.isEmpty)
+                const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(40),
+                    child: Text('No active candidates in the pipeline.'),
+                  ),
+                )
+              else
+                ListView.separated(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: candidates.length,
+                  separatorBuilder: (_, index) => const SizedBox(height: 8),
+                  itemBuilder: (context, index) {
+                    final c = candidates[index];
+                    final isHired = c.stage == 'Hired';
+                    Color stageColor = Colors.blue;
+                    if (c.stage == 'Interviewing')
+                      stageColor = Colors.orange;
+                    if (c.stage == 'Offered') stageColor = Colors.purple;
+                    if (c.stage == 'Onboarding') stageColor = Colors.teal;
+                    if (isHired) stageColor = Colors.green;
 
-                        return Card(
-                          margin: EdgeInsets.zero,
-                          elevation: 0,
-                          color: isDark ? Colors.white10 : Colors.grey.shade50,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            side: BorderSide(
-                              color: isDark
-                                  ? Colors.white12
-                                  : Colors.grey.shade200,
-                            ),
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(12),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                    return Card(
+                      margin: EdgeInsets.zero,
+                      elevation: 0,
+                      color: isDark ? Colors.white10 : Colors.grey.shade50,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        side: BorderSide(
+                          color: isDark
+                              ? Colors.white12
+                              : Colors.grey.shade200,
+                        ),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment:
+                                  MainAxisAlignment.spaceBetween,
                               children: [
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(
-                                      c.name,
-                                      style: const TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 6,
-                                        vertical: 2,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: stageColor.withValues(
-                                          alpha: 0.1,
-                                        ),
-                                        borderRadius: BorderRadius.circular(4),
-                                      ),
-                                      child: Text(
-                                        c.stage,
-                                        style: TextStyle(
-                                          fontSize: 8,
-                                          fontWeight: FontWeight.bold,
-                                          color: stageColor,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 4),
                                 Text(
-                                  '${c.designation} | ${c.qualification} | ${c.yearsOfExperience} Yrs Exp',
+                                  c.name,
                                   style: const TextStyle(
-                                    fontSize: 9,
-                                    color: Colors.grey,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                                if (c.interviewNotes.isNotEmpty) ...[
-                                  const SizedBox(height: 6),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: stageColor.withValues(
+                                      alpha: 0.1,
+                                    ),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Text(
+                                    c.stage,
+                                    style: TextStyle(
+                                      fontSize: 8,
+                                      fontWeight: FontWeight.bold,
+                                      color: stageColor,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              '${c.designation} | ${c.qualification} | ${c.yearsOfExperience} Yrs Exp',
+                              style: const TextStyle(
+                                fontSize: 9,
+                                color: Colors.grey,
+                              ),
+                            ),
+                            if (c.interviewNotes.isNotEmpty) ...[
+                              const SizedBox(height: 6),
+                              Text(
+                                'Notes: ${c.interviewNotes}',
+                                style: const TextStyle(
+                                  fontSize: 8,
+                                  fontStyle: FontStyle.italic,
+                                  color: Colors.black54,
+                                ),
+                              ),
+                            ],
+                            if (c.stage == 'Onboarding') ...[
+                              const SizedBox(height: 8),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(
+                                        2,
+                                      ),
+                                      child: LinearProgressIndicator(
+                                        value: c.onboardingProgress,
+                                        minHeight: 4,
+                                        backgroundColor:
+                                            Colors.grey.shade300,
+                                        valueColor:
+                                            const AlwaysStoppedAnimation<
+                                              Color
+                                            >(Colors.teal),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
                                   Text(
-                                    'Notes: ${c.interviewNotes}',
+                                    '${(c.onboardingProgress * 100).toStringAsFixed(0)}% Onboarded',
                                     style: const TextStyle(
                                       fontSize: 8,
-                                      fontStyle: FontStyle.italic,
-                                      color: Colors.black54,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.teal,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                            const SizedBox(height: 10),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                if (c.stage == 'Applied') ...[
+                                  TextButton(
+                                    onPressed: () => ref
+                                        .read(
+                                          recruitmentProvider.notifier,
+                                        )
+                                        .advanceCandidateStage(
+                                          c.id,
+                                          'Interviewing',
+                                        ),
+                                    child: const Text(
+                                      'Schedule Interview',
+                                      style: TextStyle(
+                                        fontSize: 9,
+                                        color: Colors.orange,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                                if (c.stage == 'Interviewing') ...[
+                                  TextButton(
+                                    onPressed: () => ref
+                                        .read(
+                                          recruitmentProvider.notifier,
+                                        )
+                                        .advanceCandidateStage(c.id, 'Offered'),
+                                    child: const Text(
+                                      'Release Offer',
+                                      style: TextStyle(
+                                        fontSize: 9,
+                                        color: Colors.purple,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                                if (c.stage == 'Offered') ...[
+                                  TextButton(
+                                    onPressed: () => ref
+                                        .read(
+                                          recruitmentProvider.notifier,
+                                        )
+                                        .advanceCandidateStage(c.id, 'Onboarding'),
+                                    child: const Text(
+                                      'Start Induction',
+                                      style: TextStyle(
+                                        fontSize: 9,
+                                        color: Colors.teal,
+                                      ),
                                     ),
                                   ),
                                 ],
                                 if (c.stage == 'Onboarding') ...[
-                                  const SizedBox(height: 8),
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        child: ClipRRect(
-                                          borderRadius: BorderRadius.circular(
-                                            2,
-                                          ),
-                                          child: LinearProgressIndicator(
-                                            value: c.onboardingProgress,
-                                            minHeight: 4,
-                                            backgroundColor:
-                                                Colors.grey.shade300,
-                                            valueColor:
-                                                const AlwaysStoppedAnimation<
-                                                  Color
-                                                >(Colors.teal),
+                                  TextButton(
+                                    onPressed: () =>
+                                        _showOnboardingProgressDialog(
+                                          context,
+                                          c,
+                                        ),
+                                    child: const Text(
+                                      'Track Checklist',
+                                      style: TextStyle(
+                                        fontSize: 9,
+                                        color: Colors.teal,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.green,
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 4,
+                                      ),
+                                      minimumSize: Size.zero,
+                                    ),
+                                    onPressed: () {
+                                      ref
+                                          .read(
+                                            recruitmentProvider.notifier,
+                                          )
+                                          .hireCandidate(c.id);
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            '${c.name} has been hired and employee ID generated!',
                                           ),
                                         ),
+                                      );
+                                    },
+                                    child: const Text(
+                                      'Finalize Hire',
+                                      style: TextStyle(
+                                        fontSize: 8,
+                                        fontWeight: FontWeight.bold,
                                       ),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        '${(c.onboardingProgress * 100).toStringAsFixed(0)}% Onboarded',
-                                        style: const TextStyle(
-                                          fontSize: 8,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.teal,
-                                        ),
-                                      ),
-                                    ],
+                                    ),
                                   ),
                                 ],
-                                const SizedBox(height: 10),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.end,
-                                  children: [
-                                    if (c.stage == 'Applied') ...[
-                                      TextButton(
-                                        onPressed: () => ref
-                                            .read(recruitmentProvider.notifier)
-                                            .advanceCandidateStage(
-                                              c.id,
-                                              'Interviewing',
-                                            ),
-                                        child: const Text(
-                                          'Schedule Interview',
-                                          style: TextStyle(
-                                            fontSize: 9,
-                                            color: Colors.orange,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                    if (c.stage == 'Interviewing') ...[
-                                      TextButton(
-                                        onPressed: () => ref
-                                            .read(recruitmentProvider.notifier)
-                                            .advanceCandidateStage(
-                                              c.id,
-                                              'Offered',
-                                            ),
-                                        child: const Text(
-                                          'Release Offer',
-                                          style: TextStyle(
-                                            fontSize: 9,
-                                            color: Colors.purple,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                    if (c.stage == 'Offered') ...[
-                                      TextButton(
-                                        onPressed: () => ref
-                                            .read(recruitmentProvider.notifier)
-                                            .advanceCandidateStage(
-                                              c.id,
-                                              'Onboarding',
-                                            ),
-                                        child: const Text(
-                                          'Start Induction',
-                                          style: TextStyle(
-                                            fontSize: 9,
-                                            color: Colors.teal,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                    if (c.stage == 'Onboarding') ...[
-                                      TextButton(
-                                        onPressed: () =>
-                                            _showOnboardingProgressDialog(
-                                              context,
-                                              c,
-                                            ),
-                                        child: const Text(
-                                          'Track Checklist',
-                                          style: TextStyle(
-                                            fontSize: 9,
-                                            color: Colors.teal,
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      ElevatedButton(
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: Colors.green,
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 10,
-                                            vertical: 4,
-                                          ),
-                                          minimumSize: Size.zero,
-                                        ),
-                                        onPressed: () {
-                                          ref
-                                              .read(
-                                                recruitmentProvider.notifier,
-                                              )
-                                              .hireCandidate(c.id);
-                                          ScaffoldMessenger.of(
-                                            context,
-                                          ).showSnackBar(
-                                            SnackBar(
-                                              content: Text(
-                                                '${c.name} has been hired and employee ID generated!',
-                                              ),
-                                            ),
-                                          );
-                                        },
-                                        child: const Text(
-                                          'Finalize Hire',
-                                          style: TextStyle(
-                                            fontSize: 8,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                    if (isHired) ...[
-                                      const Icon(
-                                        Icons.check_circle_rounded,
-                                        color: Colors.green,
-                                        size: 16,
-                                      ),
-                                      const SizedBox(width: 4),
-                                      const Text(
-                                        'Employment Confirmed',
-                                        style: TextStyle(
-                                          fontSize: 9,
-                                          color: Colors.green,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ],
-                                  ],
-                                ),
+                                if (isHired) ...[
+                                  const Icon(
+                                    Icons.check_circle_rounded,
+                                    color: Colors.green,
+                                    size: 16,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  const Text(
+                                    'Employment Confirmed',
+                                    style: TextStyle(
+                                      fontSize: 9,
+                                      color: Colors.green,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
                               ],
                             ),
-                          ),
-                        );
-                      },
-                    ),
-                ],
-              ),
-            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+            ],
           ),
-        ],
-      ),
+        );
+
+        if (isMobile) {
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                enrollmentCard,
+                const SizedBox(height: 16),
+                pipelineCard,
+              ],
+            ),
+          );
+        }
+
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                flex: 4,
+                child: enrollmentCard,
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                flex: 5,
+                child: pipelineCard,
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -1930,9 +1951,11 @@ class _StaffManagementPageState extends ConsumerState<StaffManagementPage>
                   ...classSections.map(
                     (sec) => Padding(
                       padding: const EdgeInsets.only(bottom: 8),
-                      child: Row(
-                        children: [
-                          SizedBox(
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          final isNarrow = constraints.maxWidth < 450;
+
+                          final sectionTitle = SizedBox(
                             width: 80,
                             child: Text(
                               'Section ${sec.name}',
@@ -1941,62 +1964,89 @@ class _StaffManagementPageState extends ConsumerState<StaffManagementPage>
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: DropdownButtonFormField<String>(
-                              initialValue:
-                                  branchStaff.any(
-                                    (s) => s.name == sec.classTeacher,
-                                  )
-                                  ? sec.classTeacher
-                                  : null,
-                              decoration: InputDecoration(
-                                isDense: true,
-                                labelText: 'Class Teacher: ${sec.classTeacher}',
-                              ),
-                              style: TextStyle(
-                                fontSize: 10,
-                                color: isDark
-                                    ? AppColors.darkTextPrimary
-                                    : AppColors.lightTextPrimary,
-                              ),
-                              items: branchStaff
-                                  .map(
-                                    (s) => DropdownMenuItem(
-                                      value: s.name,
-                                      child: Text(
-                                        s.name,
-                                        style: const TextStyle(fontSize: 9),
-                                      ),
-                                    ),
-                                  )
-                                  .toList(),
-                              onChanged: (v) {
-                                if (v != null) {
-                                  ref
-                                      .read(academicSectionsProvider.notifier)
-                                      .updateClassTeacher(sec.id, v);
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        '$v assigned as class teacher for ${cls.name} Section ${sec.name}',
-                                      ),
-                                    ),
-                                  );
-                                }
-                              },
+                          );
+
+                          final teacherDropdown = DropdownButtonFormField<String>(
+                            initialValue:
+                                branchStaff.any(
+                                  (s) => s.name == sec.classTeacher,
+                                )
+                                ? sec.classTeacher
+                                : null,
+                            decoration: InputDecoration(
+                              isDense: true,
+                              labelText: 'Class Teacher: ${sec.classTeacher}',
                             ),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: isDark
+                                  ? AppColors.darkTextPrimary
+                                  : AppColors.lightTextPrimary,
+                            ),
+                            items: branchStaff
+                                .map(
+                                  (s) => DropdownMenuItem(
+                                    value: s.name,
+                                    child: Text(
+                                      s.name,
+                                      style: const TextStyle(fontSize: 9),
+                                    ),
+                                  ),
+                                )
+                                .toList(),
+                            onChanged: (v) {
+                              if (v != null) {
+                                ref
+                                    .read(academicSectionsProvider.notifier)
+                                    .updateClassTeacher(sec.id, v);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      '$v assigned as class teacher for ${cls.name} Section ${sec.name}',
+                                    ),
+                                  ),
+                                );
+                              }
+                            },
+                          );
+
+                          final roomText = Text(
                             'Room: ${sec.roomNumber}',
                             style: const TextStyle(
                               fontSize: 9,
                               color: Colors.grey,
                             ),
-                          ),
-                        ],
+                          );
+
+                          if (isNarrow) {
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    sectionTitle,
+                                    roomText,
+                                  ],
+                                ),
+                                const SizedBox(height: 6),
+                                teacherDropdown,
+                              ],
+                            );
+                          }
+
+                          return Row(
+                            children: [
+                              sectionTitle,
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: teacherDropdown,
+                              ),
+                              const SizedBox(width: 8),
+                              roomText,
+                            ],
+                          );
+                        },
                       ),
                     ),
                   ),
@@ -2139,73 +2189,134 @@ class _StaffManagementPageState extends ConsumerState<StaffManagementPage>
                   final secName = sections.any((s) => s.id == sub.sectionId)
                       ? sections.firstWhere((s) => s.id == sub.sectionId).name
                       : sub.sectionId;
-                  return ListTile(
-                    dense: true,
-                    leading: Icon(
-                      Icons.swap_horiz_rounded,
-                      size: 16,
-                      color: sub.status == 'Active'
-                          ? Colors.orange
-                          : Colors.grey,
-                    ),
-                    title: Text(
-                      '$origName → $subName',
-                      style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    subtitle: Text(
-                      '$clsName Sec $secName | ${sub.date} | ${sub.reason}',
-                      style: const TextStyle(fontSize: 9, color: Colors.grey),
-                    ),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
+
+                  return LayoutBuilder(
+                    builder: (context, constraints) {
+                      final isMobile = constraints.maxWidth < 500;
+
+                      final iconWidget = Icon(
+                        Icons.swap_horiz_rounded,
+                        size: 16,
+                        color: sub.status == 'Active'
+                            ? Colors.orange
+                            : Colors.grey,
+                      );
+
+                      final titleText = Text(
+                        '$origName → $subName',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      );
+
+                      final subtitleText = Text(
+                        '$clsName Sec $secName | ${sub.date} | ${sub.reason}',
+                        style: const TextStyle(fontSize: 9, color: Colors.grey),
+                      );
+
+                      final badge = Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: sub.status == 'Active'
+                              ? Colors.orange.withValues(alpha: 0.1)
+                              : Colors.grey.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          sub.status,
+                          style: TextStyle(
+                            fontSize: 8,
+                            fontWeight: FontWeight.bold,
                             color: sub.status == 'Active'
-                                ? Colors.orange.withValues(alpha: 0.1)
-                                : Colors.grey.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            sub.status,
-                            style: TextStyle(
-                              fontSize: 8,
-                              fontWeight: FontWeight.bold,
-                              color: sub.status == 'Active'
-                                  ? Colors.orange
-                                  : Colors.grey,
-                            ),
+                                ? Colors.orange
+                                : Colors.grey,
                           ),
                         ),
-                        if (sub.status == 'Active') ...[
-                          const SizedBox(width: 4),
-                          IconButton(
-                            icon: const Icon(
-                              Icons.cancel_rounded,
-                              size: 14,
-                              color: Colors.red,
-                            ),
-                            onPressed: () {
-                              ref
-                                  .read(substitutionProvider.notifier)
-                                  .cancelSubstitution(sub.id);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Substitution cancelled.'),
-                                ),
-                              );
-                            },
+                      );
+
+                      final actionButton = sub.status == 'Active'
+                          ? IconButton(
+                              icon: const Icon(
+                                Icons.cancel_rounded,
+                                size: 14,
+                                color: Colors.red,
+                              ),
+                              onPressed: () {
+                                ref
+                                    .read(substitutionProvider.notifier)
+                                    .cancelSubstitution(sub.id);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Substitution cancelled.'),
+                                  ),
+                                );
+                              },
+                            )
+                          : const SizedBox.shrink();
+
+                      if (isMobile) {
+                        return Container(
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 8,
+                            horizontal: 4,
                           ),
-                        ],
-                      ],
-                    ),
+                          decoration: BoxDecoration(
+                            border: Border(
+                              bottom: BorderSide(
+                                color: isDark
+                                    ? Colors.white10
+                                    : Colors.grey.shade200,
+                              ),
+                            ),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  iconWidget,
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: titleText,
+                                  ),
+                                  badge,
+                                  if (sub.status == 'Active') ...[
+                                    const SizedBox(width: 4),
+                                    actionButton,
+                                  ],
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              Padding(
+                                padding: const EdgeInsets.only(left: 24),
+                                child: subtitleText,
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+
+                      return ListTile(
+                        dense: true,
+                        leading: iconWidget,
+                        title: titleText,
+                        subtitle: subtitleText,
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            badge,
+                            if (sub.status == 'Active') ...[
+                              const SizedBox(width: 4),
+                              actionButton,
+                            ],
+                          ],
+                        ),
+                      );
+                    },
                   );
                 }),
               ],
@@ -2409,82 +2520,134 @@ class _StaffManagementPageState extends ConsumerState<StaffManagementPage>
                 ),
                 const Divider(),
                 ...leaves.map(
-                  (l) => ListTile(
-                    dense: true,
-                    leading: Icon(
-                      l.status == 'Approved'
-                          ? Icons.check_circle_rounded
-                          : l.status == 'Rejected'
-                          ? Icons.cancel_rounded
-                          : Icons.hourglass_top_rounded,
-                      size: 16,
-                      color: l.status == 'Approved'
-                          ? Colors.green
-                          : l.status == 'Rejected'
-                          ? Colors.red
-                          : Colors.orange,
-                    ),
-                    title: Text(
-                      '${_staffName(l.staffId)} — ${l.leaveType} (${l.days} days)',
-                      style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    subtitle: Text(
-                      '${l.fromDate} to ${l.toDate} | ${l.reason}',
-                      style: const TextStyle(fontSize: 9, color: Colors.grey),
-                    ),
-                    trailing: l.status == 'Pending'
-                        ? Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              IconButton(
-                                icon: const Icon(
-                                  Icons.check_rounded,
-                                  size: 16,
-                                  color: Colors.green,
+                  (l) => LayoutBuilder(
+                    builder: (context, constraints) {
+                      final isMobile = constraints.maxWidth < 500;
+
+                      final iconWidget = Icon(
+                        l.status == 'Approved'
+                            ? Icons.check_circle_rounded
+                            : l.status == 'Rejected'
+                            ? Icons.cancel_rounded
+                            : Icons.hourglass_top_rounded,
+                        size: 16,
+                        color: l.status == 'Approved'
+                            ? Colors.green
+                            : l.status == 'Rejected'
+                            ? Colors.red
+                            : Colors.orange,
+                      );
+
+                      final titleText = Text(
+                        '${_staffName(l.staffId)} — ${l.leaveType} (${l.days} days)',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      );
+
+                      final subtitleText = Text(
+                        '${l.fromDate} to ${l.toDate} | ${l.reason}',
+                        style: const TextStyle(fontSize: 9, color: Colors.grey),
+                      );
+
+                      final trailingWidget = l.status == 'Pending'
+                          ? Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  icon: const Icon(
+                                    Icons.check_rounded,
+                                    size: 16,
+                                    color: Colors.green,
+                                  ),
+                                  onPressed: () => ref
+                                      .read(staffLeaveProvider.notifier)
+                                      .approveLeave(l.id),
                                 ),
-                                onPressed: () => ref
-                                    .read(staffLeaveProvider.notifier)
-                                    .approveLeave(l.id),
-                              ),
-                              IconButton(
-                                icon: const Icon(
-                                  Icons.close_rounded,
-                                  size: 16,
-                                  color: Colors.red,
+                                IconButton(
+                                  icon: const Icon(
+                                    Icons.close_rounded,
+                                    size: 16,
+                                    color: Colors.red,
+                                  ),
+                                  onPressed: () => ref
+                                      .read(staffLeaveProvider.notifier)
+                                      .rejectLeave(l.id),
                                 ),
-                                onPressed: () => ref
-                                    .read(staffLeaveProvider.notifier)
-                                    .rejectLeave(l.id),
+                              ],
+                            )
+                          : Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
                               ),
-                            ],
-                          )
-                        : Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color:
-                                  (l.status == 'Approved'
-                                          ? Colors.green
-                                          : Colors.red)
-                                      .withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Text(
-                              l.status,
-                              style: TextStyle(
-                                fontSize: 8,
-                                fontWeight: FontWeight.bold,
-                                color: l.status == 'Approved'
-                                    ? Colors.green
-                                    : Colors.red,
+                              decoration: BoxDecoration(
+                                color:
+                                    (l.status == 'Approved'
+                                            ? Colors.green
+                                            : Colors.red)
+                                        .withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                l.status,
+                                style: TextStyle(
+                                  fontSize: 8,
+                                  fontWeight: FontWeight.bold,
+                                  color: l.status == 'Approved'
+                                      ? Colors.green
+                                      : Colors.red,
+                                ),
+                              ),
+                            );
+
+                      if (isMobile) {
+                        return Container(
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 8,
+                            horizontal: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            border: Border(
+                              bottom: BorderSide(
+                                color: isDark
+                                    ? Colors.white10
+                                    : Colors.grey.shade200,
                               ),
                             ),
                           ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  iconWidget,
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: titleText,
+                                  ),
+                                  trailingWidget,
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              Padding(
+                                padding: const EdgeInsets.only(left: 24),
+                                child: subtitleText,
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+
+                      return ListTile(
+                        dense: true,
+                        leading: iconWidget,
+                        title: titleText,
+                        subtitle: subtitleText,
+                        trailing: trailingWidget,
+                      );
+                    },
                   ),
                 ),
               ],
@@ -2664,80 +2827,149 @@ class _StaffManagementPageState extends ConsumerState<StaffManagementPage>
                 ),
                 const Divider(),
                 ...payrolls.map(
-                  (p) => ListTile(
-                    dense: true,
-                    onTap: () => _showSalarySlipDialog(context, p),
-                    leading: Icon(
-                      Icons.payments_rounded,
-                      size: 16,
-                      color: p.status == 'Paid'
-                          ? Colors.green
-                          : p.status == 'Processed'
-                          ? Colors.blue
-                          : Colors.orange,
-                    ),
-                    title: Text(
-                      '${_staffName(p.staffId)} — ${p.month}',
-                      style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    subtitle: Text(
-                      'Basic: ₹${p.basicSalary.toStringAsFixed(0)} | DA: ₹${p.da.toStringAsFixed(0)} | HRA: ₹${p.hra.toStringAsFixed(0)} | PF: -₹${p.pfDeduction.toStringAsFixed(0)} | TDS: -₹${p.tdsDeduction.toStringAsFixed(0)}',
-                      style: const TextStyle(fontSize: 8, color: Colors.grey),
-                    ),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          '₹${p.netPay.toStringAsFixed(0)}',
-                          style: const TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.green,
-                          ),
+                  (p) => LayoutBuilder(
+                    builder: (context, constraints) {
+                      final isMobile = constraints.maxWidth < 550;
+
+                      final iconWidget = Icon(
+                        Icons.payments_rounded,
+                        size: 16,
+                        color: p.status == 'Paid'
+                            ? Colors.green
+                            : p.status == 'Processed'
+                            ? Colors.blue
+                            : Colors.orange,
+                      );
+
+                      final titleText = Text(
+                        '${_staffName(p.staffId)} — ${p.month}',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
                         ),
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color:
-                                (p.status == 'Paid'
-                                        ? Colors.green
-                                        : Colors.orange)
-                                    .withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            p.status,
-                            style: TextStyle(
-                              fontSize: 8,
-                              fontWeight: FontWeight.bold,
-                              color: p.status == 'Paid'
+                      );
+
+                      final subtitleText = Text(
+                        'Basic: ₹${p.basicSalary.toStringAsFixed(0)} | DA: ₹${p.da.toStringAsFixed(0)} | HRA: ₹${p.hra.toStringAsFixed(0)} | PF: -₹${p.pfDeduction.toStringAsFixed(0)} | TDS: -₹${p.tdsDeduction.toStringAsFixed(0)}',
+                        style: const TextStyle(fontSize: 8, color: Colors.grey),
+                      );
+
+                      final netPayText = Text(
+                        '₹${p.netPay.toStringAsFixed(0)}',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.green,
+                        ),
+                      );
+
+                      final badge = Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: (p.status == 'Paid'
                                   ? Colors.green
-                                  : Colors.orange,
-                            ),
+                                  : Colors.orange)
+                              .withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          p.status,
+                          style: TextStyle(
+                            fontSize: 8,
+                            fontWeight: FontWeight.bold,
+                            color: p.status == 'Paid'
+                                ? Colors.green
+                                : Colors.orange,
                           ),
                         ),
-                        if (p.status == 'Pending') ...[
-                          const SizedBox(width: 4),
-                          IconButton(
-                            icon: const Icon(
-                              Icons.check_circle_rounded,
-                              size: 14,
-                              color: Colors.green,
+                      );
+
+                      final payAction = p.status == 'Pending'
+                          ? IconButton(
+                              icon: const Icon(
+                                Icons.check_circle_rounded,
+                                size: 14,
+                                color: Colors.green,
+                              ),
+                              onPressed: () => ref
+                                  .read(staffPayrollProvider.notifier)
+                                  .markPaid(p.id),
+                            )
+                          : const SizedBox.shrink();
+
+                      if (isMobile) {
+                        return InkWell(
+                          onTap: () => _showSalarySlipDialog(context, p),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 10,
+                              horizontal: 6,
                             ),
-                            onPressed: () => ref
-                                .read(staffPayrollProvider.notifier)
-                                .markPaid(p.id),
+                            decoration: BoxDecoration(
+                              border: Border(
+                                bottom: BorderSide(
+                                  color: isDark
+                                      ? Colors.white10
+                                      : Colors.grey.shade200,
+                                ),
+                              ),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    iconWidget,
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: titleText,
+                                    ),
+                                    netPayText,
+                                    const SizedBox(width: 8),
+                                    badge,
+                                    if (p.status == 'Pending') ...[
+                                      const SizedBox(width: 4),
+                                      payAction,
+                                    ],
+                                  ],
+                                ),
+                                const SizedBox(height: 6),
+                                Padding(
+                                  padding: const EdgeInsets.only(left: 24),
+                                  child: SingleChildScrollView(
+                                    scrollDirection: Axis.horizontal,
+                                    child: subtitleText,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                        ],
-                      ],
-                    ),
+                        );
+                      }
+
+                      return ListTile(
+                        dense: true,
+                        onTap: () => _showSalarySlipDialog(context, p),
+                        leading: iconWidget,
+                        title: titleText,
+                        subtitle: subtitleText,
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            netPayText,
+                            const SizedBox(width: 8),
+                            badge,
+                            if (p.status == 'Pending') ...[
+                              const SizedBox(width: 4),
+                              payAction,
+                            ],
+                          ],
+                        ),
+                      );
+                    },
                   ),
                 ),
               ],
@@ -3064,14 +3296,13 @@ class _StaffManagementPageState extends ConsumerState<StaffManagementPage>
                     style: const TextStyle(fontSize: 9, color: Colors.grey),
                   ),
                   const SizedBox(height: 8),
-                  Row(
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
                     children: [
                       _scoreChip('Teaching', r.teachingScore),
-                      const SizedBox(width: 8),
                       _scoreChip('Discipline', r.disciplineScore),
-                      const SizedBox(width: 8),
                       _scoreChip('Attendance', r.attendanceScore),
-                      const SizedBox(width: 8),
                       _scoreChip('Parent Feedback', r.parentFeedbackScore),
                     ],
                   ),
@@ -3220,503 +3451,526 @@ class _StaffManagementPageState extends ConsumerState<StaffManagementPage>
     final reasonCtrl = TextEditingController();
 
     return StatefulBuilder(
-      builder: (context, setStateTab) => SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Left: Submit Resignation
-            Expanded(
-              flex: 3,
-              child: GlassCard(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Submit Staff Resignation',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const Text(
-                      'Initiate exit workflow and clearance processing.',
-                      style: TextStyle(fontSize: 9, color: Colors.grey),
-                    ),
-                    const SizedBox(height: 12),
-                    DropdownButtonFormField<String>(
-                      initialValue: selectedResignerId,
-                      decoration: const InputDecoration(
-                        labelText: 'Resigning Staff Member',
-                        isDense: true,
-                      ),
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: isDark
-                            ? AppColors.darkTextPrimary
-                            : AppColors.lightTextPrimary,
-                      ),
-                      items: branchStaff
-                          .map(
-                            (s) => DropdownMenuItem(
-                              value: s.id,
-                              child: Text(
-                                s.name,
-                                style: const TextStyle(fontSize: 9),
-                              ),
-                            ),
-                          )
-                          .toList(),
-                      onChanged: (v) => selectedResignerId = v,
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: resignationDateCtrl,
-                            style: const TextStyle(fontSize: 10),
-                            decoration: const InputDecoration(
-                              labelText: 'Resignation Date',
-                              isDense: true,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: TextField(
-                            controller: lastWorkingDayCtrl,
-                            style: const TextStyle(fontSize: 10),
-                            decoration: const InputDecoration(
-                              labelText: 'Last Working Day',
-                              isDense: true,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: reasonCtrl,
-                      style: const TextStyle(fontSize: 10),
-                      decoration: const InputDecoration(
-                        labelText: 'Reason for Leaving',
-                        isDense: true,
-                      ),
-                      maxLines: 2,
-                    ),
-                    const SizedBox(height: 16),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.red,
-                        ),
-                        onPressed: () {
-                          if (selectedResignerId == null ||
-                              reasonCtrl.text.isEmpty) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'Please select staff and enter reason.',
-                                ),
-                              ),
-                            );
-                            return;
-                          }
-                          ref
-                              .read(staffOffboardingProvider.notifier)
-                              .submitResignation(
-                                staffId: selectedResignerId!,
-                                branchId: branchId,
-                                resignationDate: resignationDateCtrl.text
-                                    .trim(),
-                                lastWorkingDay: lastWorkingDayCtrl.text.trim(),
-                                reason: reasonCtrl.text.trim(),
-                              );
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                'Resignation submitted successfully! Clearance initiated.',
-                              ),
-                            ),
-                          );
-                          reasonCtrl.clear();
-                        },
-                        icon: const Icon(Icons.exit_to_app_rounded, size: 14),
-                        label: const Text(
-                          'Initiate Exit Process',
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+      builder: (context, setStateTab) {
+        final submitResignationCard = GlassCard(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Submit Staff Resignation',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-            ),
-            const SizedBox(width: 16),
-            // Right: Offboarding Pipeline
-            Expanded(
-              flex: 4,
-              child: GlassCard(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Offboarding & Clearance Checklist',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
+              const Text(
+                'Initiate exit workflow and clearance processing.',
+                style: TextStyle(fontSize: 9, color: Colors.grey),
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<String>(
+                initialValue: selectedResignerId,
+                decoration: const InputDecoration(
+                  labelText: 'Resigning Staff Member',
+                  isDense: true,
+                ),
+                style: TextStyle(
+                  fontSize: 10,
+                  color: isDark
+                      ? AppColors.darkTextPrimary
+                      : AppColors.lightTextPrimary,
+                ),
+                items: branchStaff
+                    .map(
+                      (s) => DropdownMenuItem(
+                        value: s.id,
+                        child: Text(
+                          s.name,
+                          style: const TextStyle(fontSize: 9),
+                        ),
+                      ),
+                    )
+                    .toList(),
+                onChanged: (v) => selectedResignerId = v,
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: resignationDateCtrl,
+                      style: const TextStyle(fontSize: 10),
+                      decoration: const InputDecoration(
+                        labelText: 'Resignation Date',
+                        isDense: true,
                       ),
                     ),
-                    const Text(
-                      'Track clearances and process Full & Final (F&F) settlements.',
-                      style: TextStyle(fontSize: 9, color: Colors.grey),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: TextField(
+                      controller: lastWorkingDayCtrl,
+                      style: const TextStyle(fontSize: 10),
+                      decoration: const InputDecoration(
+                        labelText: 'Last Working Day',
+                        isDense: true,
+                      ),
                     ),
-                    const SizedBox(height: 12),
-                    if (offboardings.isEmpty)
-                      const Center(
-                        child: Padding(
-                          padding: EdgeInsets.all(30),
-                          child: Text('No staff members in exit processing.'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: reasonCtrl,
+                style: const TextStyle(fontSize: 10),
+                decoration: const InputDecoration(
+                  labelText: 'Reason for Leaving',
+                  isDense: true,
+                ),
+                maxLines: 2,
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                  ),
+                  onPressed: () {
+                    if (selectedResignerId == null ||
+                        reasonCtrl.text.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'Please select staff and enter reason.',
+                          ),
                         ),
-                      )
-                    else
-                      ListView.separated(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: offboardings.length,
-                        separatorBuilder: (_, index) =>
-                            const SizedBox(height: 12),
-                        itemBuilder: (context, index) {
-                          final o = offboardings[index];
-                          final isSettled = o.status == 'Settled';
-                          Color statusColor = Colors.orange;
-                          if (o.status == 'ClearanceInProgress')
-                            statusColor = Colors.blue;
-                          if (isSettled) statusColor = Colors.green;
+                      );
+                      return;
+                    }
+                    ref
+                        .read(staffOffboardingProvider.notifier)
+                        .submitResignation(
+                          staffId: selectedResignerId!,
+                          branchId: branchId,
+                          resignationDate: resignationDateCtrl.text
+                              .trim(),
+                          lastWorkingDay: lastWorkingDayCtrl.text.trim(),
+                          reason: reasonCtrl.text.trim(),
+                        );
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'Resignation submitted successfully! Clearance initiated.',
+                        ),
+                      ),
+                    );
+                    reasonCtrl.clear();
+                  },
+                  icon: const Icon(Icons.exit_to_app_rounded, size: 14),
+                  label: const Text(
+                    'Initiate Exit Process',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
 
-                          final settlementAmountCtrl = TextEditingController(
-                            text: o.settlementAmount > 0
-                                ? o.settlementAmount.toStringAsFixed(0)
-                                : '25000',
-                          );
+        final offboardingPipelineCard = GlassCard(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Offboarding & Clearance Checklist',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const Text(
+                'Track clearances and process Full & Final (F&F) settlements.',
+                style: TextStyle(fontSize: 9, color: Colors.grey),
+              ),
+              const SizedBox(height: 12),
+              if (offboardings.isEmpty)
+                const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(30),
+                    child: Text('No staff members in exit processing.'),
+                  ),
+                )
+              else
+                ListView.separated(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: offboardings.length,
+                  separatorBuilder: (_, index) =>
+                      const SizedBox(height: 12),
+                  itemBuilder: (context, index) {
+                    final o = offboardings[index];
+                    final isSettled = o.status == 'Settled';
+                    Color statusColor = Colors.orange;
+                    if (o.status == 'ClearanceInProgress')
+                      statusColor = Colors.blue;
+                    if (isSettled) statusColor = Colors.green;
 
-                          return Card(
-                            margin: EdgeInsets.zero,
-                            elevation: 0,
-                            color: isDark
-                                ? Colors.white10
-                                : Colors.grey.shade50,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              side: BorderSide(
-                                color: isDark
-                                    ? Colors.white12
-                                    : Colors.grey.shade200,
+                    final settlementAmountCtrl = TextEditingController(
+                      text: o.settlementAmount > 0
+                          ? o.settlementAmount.toStringAsFixed(0)
+                          : '25000',
+                    );
+
+                    return Card(
+                      margin: EdgeInsets.zero,
+                      elevation: 0,
+                      color: isDark
+                          ? Colors.white10
+                          : Colors.grey.shade50,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        side: BorderSide(
+                          color: isDark
+                              ? Colors.white12
+                              : Colors.grey.shade200,
+                        ),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment:
+                                  MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  _staffName(o.staffId),
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 5,
+                                    vertical: 1,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: statusColor.withValues(
+                                      alpha: 0.1,
+                                    ),
+                                    borderRadius: BorderRadius.circular(
+                                      4,
+                                    ),
+                                  ),
+                                  child: Text(
+                                    o.status,
+                                    style: TextStyle(
+                                      fontSize: 7,
+                                      fontWeight: FontWeight.bold,
+                                      color: statusColor,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'LWD: ${o.lastWorkingDay} | Initiated: ${o.resignationDate}',
+                              style: const TextStyle(
+                                fontSize: 8,
+                                color: Colors.grey,
                               ),
                             ),
-                            child: Padding(
-                              padding: const EdgeInsets.all(12),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text(
-                                        _staffName(o.staffId),
-                                        style: const TextStyle(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 5,
-                                          vertical: 1,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: statusColor.withValues(
-                                            alpha: 0.1,
-                                          ),
-                                          borderRadius: BorderRadius.circular(
-                                            4,
-                                          ),
-                                        ),
-                                        child: Text(
-                                          o.status,
-                                          style: TextStyle(
-                                            fontSize: 7,
-                                            fontWeight: FontWeight.bold,
-                                            color: statusColor,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
+                            Text(
+                              'Reason: ${o.reason}',
+                              style: const TextStyle(
+                                fontSize: 8,
+                                color: Colors.black54,
+                              ),
+                            ),
+                            if (o.exitFeedback.isNotEmpty) ...[
+                              const SizedBox(height: 6),
+                              Text(
+                                'Exit Interview Feedback: ${o.exitFeedback}',
+                                style: const TextStyle(
+                                  fontSize: 8,
+                                  fontStyle: FontStyle.italic,
+                                  color: Colors.indigo,
+                                ),
+                              ),
+                            ],
+                            const SizedBox(height: 10),
+                            const Text(
+                              'Department Clearance checklist:',
+                              style: TextStyle(
+                                fontSize: 8,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Wrap(
+                              spacing: 8,
+                              children: [
+                                FilterChip(
+                                  label: const Text(
+                                    'IT Clearance',
+                                    style: TextStyle(fontSize: 7),
                                   ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    'LWD: ${o.lastWorkingDay} | Initiated: ${o.resignationDate}',
-                                    style: const TextStyle(
-                                      fontSize: 8,
-                                      color: Colors.grey,
+                                  selected: o.clearanceIt,
+                                  selectedColor: Colors.green.withValues(
+                                    alpha: 0.2,
+                                  ),
+                                  onSelected: isSettled
+                                      ? null
+                                      : (val) {
+                                          ref
+                                              .read(
+                                                staffOffboardingProvider
+                                                    .notifier,
+                                              )
+                                              .updateClearances(
+                                                o.id,
+                                                it: val,
+                                              );
+                                        },
+                                ),
+                                FilterChip(
+                                  label: const Text(
+                                    'Library Clearance',
+                                    style: TextStyle(fontSize: 7),
+                                  ),
+                                  selected: o.clearanceLibrary,
+                                  selectedColor: Colors.green.withValues(
+                                    alpha: 0.2,
+                                  ),
+                                  onSelected: isSettled
+                                      ? null
+                                      : (val) {
+                                          ref
+                                              .read(
+                                                staffOffboardingProvider
+                                                    .notifier,
+                                              )
+                                              .updateClearances(
+                                                o.id,
+                                                lib: val,
+                                              );
+                                        },
+                                ),
+                                FilterChip(
+                                  label: const Text(
+                                    'Accounts Clearance',
+                                    style: TextStyle(fontSize: 7),
+                                  ),
+                                  selected: o.clearanceAccounts,
+                                  selectedColor: Colors.green.withValues(
+                                    alpha: 0.2,
+                                  ),
+                                  onSelected: isSettled
+                                      ? null
+                                      : (val) {
+                                          ref
+                                              .read(
+                                                staffOffboardingProvider
+                                                    .notifier,
+                                              )
+                                              .updateClearances(
+                                                o.id,
+                                                acc: val,
+                                              );
+                                        },
+                                ),
+                                FilterChip(
+                                  label: const Text(
+                                    'HR Clearance',
+                                    style: TextStyle(fontSize: 7),
+                                  ),
+                                  selected: o.clearanceHr,
+                                  selectedColor: Colors.green.withValues(
+                                    alpha: 0.2,
+                                  ),
+                                  onSelected: isSettled
+                                      ? null
+                                      : (val) {
+                                          ref
+                                              .read(
+                                                staffOffboardingProvider
+                                                    .notifier,
+                                              )
+                                              .updateClearances(
+                                                o.id,
+                                                hr: val,
+                                              );
+                                        },
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 10),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                if (o.exitFeedback.isEmpty)
+                                  TextButton.icon(
+                                    onPressed: () =>
+                                        _showExitInterviewDialog(
+                                          context,
+                                          o,
+                                        ),
+                                    icon: const Icon(
+                                      Icons.rate_review_rounded,
+                                      size: 10,
+                                    ),
+                                    label: const Text(
+                                      'Exit Interview',
+                                      style: TextStyle(fontSize: 8),
                                     ),
                                   ),
-                                  Text(
-                                    'Reason: ${o.reason}',
-                                    style: const TextStyle(
-                                      fontSize: 8,
-                                      color: Colors.black54,
+                                if (!isSettled) ...[
+                                  const SizedBox(width: 8),
+                                  SizedBox(
+                                    width: 80,
+                                    height: 24,
+                                    child: TextField(
+                                      controller: settlementAmountCtrl,
+                                      style: const TextStyle(fontSize: 8),
+                                      keyboardType: TextInputType.number,
+                                      decoration: const InputDecoration(
+                                        labelText: 'F&F Amount',
+                                        isDense: true,
+                                      ),
                                     ),
                                   ),
-                                  if (o.exitFeedback.isNotEmpty) ...[
-                                    const SizedBox(height: 6),
-                                    Text(
-                                      'Exit Interview Feedback: ${o.exitFeedback}',
-                                      style: const TextStyle(
+                                  const SizedBox(width: 8),
+                                  ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.green,
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 2,
+                                      ),
+                                      minimumSize: Size.zero,
+                                    ),
+                                    onPressed: () {
+                                      if (!o.clearanceIt ||
+                                          !o.clearanceLibrary ||
+                                          !o.clearanceAccounts ||
+                                          !o.clearanceHr) {
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          const SnackBar(
+                                            content: Text(
+                                              'All department clearances are required before settlement!',
+                                            ),
+                                          ),
+                                        );
+                                        return;
+                                      }
+                                      ref
+                                          .read(
+                                            staffOffboardingProvider
+                                                .notifier,
+                                          )
+                                          .settleOffboarding(
+                                            o.id,
+                                            double.tryParse(
+                                                  settlementAmountCtrl
+                                                      .text,
+                                                ) ??
+                                                0,
+                                          );
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            'Full & Final Settlement processed for ${_staffName(o.staffId)}. Account deactivated.',
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                    child: const Text(
+                                      'Process F&F',
+                                      style: TextStyle(
                                         fontSize: 8,
-                                        fontStyle: FontStyle.italic,
-                                        color: Colors.indigo,
+                                        fontWeight: FontWeight.bold,
                                       ),
                                     ),
-                                  ],
-                                  const SizedBox(height: 10),
-                                  const Text(
-                                    'Department Clearance checklist:',
-                                    style: TextStyle(
+                                  ),
+                                ],
+                                if (isSettled) ...[
+                                  const Icon(
+                                    Icons.check_circle_rounded,
+                                    color: Colors.green,
+                                    size: 14,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    'F&F Completed (₹${o.settlementAmount.toStringAsFixed(0)})',
+                                    style: const TextStyle(
                                       fontSize: 8,
+                                      color: Colors.green,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
-                                  const SizedBox(height: 4),
-                                  Wrap(
-                                    spacing: 8,
-                                    children: [
-                                      FilterChip(
-                                        label: const Text(
-                                          'IT Clearance',
-                                          style: TextStyle(fontSize: 7),
-                                        ),
-                                        selected: o.clearanceIt,
-                                        selectedColor: Colors.green.withValues(
-                                          alpha: 0.2,
-                                        ),
-                                        onSelected: isSettled
-                                            ? null
-                                            : (val) {
-                                                ref
-                                                    .read(
-                                                      staffOffboardingProvider
-                                                          .notifier,
-                                                    )
-                                                    .updateClearances(
-                                                      o.id,
-                                                      it: val,
-                                                    );
-                                              },
-                                      ),
-                                      FilterChip(
-                                        label: const Text(
-                                          'Library Clearance',
-                                          style: TextStyle(fontSize: 7),
-                                        ),
-                                        selected: o.clearanceLibrary,
-                                        selectedColor: Colors.green.withValues(
-                                          alpha: 0.2,
-                                        ),
-                                        onSelected: isSettled
-                                            ? null
-                                            : (val) {
-                                                ref
-                                                    .read(
-                                                      staffOffboardingProvider
-                                                          .notifier,
-                                                    )
-                                                    .updateClearances(
-                                                      o.id,
-                                                      lib: val,
-                                                    );
-                                              },
-                                      ),
-                                      FilterChip(
-                                        label: const Text(
-                                          'Accounts Clearance',
-                                          style: TextStyle(fontSize: 7),
-                                        ),
-                                        selected: o.clearanceAccounts,
-                                        selectedColor: Colors.green.withValues(
-                                          alpha: 0.2,
-                                        ),
-                                        onSelected: isSettled
-                                            ? null
-                                            : (val) {
-                                                ref
-                                                    .read(
-                                                      staffOffboardingProvider
-                                                          .notifier,
-                                                    )
-                                                    .updateClearances(
-                                                      o.id,
-                                                      acc: val,
-                                                    );
-                                              },
-                                      ),
-                                      FilterChip(
-                                        label: const Text(
-                                          'HR Clearance',
-                                          style: TextStyle(fontSize: 7),
-                                        ),
-                                        selected: o.clearanceHr,
-                                        selectedColor: Colors.green.withValues(
-                                          alpha: 0.2,
-                                        ),
-                                        onSelected: isSettled
-                                            ? null
-                                            : (val) {
-                                                ref
-                                                    .read(
-                                                      staffOffboardingProvider
-                                                          .notifier,
-                                                    )
-                                                    .updateClearances(
-                                                      o.id,
-                                                      hr: val,
-                                                    );
-                                              },
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 10),
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.end,
-                                    children: [
-                                      if (o.exitFeedback.isEmpty)
-                                        TextButton.icon(
-                                          onPressed: () =>
-                                              _showExitInterviewDialog(
-                                                context,
-                                                o,
-                                              ),
-                                          icon: const Icon(
-                                            Icons.rate_review_rounded,
-                                            size: 10,
-                                          ),
-                                          label: const Text(
-                                            'Exit Interview',
-                                            style: TextStyle(fontSize: 8),
-                                          ),
-                                        ),
-                                      if (!isSettled) ...[
-                                        const SizedBox(width: 8),
-                                        SizedBox(
-                                          width: 80,
-                                          height: 24,
-                                          child: TextField(
-                                            controller: settlementAmountCtrl,
-                                            style: const TextStyle(fontSize: 8),
-                                            keyboardType: TextInputType.number,
-                                            decoration: const InputDecoration(
-                                              labelText: 'F&F Amount',
-                                              isDense: true,
-                                            ),
-                                          ),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        ElevatedButton(
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor: Colors.green,
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 8,
-                                              vertical: 2,
-                                            ),
-                                            minimumSize: Size.zero,
-                                          ),
-                                          onPressed: () {
-                                            if (!o.clearanceIt ||
-                                                !o.clearanceLibrary ||
-                                                !o.clearanceAccounts ||
-                                                !o.clearanceHr) {
-                                              ScaffoldMessenger.of(
-                                                context,
-                                              ).showSnackBar(
-                                                const SnackBar(
-                                                  content: Text(
-                                                    'All department clearances are required before settlement!',
-                                                  ),
-                                                ),
-                                              );
-                                              return;
-                                            }
-                                            ref
-                                                .read(
-                                                  staffOffboardingProvider
-                                                      .notifier,
-                                                )
-                                                .settleOffboarding(
-                                                  o.id,
-                                                  double.tryParse(
-                                                        settlementAmountCtrl
-                                                            .text,
-                                                      ) ??
-                                                      0,
-                                                );
-                                            ScaffoldMessenger.of(
-                                              context,
-                                            ).showSnackBar(
-                                              SnackBar(
-                                                content: Text(
-                                                  'Full & Final Settlement processed for ${_staffName(o.staffId)}. Account deactivated.',
-                                                ),
-                                              ),
-                                            );
-                                          },
-                                          child: const Text(
-                                            'Process F&F',
-                                            style: TextStyle(
-                                              fontSize: 8,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                      if (isSettled) ...[
-                                        const Icon(
-                                          Icons.check_circle_rounded,
-                                          color: Colors.green,
-                                          size: 14,
-                                        ),
-                                        const SizedBox(width: 4),
-                                        Text(
-                                          'F&F Completed (₹${o.settlementAmount.toStringAsFixed(0)})',
-                                          style: const TextStyle(
-                                            fontSize: 8,
-                                            color: Colors.green,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ],
-                                    ],
-                                  ),
                                 ],
-                              ),
+                              ],
                             ),
-                          );
-                        },
+                          ],
+                        ),
                       ),
+                    );
+                  },
+                ),
+            ],
+          ),
+        );
+
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final isMobile = constraints.maxWidth < 900;
+
+            if (isMobile) {
+              return SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    submitResignationCard,
+                    const SizedBox(height: 16),
+                    offboardingPipelineCard,
                   ],
                 ),
+              );
+            }
+
+            return SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    flex: 3,
+                    child: submitResignationCard,
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    flex: 4,
+                    child: offboardingPipelineCard,
+                  ),
+                ],
               ),
-            ),
-          ],
-        ),
-      ),
+            );
+          },
+        );
+      },
     );
   }
 

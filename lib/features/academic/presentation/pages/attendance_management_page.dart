@@ -463,7 +463,9 @@ class _StudentAttendanceTab extends ConsumerWidget {
           ],
 
           // ─── Summary Stats ─────────────────────────
-          Row(
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
             children: [
               _AttendanceSummaryChip(
                 label: 'Present',
@@ -477,19 +479,16 @@ class _StudentAttendanceTab extends ConsumerWidget {
                     .length,
                 color: AppColors.secondary,
               ),
-              const SizedBox(width: 8),
               _AttendanceSummaryChip(
                 label: 'Absent',
                 count: dayRecords.where((r) => r.status == 'Absent').length,
                 color: AppColors.error,
               ),
-              const SizedBox(width: 8),
               _AttendanceSummaryChip(
                 label: 'Late',
                 count: dayRecords.where((r) => r.status == 'Late').length,
                 color: AppColors.warning,
               ),
-              const SizedBox(width: 8),
               _AttendanceSummaryChip(
                 label: 'Total Roster',
                 count: branchRoster.length,
@@ -501,7 +500,9 @@ class _StudentAttendanceTab extends ConsumerWidget {
           const SizedBox(height: 12),
 
           // ─── Bulk Actions ──────────────────────────
-          Row(
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
             children: [
               _ActionButton(
                 label: 'Mark All Present',
@@ -532,7 +533,6 @@ class _StudentAttendanceTab extends ConsumerWidget {
                   _showSnack(context, 'All students marked Present');
                 },
               ),
-              const SizedBox(width: 8),
               _ActionButton(
                 label: 'Mark All Absent',
                 icon: Icons.cancel_rounded,
@@ -794,7 +794,9 @@ class _StaffAttendanceTab extends ConsumerWidget {
           const SizedBox(height: 12),
 
           // ─── Summary Chips ─────────────────────────
-          Row(
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
             children: [
               _AttendanceSummaryChip(
                 label: 'Present',
@@ -803,13 +805,11 @@ class _StaffAttendanceTab extends ConsumerWidget {
                     .length,
                 color: AppColors.secondary,
               ),
-              const SizedBox(width: 8),
               _AttendanceSummaryChip(
                 label: 'Absent',
                 count: dayRecords.where((r) => r.status == 'Absent').length,
                 color: AppColors.error,
               ),
-              const SizedBox(width: 8),
               _AttendanceSummaryChip(
                 label: 'On Leave',
                 count: dayRecords.where((r) => r.status == 'OnLeave').length,
@@ -3064,9 +3064,11 @@ class _StudentAttendanceRow extends StatelessWidget {
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: borderColor),
       ),
-      child: Row(
-        children: [
-          CircleAvatar(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final isMobile = constraints.maxWidth < 550;
+
+          final avatar = CircleAvatar(
             radius: 18,
             backgroundColor: AppColors.primarySurface,
             child: Text(
@@ -3077,9 +3079,9 @@ class _StudentAttendanceRow extends StatelessWidget {
                 fontSize: 13,
               ),
             ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
+          );
+
+          final details = Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -3122,8 +3124,9 @@ class _StudentAttendanceRow extends StatelessWidget {
                 ),
               ],
             ),
-          ),
-          IconButton(
+          );
+
+          final adjustmentButton = IconButton(
             onPressed: onRequestCorrection,
             icon: const Icon(
               Icons.edit_note_rounded,
@@ -3131,9 +3134,9 @@ class _StudentAttendanceRow extends StatelessWidget {
               color: AppColors.primary,
             ),
             tooltip: 'Request Adjustment',
-          ),
-          const SizedBox(width: 4),
-          ...[
+          );
+
+          final chips = [
             'Present',
             'Absent',
             'Late',
@@ -3176,8 +3179,43 @@ class _StudentAttendanceRow extends StatelessWidget {
                 ),
               ),
             );
-          }),
-        ],
+          }).toList();
+
+          if (isMobile) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    avatar,
+                    const SizedBox(width: 10),
+                    details,
+                    adjustmentButton,
+                  ],
+                ),
+                const SizedBox(height: 10),
+                const Divider(height: 1),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 4,
+                  runSpacing: 4,
+                  children: chips,
+                ),
+              ],
+            );
+          }
+
+          return Row(
+            children: [
+              avatar,
+              const SizedBox(width: 10),
+              details,
+              adjustmentButton,
+              const SizedBox(width: 4),
+              ...chips,
+            ],
+          );
+        },
       ),
     );
   }
@@ -3228,10 +3266,11 @@ class _StaffAttendanceRow extends StatelessWidget {
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: borderColor),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final isMobile = constraints.maxWidth < 550;
+
+          final topRow = Row(
             children: [
               CircleAvatar(
                 radius: 18,
@@ -3317,9 +3356,10 @@ class _StaffAttendanceRow extends StatelessWidget {
                 ),
               ),
             ],
-          ),
-          const SizedBox(height: 8),
-          Row(
+          );
+
+          final timeDetails = Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
               if (arrivalTime.isNotEmpty) ...[
                 Icon(Icons.login_rounded, size: 12, color: textSec),
@@ -3338,50 +3378,89 @@ class _StaffAttendanceRow extends StatelessWidget {
                   style: TextStyle(fontSize: 11, color: textSec),
                 ),
               ],
-              const Spacer(),
-              ...['Present', 'Absent', 'Late', 'HalfDay', 'OnLeave'].map((s) {
-                final isSelected = status == s;
-                final chipColor = _statusColor(s);
-                return Padding(
-                  padding: const EdgeInsets.only(left: 4),
-                  child: GestureDetector(
-                    onTap: () => onStatusChanged(s),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 7,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? chipColor
-                            : chipColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(
-                          color: isSelected
-                              ? chipColor
-                              : chipColor.withValues(alpha: 0.3),
-                        ),
-                      ),
-                      child: Text(
-                        s == 'HalfDay'
-                            ? 'Half'
-                            : s == 'OnLeave'
-                            ? 'Leave'
-                            : s,
-                        style: TextStyle(
-                          fontSize: 9,
-                          fontWeight: FontWeight.w600,
-                          color: isSelected ? Colors.white : chipColor,
-                        ),
-                      ),
+            ],
+          );
+
+          final chips = ['Present', 'Absent', 'Late', 'HalfDay', 'OnLeave'].map((s) {
+            final isSelected = status == s;
+            final chipColor = _statusColor(s);
+            return Padding(
+              padding: const EdgeInsets.only(left: 4),
+              child: GestureDetector(
+                onTap: () => onStatusChanged(s),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 7,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? chipColor
+                        : chipColor.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(
+                      color: isSelected
+                          ? chipColor
+                          : chipColor.withValues(alpha: 0.3),
                     ),
                   ),
-                );
-              }),
+                  child: Text(
+                    s == 'HalfDay'
+                        ? 'Half'
+                        : s == 'OnLeave'
+                        ? 'Leave'
+                        : s,
+                    style: TextStyle(
+                      fontSize: 9,
+                      fontWeight: FontWeight.w600,
+                      color: isSelected ? Colors.white : chipColor,
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }).toList();
+
+          if (isMobile) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                topRow,
+                const SizedBox(height: 8),
+                const Divider(height: 1),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    timeDetails,
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 4,
+                  runSpacing: 4,
+                  children: chips,
+                ),
+              ],
+            );
+          }
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              topRow,
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  timeDetails,
+                  const Spacer(),
+                  ...chips,
+                ],
+              ),
             ],
-          ),
-        ],
+          );
+        },
       ),
     );
   }
