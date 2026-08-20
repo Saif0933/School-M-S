@@ -714,48 +714,75 @@ class _DashboardOverview extends ConsumerWidget {
   }
 
   Widget _buildChartsRow(BuildContext context, bool isDark, bool isMobile) {
-    if (isMobile) {
-      return Column(
-        children: [
-          _buildAttendanceChart(isDark),
-          const SizedBox(height: 16),
-          _buildFeeCollectionChart(isDark),
-        ],
-      );
-    }
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
 
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(flex: 3, child: _buildAttendanceChart(isDark)),
-        const SizedBox(width: 16),
-        Expanded(flex: 2, child: _buildFeeCollectionChart(isDark)),
-      ],
+        if (width < 850) {
+          return Column(
+            children: [
+              _buildAttendanceChart(isDark),
+              const SizedBox(height: 16),
+              _buildFeeCollectionChart(isDark),
+            ],
+          );
+        }
+
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(flex: 3, child: _buildAttendanceChart(isDark)),
+            const SizedBox(width: 16),
+            Expanded(flex: 2, child: _buildFeeCollectionChart(isDark)),
+          ],
+        );
+      },
     );
   }
 
   Widget _buildOrgComparisonRow(BuildContext context, WidgetRef ref, bool isDark, bool isMobile) {
-    if (isMobile) {
-      return Column(
-        children: [
-          _buildBranchComparisonChart(ref, isDark),
-          const SizedBox(height: 16),
-          _buildBranchExamComparisonChart(ref, isDark),
-          const SizedBox(height: 16),
-          _buildBranchAttendanceHeatMap(isDark),
-        ],
-      );
-    }
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
 
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(flex: 3, child: _buildBranchComparisonChart(ref, isDark)),
-        const SizedBox(width: 16),
-        Expanded(flex: 3, child: _buildBranchExamComparisonChart(ref, isDark)),
-        const SizedBox(width: 16),
-        Expanded(flex: 2, child: _buildBranchAttendanceHeatMap(isDark)),
-      ],
+        if (width < 750) {
+          return Column(
+            children: [
+              _buildBranchComparisonChart(ref, isDark),
+              const SizedBox(height: 16),
+              _buildBranchExamComparisonChart(ref, isDark),
+              const SizedBox(height: 16),
+              _buildBranchAttendanceHeatMap(isDark),
+            ],
+          );
+        } else if (width < 1150) {
+          return Column(
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(child: _buildBranchComparisonChart(ref, isDark)),
+                  const SizedBox(width: 16),
+                  Expanded(child: _buildBranchExamComparisonChart(ref, isDark)),
+                ],
+              ),
+              const SizedBox(height: 16),
+              _buildBranchAttendanceHeatMap(isDark),
+            ],
+          );
+        } else {
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(flex: 3, child: _buildBranchComparisonChart(ref, isDark)),
+              const SizedBox(width: 16),
+              Expanded(flex: 3, child: _buildBranchExamComparisonChart(ref, isDark)),
+              const SizedBox(width: 16),
+              Expanded(flex: 2, child: _buildBranchAttendanceHeatMap(isDark)),
+            ],
+          );
+        }
+      },
     );
   }
 
@@ -853,7 +880,15 @@ class _DashboardOverview extends ConsumerWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(name, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: isDark ? Colors.white70 : Colors.black87)),
+              Expanded(
+                child: Text(
+                  name,
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: isDark ? Colors.white70 : Colors.black87),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: 8),
               Text('${(value * 100).toStringAsFixed(1)}%', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: color)),
             ],
           ),
@@ -957,23 +992,29 @@ class _DashboardOverview extends ConsumerWidget {
   }
 
   Widget _buildOrgFinanceRow(BuildContext context, WidgetRef ref, bool isDark, bool isMobile) {
-    if (isMobile) {
-      return Column(
-        children: [
-          _buildOrgConsolidatedFeeDashboard(ref, isDark),
-          const SizedBox(height: 16),
-          _buildBranchRevenueRanking(ref, isDark),
-        ],
-      );
-    }
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
 
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(flex: 3, child: _buildOrgConsolidatedFeeDashboard(ref, isDark)),
-        const SizedBox(width: 16),
-        Expanded(flex: 2, child: _buildBranchRevenueRanking(ref, isDark)),
-      ],
+        if (width < 850) {
+          return Column(
+            children: [
+              _buildOrgConsolidatedFeeDashboard(ref, isDark),
+              const SizedBox(height: 16),
+              _buildBranchRevenueRanking(ref, isDark),
+            ],
+          );
+        }
+
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(flex: 3, child: _buildOrgConsolidatedFeeDashboard(ref, isDark)),
+            const SizedBox(width: 16),
+            Expanded(flex: 2, child: _buildBranchRevenueRanking(ref, isDark)),
+          ],
+        );
+      },
     );
   }
 
@@ -1098,23 +1139,29 @@ class _DashboardOverview extends ConsumerWidget {
   }
 
   Widget _buildOrgLibraryRow(BuildContext context, WidgetRef ref, bool isDark, bool isMobile) {
-    if (isMobile) {
-      return Column(
-        children: [
-          _buildOrgConsolidatedLibraryDashboard(ref, isDark),
-          const SizedBox(height: 16),
-          _buildBranchLibraryRanking(ref, isDark),
-        ],
-      );
-    }
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
 
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(flex: 3, child: _buildOrgConsolidatedLibraryDashboard(ref, isDark)),
-        const SizedBox(width: 16),
-        Expanded(flex: 2, child: _buildBranchLibraryRanking(ref, isDark)),
-      ],
+        if (width < 850) {
+          return Column(
+            children: [
+              _buildOrgConsolidatedLibraryDashboard(ref, isDark),
+              const SizedBox(height: 16),
+              _buildBranchLibraryRanking(ref, isDark),
+            ],
+          );
+        }
+
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(flex: 3, child: _buildOrgConsolidatedLibraryDashboard(ref, isDark)),
+            const SizedBox(width: 16),
+            Expanded(flex: 2, child: _buildBranchLibraryRanking(ref, isDark)),
+          ],
+        );
+      },
     );
   }
 
@@ -1469,23 +1516,29 @@ class _DashboardOverview extends ConsumerWidget {
   }
 
   Widget _buildBottomSection(BuildContext context, bool isDark, bool isMobile) {
-    if (isMobile) {
-      return Column(
-        children: [
-          _buildQuickActions(isDark),
-          const SizedBox(height: 16),
-          _buildRecentActivity(isDark),
-        ],
-      );
-    }
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
 
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(flex: 2, child: _buildQuickActions(isDark)),
-        const SizedBox(width: 16),
-        Expanded(flex: 3, child: _buildRecentActivity(isDark)),
-      ],
+        if (width < 850) {
+          return Column(
+            children: [
+              _buildQuickActions(isDark),
+              const SizedBox(height: 16),
+              _buildRecentActivity(isDark),
+            ],
+          );
+        }
+
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(flex: 2, child: _buildQuickActions(isDark)),
+            const SizedBox(width: 16),
+            Expanded(flex: 3, child: _buildRecentActivity(isDark)),
+          ],
+        );
+      },
     );
   }
 
@@ -1514,16 +1567,22 @@ class _DashboardOverview extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 16),
-          GridView.count(
-            crossAxisCount: 3,
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            crossAxisSpacing: 10,
-            mainAxisSpacing: 10,
-            childAspectRatio: 1.0,
-            children: actions.map((action) {
-              return _QuickActionTile(action: action, isDark: isDark);
-            }).toList(),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final width = constraints.maxWidth;
+              final crossAxisCount = width < 300 ? 2 : (width < 600 ? 3 : 4);
+              return GridView.count(
+                crossAxisCount: crossAxisCount,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                crossAxisSpacing: 10,
+                mainAxisSpacing: 10,
+                childAspectRatio: width < 300 ? 1.1 : 1.0,
+                children: actions.map((action) {
+                  return _QuickActionTile(action: action, isDark: isDark);
+                }).toList(),
+              );
+            },
           ),
         ],
       ),
@@ -1649,6 +1708,7 @@ class _DashboardOverview extends ConsumerWidget {
               ],
             ),
           ),
+          const SizedBox(width: 8),
           Text(
             activity.time,
             style: TextStyle(

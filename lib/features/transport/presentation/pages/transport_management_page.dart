@@ -43,6 +43,7 @@ class _TransportManagementPageState extends ConsumerState<TransportManagementPag
           child: TabBar(
             controller: _tabController,
             isScrollable: true,
+            tabAlignment: TabAlignment.start,
             indicatorColor: AppColors.primary,
             labelColor: AppColors.primary,
             unselectedLabelColor: isDark
@@ -152,96 +153,123 @@ class _FleetTab extends ConsumerWidget {
                 ),
               )
             else
-              GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: vehicles.length,
-                gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                  maxCrossAxisExtent: 400,
-                  mainAxisSpacing: 16,
-                  crossAxisSpacing: 16,
-                  childAspectRatio: 1.35,
-                ),
-                itemBuilder: (context, index) {
-                  final v = vehicles[index];
-                  final isPucExpired = v.pucValidity.isBefore(DateTime.now());
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final isMobile = constraints.maxWidth < 650;
 
-                  return GlassCard(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: AppColors.primary.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Text(
-                                v.regNo,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.primary,
-                                ),
-                              ),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                              decoration: BoxDecoration(
-                                color: v.status == 'Active'
-                                    ? Colors.green.withValues(alpha: 0.15)
-                                    : Colors.amber.withValues(alpha: 0.15),
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: Text(
-                                v.status,
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                  color: v.status == 'Active' ? Colors.green : Colors.orange,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          v.model,
-                          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Capacity: ${v.capacity} Passengers | GPS: ${v.gpsDeviceId}',
-                          style: const TextStyle(fontSize: 11, color: Colors.grey),
-                        ),
-                        const Divider(height: 16),
-                        _buildValidityRow('Insurance:', v.insuranceValidity, false),
-                        _buildValidityRow('Fitness Cert:', v.fitnessValidity, false),
-                        _buildValidityRow('PUC Validity:', v.pucValidity, isPucExpired),
-                        const Spacer(),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            TextButton.icon(
-                              onPressed: () {
-                                final newStatus = v.status == 'Active' ? 'Maintenance' : 'Active';
-                                ref.read(vehiclesProvider.notifier).updateStatus(v.id, newStatus);
-                              },
-                              icon: const Icon(Icons.swap_horiz_rounded, size: 14),
-                              label: Text(v.status == 'Active' ? 'Send to Service' : 'Activate'),
-                            ),
-                          ],
-                        ),
-                      ],
+                  if (isMobile) {
+                    return ListView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: vehicles.length,
+                      itemBuilder: (context, index) {
+                        final v = vehicles[index];
+                        final isPucExpired = v.pucValidity.isBefore(DateTime.now());
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 12.0),
+                          child: GlassCard(
+                            child: _buildVehicleCardContent(ref, v, isPucExpired, isMobile: true),
+                          ),
+                        );
+                      },
+                    );
+                  }
+
+                  return GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: vehicles.length,
+                    gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                      maxCrossAxisExtent: 400,
+                      mainAxisSpacing: 16,
+                      crossAxisSpacing: 16,
+                      childAspectRatio: 1.35,
                     ),
+                    itemBuilder: (context, index) {
+                      final v = vehicles[index];
+                      final isPucExpired = v.pucValidity.isBefore(DateTime.now());
+                      return GlassCard(
+                        child: _buildVehicleCardContent(ref, v, isPucExpired, isMobile: false),
+                      );
+                    },
                   );
                 },
               ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildVehicleCardContent(WidgetRef ref, VehicleEntity v, bool isPucExpired, {required bool isMobile}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Text(
+                v.regNo,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primary,
+                ),
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: v.status == 'Active'
+                    ? Colors.green.withValues(alpha: 0.15)
+                    : Colors.amber.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(
+                v.status,
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  color: v.status == 'Active' ? Colors.green : Colors.orange,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Text(
+          v.model,
+          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'Capacity: ${v.capacity} Passengers | GPS: ${v.gpsDeviceId}',
+          style: const TextStyle(fontSize: 11, color: Colors.grey),
+        ),
+        const Divider(height: 16),
+        _buildValidityRow('Insurance:', v.insuranceValidity, false),
+        _buildValidityRow('Fitness Cert:', v.fitnessValidity, false),
+        _buildValidityRow('PUC Validity:', v.pucValidity, isPucExpired),
+        if (isMobile) const SizedBox(height: 12) else const Spacer(),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            TextButton.icon(
+              onPressed: () {
+                final newStatus = v.status == 'Active' ? 'Maintenance' : 'Active';
+                ref.read(vehiclesProvider.notifier).updateStatus(v.id, newStatus);
+              },
+              icon: const Icon(Icons.swap_horiz_rounded, size: 14),
+              label: Text(v.status == 'Active' ? 'Send to Service' : 'Activate'),
+            ),
+          ],
+        ),
+      ],
     );
   }
 
@@ -276,25 +304,27 @@ class _FleetTab extends ConsumerWidget {
       builder: (context) {
         return AlertDialog(
           title: const Text('Register Fleet Vehicle'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: regCtrl,
-                decoration: const InputDecoration(labelText: 'Registration No (e.g. MH-01-AB-1234)'),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: modelCtrl,
-                decoration: const InputDecoration(labelText: 'Vehicle Model (e.g. Ashok Leyland Bus)'),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: capCtrl,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'Capacity (Seats)'),
-              ),
-            ],
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: regCtrl,
+                  decoration: const InputDecoration(labelText: 'Registration No (e.g. MH-01-AB-1234)'),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: modelCtrl,
+                  decoration: const InputDecoration(labelText: 'Vehicle Model (e.g. Ashok Leyland Bus)'),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: capCtrl,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(labelText: 'Capacity (Seats)'),
+                ),
+              ],
+            ),
           ),
           actions: [
             TextButton(
@@ -394,20 +424,68 @@ class _DriversTab extends ConsumerWidget {
                   return Card(
                     margin: const EdgeInsets.symmetric(vertical: 8),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    child: ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor: s.role == 'Driver' ? AppColors.primary : AppColors.secondary,
-                        child: Icon(
-                          s.role == 'Driver' ? Icons.directions_car_rounded : Icons.support_agent_rounded,
-                          color: Colors.white,
-                        ),
-                      ),
-                      title: Text(s.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                      subtitle: Text('Role: ${s.role} | License: ${s.licenseNo} | Expiry: $expiryStr', style: const TextStyle(fontSize: 11)),
-                      trailing: TextButton.icon(
-                        onPressed: () {},
-                        icon: const Icon(Icons.call_rounded, size: 14),
-                        label: Text(s.phone),
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          final isMobile = constraints.maxWidth < 600;
+
+                          final avatar = CircleAvatar(
+                            backgroundColor: s.role == 'Driver' ? AppColors.primary : AppColors.secondary,
+                            child: Icon(
+                              s.role == 'Driver' ? Icons.directions_car_rounded : Icons.support_agent_rounded,
+                              color: Colors.white,
+                            ),
+                          );
+
+                          final detailsCol = Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(s.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                              const SizedBox(height: 4),
+                              Text('Role: ${s.role} | License: ${s.licenseNo} | Expiry: $expiryStr', style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                            ],
+                          );
+
+                          final callButton = TextButton.icon(
+                            onPressed: () {},
+                            icon: const Icon(Icons.call_rounded, size: 14),
+                            label: Text(s.phone, style: const TextStyle(fontSize: 11)),
+                          );
+
+                          if (isMobile) {
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    avatar,
+                                    const SizedBox(width: 12),
+                                    Expanded(child: detailsCol),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+                                const Divider(height: 1),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    callButton,
+                                  ],
+                                ),
+                              ],
+                            );
+                          }
+
+                          return Row(
+                            children: [
+                              avatar,
+                              const SizedBox(width: 16),
+                              Expanded(child: detailsCol),
+                              const SizedBox(width: 16),
+                              callButton,
+                            ],
+                          );
+                        },
                       ),
                     ),
                   );
@@ -430,29 +508,31 @@ class _DriversTab extends ConsumerWidget {
       builder: (context) {
         return AlertDialog(
           title: const Text('Hire Transport Staff'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameCtrl,
-                decoration: const InputDecoration(labelText: 'Staff Name'),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: roleCtrl,
-                decoration: const InputDecoration(labelText: 'Role (Driver/Conductor)'),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: phoneCtrl,
-                decoration: const InputDecoration(labelText: 'Phone Number'),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: licCtrl,
-                decoration: const InputDecoration(labelText: 'Driving License No (If Driver)'),
-              ),
-            ],
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameCtrl,
+                  decoration: const InputDecoration(labelText: 'Staff Name'),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: roleCtrl,
+                  decoration: const InputDecoration(labelText: 'Role (Driver/Conductor)'),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: phoneCtrl,
+                  decoration: const InputDecoration(labelText: 'Phone Number'),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: licCtrl,
+                  decoration: const InputDecoration(labelText: 'Driving License No (If Driver)'),
+                ),
+              ],
+            ),
           ),
           actions: [
             TextButton(
@@ -505,10 +585,11 @@ class _RoutesTab extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final isMobile = constraints.maxWidth < 650;
+
+                final titleCol = Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
@@ -528,8 +609,9 @@ class _RoutesTab extends ConsumerWidget {
                       ),
                     ),
                   ],
-                ),
-                ElevatedButton.icon(
+                );
+
+                final optButton = ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.teal,
                     foregroundColor: Colors.white,
@@ -537,8 +619,31 @@ class _RoutesTab extends ConsumerWidget {
                   onPressed: () => _simulateRouteOptimization(context),
                   icon: const Icon(Icons.auto_awesome_rounded, size: 16),
                   label: const Text('Optimize Routes (AI)'),
-                ),
-              ],
+                );
+
+                if (isMobile) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      titleCol,
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        width: double.infinity,
+                        child: optButton,
+                      ),
+                    ],
+                  );
+                }
+
+                return Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(child: titleCol),
+                    const SizedBox(width: 16),
+                    optButton,
+                  ],
+                );
+              },
             ),
             const SizedBox(height: 20),
             if (routes.isEmpty)
@@ -565,10 +670,15 @@ class _RoutesTab extends ConsumerWidget {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text(
-                                r.routeName,
-                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                              Expanded(
+                                child: Text(
+                                  r.routeName,
+                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                               ),
+                              const SizedBox(width: 12),
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                 decoration: BoxDecoration(
@@ -724,68 +834,101 @@ class _StudentsTab extends ConsumerWidget {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text(
-                                a.studentName,
-                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                              Expanded(
+                                child: Text(
+                                  a.studentName,
+                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                               ),
+                              const SizedBox(width: 12),
                               Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: a.status == 'Active' ? Colors.green.withValues(alpha: 0.1) : Colors.red.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: Text(
-                                a.status,
-                                style: TextStyle(fontSize: 10, color: a.status == 'Active' ? Colors.green : Colors.red, fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Class: ${a.classSection} | Stop: ${a.stopName}',
-                          style: const TextStyle(fontSize: 12, color: Colors.grey),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Route: ${a.routeName}',
-                          style: const TextStyle(fontSize: 11, color: Colors.grey),
-                        ),
-                        const Divider(height: 16),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'Base Fee: ₹${a.monthlyFee.toStringAsFixed(0)} | Concession: ₹${a.waiverAmount.toStringAsFixed(0)} | Net Fee: ₹${netFee.toStringAsFixed(0)}',
-                              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
-                            ),
-                            Row(
-                              children: [
-                                TextButton.icon(
-                                  onPressed: () => _showWaiverDialog(context, ref, a.id, a.waiverAmount),
-                                  icon: const Icon(Icons.discount_rounded, size: 14),
-                                  label: const Text('Edit Waiver', style: TextStyle(fontSize: 11)),
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: a.status == 'Active' ? Colors.green.withValues(alpha: 0.1) : Colors.red.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(4),
                                 ),
-                                const SizedBox(width: 8),
-                                ElevatedButton.icon(
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: AppColors.primary,
-                                    foregroundColor: Colors.white,
-                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                child: Text(
+                                  a.status,
+                                  style: TextStyle(fontSize: 10, color: a.status == 'Active' ? Colors.green : Colors.red, fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Class: ${a.classSection} | Stop: ${a.stopName}',
+                            style: const TextStyle(fontSize: 12, color: Colors.grey),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Route: ${a.routeName}',
+                            style: const TextStyle(fontSize: 11, color: Colors.grey),
+                          ),
+                          const Divider(height: 16),
+                          LayoutBuilder(
+                            builder: (context, constraints) {
+                              final isMobile = constraints.maxWidth < 600;
+
+                              final feeDetails = Text(
+                                'Base Fee: ₹${a.monthlyFee.toStringAsFixed(0)} | Concession: ₹${a.waiverAmount.toStringAsFixed(0)} | Net Fee: ₹${netFee.toStringAsFixed(0)}',
+                                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+                              );
+
+                              final buttons = Wrap(
+                                spacing: 8,
+                                runSpacing: 8,
+                                children: [
+                                  TextButton.icon(
+                                    onPressed: () => _showWaiverDialog(context, ref, a.id, a.waiverAmount),
+                                    icon: const Icon(Icons.discount_rounded, size: 14),
+                                    label: const Text('Edit Waiver', style: TextStyle(fontSize: 11)),
                                   ),
-                                  onPressed: () => _triggerNotify(context, a.studentName),
-                                  icon: const Icon(Icons.notifications_active_rounded, size: 14),
-                                  label: const Text('Notify Parent', style: TextStyle(fontSize: 11, color: Colors.white)),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ],
+                                  ElevatedButton.icon(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: AppColors.primary,
+                                      foregroundColor: Colors.white,
+                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                    ),
+                                    onPressed: () => _triggerNotify(context, a.studentName),
+                                    icon: const Icon(Icons.notifications_active_rounded, size: 14),
+                                    label: const Text('Notify Parent', style: TextStyle(fontSize: 11, color: Colors.white)),
+                                  ),
+                                ],
+                              );
+
+                              if (isMobile) {
+                                return Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    feeDetails,
+                                    const SizedBox(height: 10),
+                                    const Divider(height: 1),
+                                    const SizedBox(height: 6),
+                                    SizedBox(
+                                      width: double.infinity,
+                                      child: buttons,
+                                    ),
+                                  ],
+                                );
+                              }
+
+                              return Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Expanded(child: feeDetails),
+                                  const SizedBox(width: 16),
+                                  buttons,
+                                ],
+                              );
+                            },
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                );
-              },
+                  );
+                },
               ),
           ],
         ),
@@ -800,15 +943,17 @@ class _StudentsTab extends ConsumerWidget {
       builder: (context) {
         return AlertDialog(
           title: const Text('Apply Fee Waiver'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: waiverCtrl,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'Waiver Concession Amount (₹)'),
-              ),
-            ],
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: waiverCtrl,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(labelText: 'Waiver Concession Amount (₹)'),
+                ),
+              ],
+            ),
           ),
           actions: [
             TextButton(
@@ -871,10 +1016,11 @@ class _AttendanceTabState extends State<_AttendanceTab> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final isMobile = constraints.maxWidth < 650;
+
+                    final titleCol = Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
@@ -894,22 +1040,61 @@ class _AttendanceTabState extends State<_AttendanceTab> {
                           ),
                         ),
                       ],
-                    ),
-                    DropdownButton<String>(
-                      value: _selectedSession,
-                      items: const [
-                        DropdownMenuItem(value: 'Morning Pickup', child: Text('Morning Pickup')),
-                        DropdownMenuItem(value: 'Afternoon Drop', child: Text('Afternoon Drop')),
+                    );
+
+                    if (isMobile) {
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          titleCol,
+                          const SizedBox(height: 10),
+                          SizedBox(
+                            width: double.infinity,
+                            child: DropdownButtonFormField<String>(
+                              initialValue: _selectedSession,
+                              decoration: const InputDecoration(
+                                contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                isDense: true,
+                              ),
+                              items: const [
+                                DropdownMenuItem(value: 'Morning Pickup', child: Text('Morning Pickup')),
+                                DropdownMenuItem(value: 'Afternoon Drop', child: Text('Afternoon Drop')),
+                              ],
+                              onChanged: (val) {
+                                if (val != null) {
+                                  setState(() {
+                                    _selectedSession = val;
+                                  });
+                                }
+                              },
+                            ),
+                          ),
+                        ],
+                      );
+                    }
+
+                    return Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(child: titleCol),
+                        const SizedBox(width: 16),
+                        DropdownButton<String>(
+                          value: _selectedSession,
+                          items: const [
+                            DropdownMenuItem(value: 'Morning Pickup', child: Text('Morning Pickup')),
+                            DropdownMenuItem(value: 'Afternoon Drop', child: Text('Afternoon Drop')),
+                          ],
+                          onChanged: (val) {
+                            if (val != null) {
+                              setState(() {
+                                _selectedSession = val;
+                              });
+                            }
+                          },
+                        ),
                       ],
-                      onChanged: (val) {
-                        if (val != null) {
-                          setState(() {
-                            _selectedSession = val;
-                          });
-                        }
-                      },
-                    ),
-                  ],
+                    );
+                  },
                 ),
                 const SizedBox(height: 20),
                 if (assignments.isEmpty)
@@ -944,24 +1129,55 @@ class _AttendanceTabState extends State<_AttendanceTab> {
                         margin: const EdgeInsets.symmetric(vertical: 6),
                         child: Padding(
                           padding: const EdgeInsets.all(12),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Column(
+                          child: LayoutBuilder(
+                            builder: (context, constraints) {
+                              final isMobile = constraints.maxWidth < 550;
+
+                              final infoCol = Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(a.studentName, style: const TextStyle(fontWeight: FontWeight.bold)),
+                                  const SizedBox(height: 2),
                                   Text('${a.stopName} | ${a.routeName}', style: const TextStyle(fontSize: 10, color: Colors.grey)),
                                 ],
-                              ),
-                              Row(
+                              );
+
+                              final actionButtons = Row(
+                                mainAxisSize: MainAxisSize.min,
                                 children: [
                                   _buildAttendanceChoiceButton(ref, log, 'Boarded', Colors.green),
                                   const SizedBox(width: 8),
                                   _buildAttendanceChoiceButton(ref, log, 'Absent', Colors.red),
                                 ],
-                              ),
-                            ],
+                              );
+
+                              if (isMobile) {
+                                return Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    infoCol,
+                                    const SizedBox(height: 10),
+                                    const Divider(height: 1),
+                                    const SizedBox(height: 6),
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.end,
+                                      children: [
+                                        actionButtons,
+                                      ],
+                                    ),
+                                  ],
+                                );
+                              }
+
+                              return Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Expanded(child: infoCol),
+                                  const SizedBox(width: 16),
+                                  actionButtons,
+                                ],
+                              );
+                            },
                           ),
                         ),
                       );
@@ -1028,10 +1244,11 @@ class _ExpensesTab extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final isMobile = constraints.maxWidth < 700;
+
+                final titleCol = Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
@@ -1051,19 +1268,44 @@ class _ExpensesTab extends ConsumerWidget {
                       ),
                     ),
                   ],
-                ),
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: Colors.red.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    'Total Running Cost: ₹${totalSpent.toStringAsFixed(0)}',
-                    style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.red, fontSize: 13),
-                  ),
-                ),
-              ],
+                );
+
+                final costBanner = Container(
+                   padding: const EdgeInsets.all(10),
+                   decoration: BoxDecoration(
+                     color: Colors.red.withValues(alpha: 0.1),
+                     borderRadius: BorderRadius.circular(8),
+                   ),
+                   child: Text(
+                     'Total Running Cost: ₹${totalSpent.toStringAsFixed(0)}',
+                     style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.red, fontSize: 13),
+                     textAlign: TextAlign.center,
+                   ),
+                 );
+
+                if (isMobile) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      titleCol,
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        width: double.infinity,
+                        child: costBanner,
+                      ),
+                    ],
+                  );
+                }
+
+                return Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(child: titleCol),
+                    const SizedBox(width: 16),
+                    costBanner,
+                  ],
+                );
+              },
             ),
             const SizedBox(height: 20),
             if (expenses.isEmpty)
@@ -1084,19 +1326,72 @@ class _ExpensesTab extends ConsumerWidget {
 
                   return Card(
                     margin: const EdgeInsets.symmetric(vertical: 6),
-                    child: ListTile(
-                      leading: Icon(
-                        e.type == 'Fuel' ? Icons.local_gas_station_rounded : Icons.build_rounded,
-                        color: e.type == 'Fuel' ? Colors.orange : Colors.blueGrey,
-                      ),
-                      title: Text(
-                        '${e.type} for Vehicle: ${e.regNo}',
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      subtitle: Text('Date: $expenseDate | Remarks: ${e.remarks}', style: const TextStyle(fontSize: 11)),
-                      trailing: Text(
-                        '₹${e.amount.toStringAsFixed(0)}',
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          final isMobile = constraints.maxWidth < 500;
+
+                          final leadingIcon = Icon(
+                            e.type == 'Fuel' ? Icons.local_gas_station_rounded : Icons.build_rounded,
+                            color: e.type == 'Fuel' ? Colors.orange : Colors.blueGrey,
+                          );
+
+                          final detailsCol = Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '${e.type} for Vehicle: ${e.regNo}',
+                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Date: $expenseDate | Remarks: ${e.remarks}',
+                                style: const TextStyle(fontSize: 11, color: Colors.grey),
+                              ),
+                            ],
+                          );
+
+                          final trailingAmount = Text(
+                            '₹${e.amount.toStringAsFixed(0)}',
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.primary),
+                          );
+
+                          if (isMobile) {
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    leadingIcon,
+                                    const SizedBox(width: 12),
+                                    Expanded(child: detailsCol),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+                                const Divider(height: 1),
+                                const SizedBox(height: 6),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    const Text('Amount Paid:', style: TextStyle(fontSize: 11, color: Colors.grey)),
+                                    trailingAmount,
+                                  ],
+                                ),
+                              ],
+                            );
+                          }
+
+                          return Row(
+                            children: [
+                              leadingIcon,
+                              const SizedBox(width: 12),
+                              Expanded(child: detailsCol),
+                              const SizedBox(width: 12),
+                              trailingAmount,
+                            ],
+                          );
+                        },
                       ),
                     ),
                   );
@@ -1119,30 +1414,32 @@ class _ExpensesTab extends ConsumerWidget {
       builder: (context) {
         return AlertDialog(
           title: const Text('Log Fleet Expense'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: regCtrl,
-                decoration: const InputDecoration(labelText: 'Vehicle Registration No'),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: typeCtrl,
-                decoration: const InputDecoration(labelText: 'Expense Type (Fuel/Maintenance/PUC)'),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: amountCtrl,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'Amount (₹)'),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: remarksCtrl,
-                decoration: const InputDecoration(labelText: 'Remarks / Invoice notes'),
-              ),
-            ],
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: regCtrl,
+                  decoration: const InputDecoration(labelText: 'Vehicle Registration No'),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: typeCtrl,
+                  decoration: const InputDecoration(labelText: 'Expense Type (Fuel/Maintenance/PUC)'),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: amountCtrl,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(labelText: 'Amount (₹)'),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: remarksCtrl,
+                  decoration: const InputDecoration(labelText: 'Remarks / Invoice notes'),
+                ),
+              ],
+            ),
           ),
           actions: [
             TextButton(
