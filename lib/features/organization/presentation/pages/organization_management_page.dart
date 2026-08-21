@@ -38,6 +38,14 @@ class _OrganizationManagementPageState
   void initState() {
     super.initState();
     _tabController = TabController(length: 6, vsync: this);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        ref.read(organizationProvider.notifier).fetchOrganization();
+        ref.read(organizationBranchesProvider.notifier).fetchBranches();
+        ref.read(orgAdminsProvider.notifier).fetchAdmins();
+        ref.read(crossBranchTransferProvider.notifier).fetchTransfers();
+      }
+    });
   }
 
   @override
@@ -1129,28 +1137,69 @@ class _OrganizationManagementPageState
           ),
           const SizedBox(height: 20),
 
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final crossAxisCount = constraints.maxWidth > 1100
-                  ? 3
-                  : (constraints.maxWidth > 700 ? 2 : 1);
-              return GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: crossAxisCount,
-                  crossAxisSpacing: 18,
-                  mainAxisSpacing: 18,
-                  mainAxisExtent: 290,
-                ),
-                itemCount: branches.length,
-                itemBuilder: (context, index) {
-                  final b = branches[index];
-                  return _buildBranchCard(isDark, b);
-                },
-              );
-            },
-          ),
+          if (branches.isEmpty)
+            Container(
+              height: 250,
+              alignment: Alignment.center,
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.business_rounded,
+                    size: 64,
+                    color: isDark
+                        ? Colors.white.withValues(alpha: 0.3)
+                        : Colors.black.withValues(alpha: 0.2),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'No Branches Provisioned Yet',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: isDark
+                          ? AppColors.darkTextPrimary
+                          : AppColors.lightTextPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Click on "+ Provision New Branch" to create your first school branch.',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: isDark
+                          ? AppColors.darkTextSecondary
+                          : AppColors.lightTextSecondary,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            )
+          else
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final crossAxisCount = constraints.maxWidth > 1100
+                    ? 3
+                    : (constraints.maxWidth > 700 ? 2 : 1);
+                return GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: crossAxisCount,
+                    crossAxisSpacing: 18,
+                    mainAxisSpacing: 18,
+                    mainAxisExtent: 290,
+                  ),
+                  itemCount: branches.length,
+                  itemBuilder: (context, index) {
+                    final b = branches[index];
+                    return _buildBranchCard(isDark, b);
+                  },
+                );
+              },
+            ),
         ],
       ),
     );
@@ -1531,28 +1580,69 @@ class _OrganizationManagementPageState
           ),
           const SizedBox(height: 20),
 
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final crossAxisCount = constraints.maxWidth > 1100
-                  ? 3
-                  : (constraints.maxWidth > 700 ? 2 : 1);
-              return GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: crossAxisCount,
-                  crossAxisSpacing: 18,
-                  mainAxisSpacing: 18,
-                  mainAxisExtent: 290,
-                ),
-                itemCount: admins.length,
-                itemBuilder: (context, index) {
-                  final admin = admins[index];
-                  return _buildOrgAdminCard(isDark, admin);
-                },
-              );
-            },
-          ),
+          if (admins.isEmpty)
+            Container(
+              height: 250,
+              alignment: Alignment.center,
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.admin_panel_settings_rounded,
+                    size: 64,
+                    color: isDark
+                        ? Colors.white.withValues(alpha: 0.3)
+                        : Colors.black.withValues(alpha: 0.2),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'No Organization Admins Created',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: isDark
+                          ? AppColors.darkTextPrimary
+                          : AppColors.lightTextPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Click on "+ Create Org Admin Account" to delegate organization control.',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: isDark
+                          ? AppColors.darkTextSecondary
+                          : AppColors.lightTextSecondary,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            )
+          else
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final crossAxisCount = constraints.maxWidth > 1100
+                    ? 3
+                    : (constraints.maxWidth > 700 ? 2 : 1);
+                return GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: crossAxisCount,
+                    crossAxisSpacing: 18,
+                    mainAxisSpacing: 18,
+                    mainAxisExtent: 290,
+                  ),
+                  itemCount: admins.length,
+                  itemBuilder: (context, index) {
+                    final admin = admins[index];
+                    return _buildOrgAdminCard(isDark, admin);
+                  },
+                );
+              },
+            ),
           const SizedBox(height: 24),
 
           // Role-Based Access Control Matrix Card
@@ -1884,90 +1974,131 @@ class _OrganizationManagementPageState
           ),
           const SizedBox(height: 20),
 
-          GlassCard(
-            padding: const EdgeInsets.all(20),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: DataTable(
-                columns: const [
-                  DataColumn(label: Text('Transfer ID')),
-                  DataColumn(label: Text('Type')),
-                  DataColumn(label: Text('Name & Code')),
-                  DataColumn(label: Text('Source Branch (From)')),
-                  DataColumn(label: Text('Target Branch (To)')),
-                  DataColumn(label: Text('Reason & Notes')),
-                  DataColumn(label: Text('Status')),
+          if (transfers.isEmpty)
+            Container(
+              height: 250,
+              alignment: Alignment.center,
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.swap_horiz_rounded,
+                    size: 64,
+                    color: isDark
+                        ? Colors.white.withValues(alpha: 0.3)
+                        : Colors.black.withValues(alpha: 0.2),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'No Transfer Requests Found',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: isDark
+                          ? AppColors.darkTextPrimary
+                          : AppColors.lightTextPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Click on "+ Initiate Transfer Request" to request inter-branch record migration.',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: isDark
+                          ? AppColors.darkTextSecondary
+                          : AppColors.lightTextSecondary,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
                 ],
-                rows: transfers.map((t) {
-                  return DataRow(
-                    cells: [
-                      DataCell(Text(t.id,
-                          style: const TextStyle(
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.primary))),
-                      DataCell(
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: t.entityType == 'student'
-                                ? Colors.blue.withValues(alpha: 0.15)
-                                : Colors.purple.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            t.entityType.toUpperCase(),
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w800,
-                              color: t.entityType == 'student'
-                                  ? Colors.blue
-                                  : Colors.purple,
-                            ),
-                          ),
-                        ),
-                      ),
-                      DataCell(
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(t.entityName,
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.w700, fontSize: 13)),
-                            Text(t.entityCode,
-                                style: const TextStyle(
-                                    fontSize: 10, color: Colors.grey)),
-                          ],
-                        ),
-                      ),
-                      DataCell(Text(t.fromBranchName)),
-                      DataCell(Text(t.toBranchName)),
-                      DataCell(Text(t.reason)),
-                      DataCell(
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: Colors.green.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Text(
-                            t.status.toUpperCase(),
+              ),
+            )
+          else
+            GlassCard(
+              padding: const EdgeInsets.all(20),
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: DataTable(
+                  columns: const [
+                    DataColumn(label: Text('Transfer ID')),
+                    DataColumn(label: Text('Type')),
+                    DataColumn(label: Text('Name & Code')),
+                    DataColumn(label: Text('Source Branch (From)')),
+                    DataColumn(label: Text('Target Branch (To)')),
+                    DataColumn(label: Text('Reason & Notes')),
+                    DataColumn(label: Text('Status')),
+                  ],
+                  rows: transfers.map((t) {
+                    return DataRow(
+                      cells: [
+                        DataCell(Text(t.id,
                             style: const TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w800,
-                              color: Colors.green,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.primary))),
+                        DataCell(
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: t.entityType == 'student'
+                                  ? Colors.blue.withValues(alpha: 0.15)
+                                  : Colors.purple.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              t.entityType.toUpperCase(),
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w800,
+                                color: t.entityType == 'student'
+                                    ? Colors.blue
+                                    : Colors.purple,
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                    ],
-                  );
-                }).toList(),
+                        DataCell(
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(t.entityName,
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.w700, fontSize: 13)),
+                              Text(t.entityCode,
+                                  style: const TextStyle(
+                                      fontSize: 10, color: Colors.grey)),
+                            ],
+                          ),
+                        ),
+                        DataCell(Text(t.fromBranchName)),
+                        DataCell(Text(t.toBranchName)),
+                        DataCell(Text(t.reason)),
+                        DataCell(
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.green.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Text(
+                              t.status.toUpperCase(),
+                              style: const TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w800,
+                                color: Colors.green,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  }).toList(),
+                ),
               ),
             ),
-          ),
         ],
       ),
     );

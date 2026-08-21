@@ -1,7 +1,14 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/enums/enums.dart';
+import '../../core/network/api_client.dart';
+import '../auth/providers.dart';
 import '../branch/domain/entities/branch_entity.dart';
+import 'data/repositories/organization_repository.dart';
 import 'domain/entities/organization_entity.dart';
+
+export 'org_admin_providers.dart';
+export 'cross_branch_transfer_providers.dart';
 
 /// Default Master Organization for Sunrise Education Trust
 final OrganizationEntity _defaultOrganization = OrganizationEntity(
@@ -49,135 +56,24 @@ final OrganizationEntity _defaultOrganization = OrganizationEntity(
   ],
 );
 
-/// Default Branches for Sunrise Education Trust
-final List<BranchEntity> _defaultBranches = [
-  BranchEntity(
-    id: 'BR-001',
-    organizationId: 'ORG-001',
-    code: 'SIS-DEL',
-    name: 'Sunrise International School - Delhi',
-    affiliationBoard: 'CBSE',
-    recognitionNumber: 'CBSE/AFF/2020/1104',
-    principalName: 'Dr. Meenakshi Sundaram',
-    email: 'delhi@sunrisetrust.edu.in',
-    phone: '+91 11 2612 3456',
-    address: 'Plot 4, Vasant Kunj Sector C',
-    city: 'New Delhi',
-    state: 'Delhi',
-    pincode: '110070',
-    status: BranchStatus.active,
-    maxStudentCapacity: 3000,
-    maxStaffCapacity: 200,
-    activeStudentCount: 2847,
-    activeStaffCount: 186,
-    currentAcademicYear: '2026-2027',
-    planType: 'Premium',
-    enabledModules: ModuleType.values.toSet(),
-    createdAt: DateTime(2018, 6, 1),
-  ),
-  BranchEntity(
-    id: 'BR-002',
-    organizationId: 'ORG-001',
-    code: 'SPS-MUM',
-    name: 'Sunrise Public School - Mumbai',
-    affiliationBoard: 'ICSE',
-    recognitionNumber: 'ICSE/MAH/2021/883',
-    principalName: 'Mr. Rajeshwar Rao',
-    email: 'mumbai@sunrisetrust.edu.in',
-    phone: '+91 22 6789 1234',
-    address: 'Bandra-Kurla Complex, Bandra East',
-    city: 'Mumbai',
-    state: 'Maharashtra',
-    pincode: '400051',
-    status: BranchStatus.active,
-    maxStudentCapacity: 2500,
-    maxStaffCapacity: 150,
-    activeStudentCount: 2150,
-    activeStaffCount: 142,
-    currentAcademicYear: '2026-2027',
-    planType: 'Premium',
-    enabledModules: ModuleType.values.toSet(),
-    createdAt: DateTime(2020, 8, 15),
-  ),
-  BranchEntity(
-    id: 'BR-003',
-    organizationId: 'ORG-001',
-    code: 'SA-BLR',
-    name: 'Sunrise Academy - Bangalore',
-    affiliationBoard: 'IB World School',
-    recognitionNumber: 'IB/IND/2022/990',
-    principalName: 'Mrs. Sarah Williams',
-    email: 'bangalore@sunrisetrust.edu.in',
-    phone: '+91 80 4123 5678',
-    address: 'Whitefield Main Road, Near ITPL',
-    city: 'Bengaluru',
-    state: 'Karnataka',
-    pincode: '560066',
-    status: BranchStatus.active,
-    maxStudentCapacity: 1500,
-    maxStaffCapacity: 100,
-    activeStudentCount: 1280,
-    activeStaffCount: 94,
-    currentAcademicYear: '2026-2027',
-    planType: 'Standard',
-    enabledModules: ModuleType.values.where((m) => m != ModuleType.hostel).toSet(),
-    createdAt: DateTime(2022, 3, 10),
-  ),
-];
 
-/// Cross-Branch Transfer Log entity
-class CrossBranchTransferLog {
-  final String id;
-  final String entityType; // 'student' or 'staff'
-  final String entityName;
-  final String entityCode;
-  final String fromBranchName;
-  final String toBranchName;
-  final String reason;
-  final String status; // 'approved', 'pending', 'migrated'
-  final DateTime date;
-
-  const CrossBranchTransferLog({
-    required this.id,
-    required this.entityType,
-    required this.entityName,
-    required this.entityCode,
-    required this.fromBranchName,
-    required this.toBranchName,
-    required this.reason,
-    required this.status,
-    required this.date,
-  });
-}
-
-final List<CrossBranchTransferLog> _initialTransferLogs = [
-  CrossBranchTransferLog(
-    id: 'TRF-001',
-    entityType: 'student',
-    entityName: 'Rohan Verma',
-    entityCode: 'STU-2024-089',
-    fromBranchName: 'Sunrise International School - Delhi',
-    toBranchName: 'Sunrise Public School - Mumbai',
-    reason: 'Parent relocated to Mumbai headquarters',
-    status: 'migrated',
-    date: DateTime.now().subtract(const Duration(days: 12)),
-  ),
-  CrossBranchTransferLog(
-    id: 'TRF-002',
-    entityType: 'staff',
-    entityName: 'Anita Desai (Senior Physics Teacher)',
-    entityCode: 'TCH-2021-042',
-    fromBranchName: 'Sunrise Public School - Mumbai',
-    toBranchName: 'Sunrise Academy - Bangalore',
-    reason: 'Promoted to HOD Sciences in Bangalore branch',
-    status: 'approved',
-    date: DateTime.now().subtract(const Duration(days: 4)),
-  ),
-];
 
 /// StateNotifier for Organization Entity
 class OrganizationNotifier extends StateNotifier<OrganizationEntity> {
-  OrganizationNotifier() : super(_defaultOrganization);
+  final OrganizationRepository _repository;
+
+  OrganizationNotifier(this._repository) : super(_defaultOrganization);
+
+  Future<void> fetchOrganization() async {
+    try {
+      final result = await _repository.fetchOrganizationDetails();
+      if (result != null) {
+        state = result['organization'] as OrganizationEntity;
+      }
+    } catch (e) {
+      debugPrint('Error fetching organization details: $e');
+    }
+  }
 
   void updateOrganizationProfile({
     required String name,
@@ -206,67 +102,123 @@ class OrganizationNotifier extends StateNotifier<OrganizationEntity> {
     addAuditLog('PROFILE_UPDATED', 'Organization profile & tax info updated.');
   }
 
-  void addMasterSubject(String subject) {
+  Future<void> addMasterSubject(String subject) async {
     if (!state.masterSubjects.contains(subject)) {
-      state = state.copyWith(
-        masterSubjects: [...state.masterSubjects, subject],
-      );
-      addAuditLog('MASTER_SUBJECT_ADDED', 'Added master subject: $subject.');
+      try {
+        final success = await _repository.addMasterItem(type: 'SUBJECT', name: subject);
+        if (success) {
+          state = state.copyWith(
+            masterSubjects: [...state.masterSubjects, subject],
+          );
+          addAuditLog('MASTER_SUBJECT_ADDED', 'Added master subject: $subject.');
+        }
+      } catch (e) {
+        debugPrint('Error adding master subject: $e');
+      }
     }
   }
 
-  void removeMasterSubject(String subject) {
-    state = state.copyWith(
-      masterSubjects: state.masterSubjects.where((s) => s != subject).toList(),
-    );
-    addAuditLog('MASTER_SUBJECT_REMOVED', 'Removed master subject: $subject.');
+  Future<void> removeMasterSubject(String subject) async {
+    try {
+      final success = await _repository.removeMasterItem(type: 'SUBJECT', name: subject);
+      if (success) {
+        state = state.copyWith(
+          masterSubjects: state.masterSubjects.where((s) => s != subject).toList(),
+        );
+        addAuditLog('MASTER_SUBJECT_REMOVED', 'Removed master subject: $subject.');
+      }
+    } catch (e) {
+      debugPrint('Error removing master subject: $e');
+    }
   }
 
-  void addMasterFeeHead(String feeHead) {
+  Future<void> addMasterFeeHead(String feeHead) async {
     if (!state.masterFeeHeads.contains(feeHead)) {
-      state = state.copyWith(
-        masterFeeHeads: [...state.masterFeeHeads, feeHead],
-      );
-      addAuditLog('MASTER_FEE_HEAD_ADDED', 'Added fee head: $feeHead.');
+      try {
+        final success = await _repository.addMasterItem(type: 'FEE_HEAD', name: feeHead);
+        if (success) {
+          state = state.copyWith(
+            masterFeeHeads: [...state.masterFeeHeads, feeHead],
+          );
+          addAuditLog('MASTER_FEE_HEAD_ADDED', 'Added fee head: $feeHead.');
+        }
+      } catch (e) {
+        debugPrint('Error adding master fee head: $e');
+      }
     }
   }
 
-  void removeMasterFeeHead(String feeHead) {
-    state = state.copyWith(
-      masterFeeHeads: state.masterFeeHeads.where((f) => f != feeHead).toList(),
-    );
-    addAuditLog('MASTER_FEE_HEAD_REMOVED', 'Removed fee head: $feeHead.');
+  Future<void> removeMasterFeeHead(String feeHead) async {
+    try {
+      final success = await _repository.removeMasterItem(type: 'FEE_HEAD', name: feeHead);
+      if (success) {
+        state = state.copyWith(
+          masterFeeHeads: state.masterFeeHeads.where((f) => f != feeHead).toList(),
+        );
+        addAuditLog('MASTER_FEE_HEAD_REMOVED', 'Removed fee head: $feeHead.');
+      }
+    } catch (e) {
+      debugPrint('Error removing master fee head: $e');
+    }
   }
 
-  void addMasterDesignation(String designation) {
+  Future<void> addMasterDesignation(String designation) async {
     if (!state.masterDesignations.contains(designation)) {
-      state = state.copyWith(
-        masterDesignations: [...state.masterDesignations, designation],
-      );
-      addAuditLog('MASTER_DESIGNATION_ADDED', 'Added designation: $designation.');
+      try {
+        final success = await _repository.addMasterItem(type: 'DESIGNATION', name: designation);
+        if (success) {
+          state = state.copyWith(
+            masterDesignations: [...state.masterDesignations, designation],
+          );
+          addAuditLog('MASTER_DESIGNATION_ADDED', 'Added designation: $designation.');
+        }
+      } catch (e) {
+        debugPrint('Error adding master designation: $e');
+      }
     }
   }
 
-  void removeMasterDesignation(String designation) {
-    state = state.copyWith(
-      masterDesignations:
-          state.masterDesignations.where((d) => d != designation).toList(),
-    );
-    addAuditLog('MASTER_DESIGNATION_REMOVED', 'Removed designation: $designation.');
+  Future<void> removeMasterDesignation(String designation) async {
+    try {
+      final success = await _repository.removeMasterItem(type: 'DESIGNATION', name: designation);
+      if (success) {
+        state = state.copyWith(
+          masterDesignations:
+              state.masterDesignations.where((d) => d != designation).toList(),
+        );
+        addAuditLog('MASTER_DESIGNATION_REMOVED', 'Removed designation: $designation.');
+      }
+    } catch (e) {
+      debugPrint('Error removing master designation: $e');
+    }
   }
 
-  void updateMasterSettings(Map<String, dynamic> newSettings) {
+  Future<void> updateMasterSettings(Map<String, dynamic> newSettings) async {
     final updated = Map<String, dynamic>.from(state.masterSettings)..addAll(newSettings);
-    state = state.copyWith(masterSettings: updated);
-    addAuditLog('MASTER_SETTINGS_UPDATED', 'Updated organization-wide settings & policies.');
+    try {
+      final success = await _repository.updateMasterSettings(updated);
+      if (success) {
+        state = state.copyWith(masterSettings: updated);
+        await fetchOrganization();
+      }
+    } catch (e) {
+      debugPrint('Error updating master settings: $e');
+    }
   }
 
-  void updateCredits({required int smsCount, required int emailCount}) {
-    state = state.copyWith(
-      smsCreditPool: state.smsCreditPool + smsCount,
-      emailCreditPool: state.emailCreditPool + emailCount,
-    );
-    addAuditLog('CREDITS_RECHARGED', 'Recharged $smsCount SMS and $emailCount Email credits.');
+  Future<void> updateCredits({required int smsCount, required int emailCount}) async {
+    try {
+      final success = await _repository.updateCredits(smsCount: smsCount, emailCount: emailCount);
+      if (success) {
+        state = state.copyWith(
+          smsCreditPool: state.smsCreditPool + smsCount,
+          emailCreditPool: state.emailCreditPool + emailCount,
+        );
+        await fetchOrganization();
+      }
+    } catch (e) {
+      debugPrint('Error recharging credits: $e');
+    }
   }
 
   void updatePrimaryColor(String hexColor) {
@@ -285,17 +237,41 @@ class OrganizationNotifier extends StateNotifier<OrganizationEntity> {
   }
 }
 
+/// Organization repository provider
+final organizationRepositoryProvider = Provider<OrganizationRepository>(
+  (ref) => OrganizationRepository(ref.read(apiClientProvider)),
+);
+
 /// Provider for Organization Entity
 final organizationProvider =
     StateNotifierProvider<OrganizationNotifier, OrganizationEntity>((ref) {
-  return OrganizationNotifier();
+  final isLoggedIn = ref.watch(isLoggedInProvider);
+  final repo = ref.read(organizationRepositoryProvider);
+  final notifier = OrganizationNotifier(repo);
+  if (isLoggedIn) {
+    notifier.fetchOrganization();
+  }
+  return notifier;
 });
 
 /// StateNotifier for Branches under the Organization
 class OrganizationBranchesNotifier extends StateNotifier<List<BranchEntity>> {
-  OrganizationBranchesNotifier() : super(_defaultBranches);
+  final OrganizationRepository _repository;
 
-  void onboardBranch({
+  OrganizationBranchesNotifier(this._repository) : super(const []);
+
+  Future<void> fetchBranches() async {
+    try {
+      final result = await _repository.fetchOrganizationDetails();
+      if (result != null && result['branches'] != null) {
+        state = List<BranchEntity>.from(result['branches'] as Iterable);
+      }
+    } catch (e) {
+      debugPrint('Error fetching branches: $e');
+    }
+  }
+
+  Future<bool> onboardBranch({
     required String code,
     required String name,
     required String affiliationBoard,
@@ -307,33 +283,28 @@ class OrganizationBranchesNotifier extends StateNotifier<List<BranchEntity>> {
     required String stateName,
     required int maxStudents,
     required int maxStaff,
-  }) {
-    final newBranch = BranchEntity(
-      id: 'BR-00${state.length + 1}',
-      organizationId: 'ORG-001',
-      code: code.toUpperCase(),
-      name: name,
-      affiliationBoard: affiliationBoard,
-      recognitionNumber: 'REC/2026/${state.length + 101}',
-      principalName: principalName,
-      email: email,
-      phone: phone,
-      address: address,
-      city: city,
-      state: stateName,
-      pincode: '110001',
-      status: BranchStatus.active,
-      maxStudentCapacity: maxStudents,
-      maxStaffCapacity: maxStaff,
-      activeStudentCount: 0,
-      activeStaffCount: 0,
-      currentAcademicYear: '2026-2027',
-      planType: 'Standard',
-      enabledModules: ModuleType.values.toSet(),
-      createdAt: DateTime.now(),
-    );
-
-    state = [...state, newBranch];
+    required String password,
+  }) async {
+    try {
+      final branch = await _repository.createBranch(
+        code: code,
+        name: name,
+        address: address,
+        phone: phone,
+        email: email,
+        affiliationBoard: affiliationBoard,
+        recognitionNumber: 'REC/2026/${state.length + 101}',
+        principalName: principalName,
+        password: password,
+      );
+      if (branch != null) {
+        state = [...state, branch];
+        return true;
+      }
+    } catch (e) {
+      debugPrint('Error onboarding branch: $e');
+    }
+    return false;
   }
 
   void updateBranchProfile(BranchEntity updatedBranch) {
@@ -386,195 +357,16 @@ class OrganizationBranchesNotifier extends StateNotifier<List<BranchEntity>> {
 final organizationBranchesProvider =
     StateNotifierProvider<OrganizationBranchesNotifier, List<BranchEntity>>(
         (ref) {
-  return OrganizationBranchesNotifier();
+  final isLoggedIn = ref.watch(isLoggedInProvider);
+  final repo = ref.read(organizationRepositoryProvider);
+  final notifier = OrganizationBranchesNotifier(repo);
+  if (isLoggedIn) {
+    notifier.fetchBranches();
+  }
+  return notifier;
 });
 
-/// StateNotifier for Cross-Branch Transfers
-class CrossBranchTransferNotifier
-    extends StateNotifier<List<CrossBranchTransferLog>> {
-  CrossBranchTransferNotifier() : super(_initialTransferLogs);
 
-  void requestTransfer({
-    required String entityType,
-    required String entityName,
-    required String entityCode,
-    required String fromBranchName,
-    required String toBranchName,
-    required String reason,
-  }) {
-    final newLog = CrossBranchTransferLog(
-      id: 'TRF-00${state.length + 1}',
-      entityType: entityType,
-      entityName: entityName,
-      entityCode: entityCode,
-      fromBranchName: fromBranchName,
-      toBranchName: toBranchName,
-      reason: reason,
-      status: 'migrated',
-      date: DateTime.now(),
-    );
-    state = [newLog, ...state];
-  }
-}
-
-/// Provider for Cross-Branch Transfers
-final crossBranchTransferProvider = StateNotifierProvider<
-    CrossBranchTransferNotifier, List<CrossBranchTransferLog>>((ref) {
-  return CrossBranchTransferNotifier();
-});
-
-/// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-/// Organization Admin Entity (Level 1 Admin Roles)
-/// Super Admin, Billing Admin, Support Admin, Compliance Admin
-/// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-class OrgAdminEntity {
-  final String id;
-  final String name;
-  final String email;
-  final String phone;
-  final String role; // 'Super Admin', 'Billing Admin', 'Support Admin', 'Compliance Admin'
-  final String branchScope; // 'ALL' or specific branch name
-  final List<String> permissions;
-  final bool isActive;
-  final DateTime createdAt;
-  final DateTime? lastLoginAt;
-
-  const OrgAdminEntity({
-    required this.id,
-    required this.name,
-    required this.email,
-    required this.phone,
-    required this.role,
-    this.branchScope = 'ALL (Global Trust Scope)',
-    required this.permissions,
-    this.isActive = true,
-    required this.createdAt,
-    this.lastLoginAt,
-  });
-
-  OrgAdminEntity copyWith({
-    String? id,
-    String? name,
-    String? email,
-    String? phone,
-    String? role,
-    String? branchScope,
-    List<String>? permissions,
-    bool? isActive,
-    DateTime? createdAt,
-    DateTime? lastLoginAt,
-  }) {
-    return OrgAdminEntity(
-      id: id ?? this.id,
-      name: name ?? this.name,
-      email: email ?? this.email,
-      phone: phone ?? this.phone,
-      role: role ?? this.role,
-      branchScope: branchScope ?? this.branchScope,
-      permissions: permissions ?? this.permissions,
-      isActive: isActive ?? this.isActive,
-      createdAt: createdAt ?? this.createdAt,
-      lastLoginAt: lastLoginAt ?? this.lastLoginAt,
-    );
-  }
-}
-
-final List<OrgAdminEntity> _initialOrgAdmins = [
-  OrgAdminEntity(
-    id: 'ADM-ORG-001',
-    name: 'Dr. Rajesh Kumar Sharma',
-    email: 'superadmin@symbosys.com',
-    phone: '+91 9876543210',
-    role: 'Super Admin',
-    branchScope: 'ALL (Global Trust Scope)',
-    permissions: const [
-      'Full Organization Control',
-      'Branch Onboarding & Deactivation',
-      'Cross-Branch Migration Approval',
-      'Subscription Billing',
-      'Master Data Configuration',
-    ],
-    isActive: true,
-    createdAt: DateTime(2018, 4, 1),
-    lastLoginAt: DateTime.now(),
-  ),
-  OrgAdminEntity(
-    id: 'ADM-ORG-002',
-    name: 'Siddharth Varma',
-    email: 'billing@sunrisetrust.edu.in',
-    phone: '+91 9811223344',
-    role: 'Billing Admin',
-    branchScope: 'ALL (Global Trust Scope)',
-    permissions: const [
-      'Subscription Renewal',
-      'Invoices & Payments',
-      'SMS & Email Credit Recharges',
-      'Financial Analytics',
-    ],
-    isActive: true,
-    createdAt: DateTime(2021, 6, 15),
-    lastLoginAt: DateTime.now().subtract(const Duration(hours: 4)),
-  ),
-  OrgAdminEntity(
-    id: 'ADM-ORG-003',
-    name: 'Priyanka Sen',
-    email: 'support@sunrisetrust.edu.in',
-    phone: '+91 9877665544',
-    role: 'Support Admin',
-    branchScope: 'ALL (Global Trust Scope)',
-    permissions: const [
-      'Cross-Branch Helpdesk',
-      'Password Resets',
-      'Branch Diagnostic Logs',
-      'User License Audits',
-    ],
-    isActive: true,
-    createdAt: DateTime(2023, 1, 10),
-    lastLoginAt: DateTime.now().subtract(const Duration(days: 1)),
-  ),
-];
-
-class OrgAdminNotifier extends StateNotifier<List<OrgAdminEntity>> {
-  OrgAdminNotifier() : super(_initialOrgAdmins);
-
-  void createAdmin({
-    required String name,
-    required String email,
-    required String phone,
-    required String role,
-    required String branchScope,
-    required List<String> permissions,
-  }) {
-    final newAdmin = OrgAdminEntity(
-      id: 'ADM-ORG-00${state.length + 1}',
-      name: name,
-      email: email,
-      phone: phone,
-      role: role,
-      branchScope: branchScope,
-      permissions: permissions,
-      isActive: true,
-      createdAt: DateTime.now(),
-    );
-    state = [newAdmin, ...state];
-  }
-
-  void toggleAdminStatus(String adminId) {
-    state = [
-      for (final a in state)
-        if (a.id == adminId) a.copyWith(isActive: !a.isActive) else a,
-    ];
-  }
-
-  void deleteAdmin(String adminId) {
-    state = state.where((a) => a.id != adminId).toList();
-  }
-}
-
-final orgAdminsProvider =
-    StateNotifierProvider<OrgAdminNotifier, List<OrgAdminEntity>>((ref) {
-  return OrgAdminNotifier();
-});
 
 /// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 /// Organization-Wide Broadcast Announcement Entity

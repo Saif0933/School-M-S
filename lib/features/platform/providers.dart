@@ -1,5 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/enums/enums.dart';
+import '../auth/providers.dart';
 import 'domain/entities/platform_organization_entity.dart';
 
 /// Initial mock SaaS platform organizations
@@ -123,10 +125,12 @@ final List<PlatformOrganizationEntity> _initialPlatformOrganizations = [
 /// StateNotifier for SaaS Platform Organizations
 class PlatformOrganizationsNotifier
     extends StateNotifier<List<PlatformOrganizationEntity>> {
-  PlatformOrganizationsNotifier() : super(_initialPlatformOrganizations);
+  final Ref _ref;
+
+  PlatformOrganizationsNotifier(this._ref) : super(_initialPlatformOrganizations);
 
   /// Onboard a brand new organization onto the SaaS platform
-  void onboardOrganization({
+  Future<bool> onboardOrganization({
     required String name,
     required String code,
     required String superAdminName,
@@ -137,31 +141,52 @@ class PlatformOrganizationsNotifier
     required int maxBranches,
     required int maxStudents,
     required String address,
-  }) {
-    final newOrgId = 'ORG-00${state.length + 1}';
-    final newOrg = PlatformOrganizationEntity(
-      id: newOrgId,
-      name: name,
-      code: code.toUpperCase(),
-      superAdminName: superAdminName,
-      superAdminEmail: superAdminEmail,
-      contactPhone: contactPhone,
-      subscriptionTier: subscriptionTier,
-      status: 'active',
-      monthlyFee: subscriptionTier.monthlyPrice,
-      billingCycle: billingCycle,
-      startDate: DateTime.now(),
-      renewalDate: billingCycle == 'yearly'
-          ? DateTime.now().add(const Duration(days: 365))
-          : DateTime.now().add(const Duration(days: 30)),
-      branchCount: 1,
-      maxBranches: maxBranches,
-      studentCount: 0,
-      maxStudents: maxStudents,
-      address: address,
-    );
+    required String password,
+  }) async {
+    try {
+      final authRepo = _ref.read(authRepositoryProvider);
 
-    state = [newOrg, ...state];
+      // Call the backend onboarding API
+      final user = await authRepo.onboard(
+        orgName: name,
+        registrationNumber: code,
+        address: address,
+        contactEmail: superAdminEmail,
+        contactPhone: contactPhone,
+        adminName: superAdminName,
+        password: password,
+      );
+
+      if (user != null) {
+        final newOrg = PlatformOrganizationEntity(
+          id: user.organizationId ?? 'ORG-00${state.length + 1}',
+          name: name,
+          code: code.toUpperCase(),
+          superAdminName: superAdminName,
+          superAdminEmail: superAdminEmail,
+          contactPhone: contactPhone,
+          subscriptionTier: subscriptionTier,
+          status: 'active',
+          monthlyFee: subscriptionTier.monthlyPrice,
+          billingCycle: billingCycle,
+          startDate: DateTime.now(),
+          renewalDate: billingCycle == 'yearly'
+              ? DateTime.now().add(const Duration(days: 365))
+              : DateTime.now().add(const Duration(days: 30)),
+          branchCount: 1,
+          maxBranches: maxBranches,
+          studentCount: 0,
+          maxStudents: maxStudents,
+          address: address,
+        );
+
+        state = [newOrg, ...state];
+        return true;
+      }
+    } catch (e) {
+      debugPrint('Error onboarding organization: $e');
+    }
+    return false;
   }
 
   /// Change subscription tier plan for an existing organization
@@ -209,7 +234,7 @@ class PlatformOrganizationsNotifier
 /// Riverpod provider for SaaS Platform Organizations
 final platformOrganizationsProvider = StateNotifierProvider<
     PlatformOrganizationsNotifier, List<PlatformOrganizationEntity>>((ref) {
-  return PlatformOrganizationsNotifier();
+  return PlatformOrganizationsNotifier(ref);
 });
 
 /// Filter provider for Platform Organizations by search or subscription tier

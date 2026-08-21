@@ -32,10 +32,10 @@ class _CrossBranchTransferModalState
     super.dispose();
   }
 
-  void _submitTransfer() {
+  void _submitTransfer() async {
     if (_nameController.text.trim().isEmpty) return;
 
-    ref.read(crossBranchTransferProvider.notifier).requestTransfer(
+    final success = await ref.read(crossBranchTransferProvider.notifier).requestTransfer(
           entityType: _entityType,
           entityName: _nameController.text.trim(),
           entityCode: _codeController.text.trim().isEmpty
@@ -48,26 +48,29 @@ class _CrossBranchTransferModalState
               : _reasonController.text.trim(),
         );
 
-    Navigator.of(context).pop();
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        backgroundColor: AppColors.secondary,
-        behavior: SnackBarBehavior.floating,
-        content: Row(
-          children: [
-            const Icon(Icons.swap_horiz_rounded, color: Colors.white),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                '${_entityType.toUpperCase()} transfer for "${_nameController.text.trim()}" initiated successfully with data migration!',
-                style: const TextStyle(fontWeight: FontWeight.w600),
+    if (mounted) {
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: success ? AppColors.secondary : Colors.redAccent,
+          behavior: SnackBarBehavior.floating,
+          content: Row(
+            children: [
+              Icon(success ? Icons.swap_horiz_rounded : Icons.error_outline_rounded, color: Colors.white),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  success
+                      ? '${_entityType.toUpperCase()} transfer for "${_nameController.text.trim()}" initiated successfully with data migration!'
+                      : 'Failed to initiate transfer. Make sure entity code and source branch match a registered database record.',
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-      ),
-    );
+      );
+    }
   }
 
   @override
@@ -75,6 +78,16 @@ class _CrossBranchTransferModalState
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final branches = ref.watch(organizationBranchesProvider);
+
+    if (branches.isNotEmpty) {
+      final branchNames = branches.map((b) => b.name).toList();
+      if (!branchNames.contains(_fromBranch)) {
+        _fromBranch = branchNames.first;
+      }
+      if (!branchNames.contains(_toBranch)) {
+        _toBranch = branchNames.length > 1 ? branchNames[1] : branchNames.first;
+      }
+    }
 
     return Dialog(
       backgroundColor: isDark ? AppColors.darkCard : AppColors.lightCard,
@@ -199,7 +212,8 @@ class _CrossBranchTransferModalState
 
               // From Branch Dropdown
               DropdownButtonFormField<String>(
-                initialValue: _fromBranch,
+                key: ValueKey('from_${branches.length}_$_fromBranch'),
+                initialValue: branches.isEmpty ? null : _fromBranch,
                 decoration: InputDecoration(
                   labelText: 'Source Branch (From)',
                   prefixIcon: const Icon(Icons.call_made_rounded, size: 18),
@@ -220,7 +234,8 @@ class _CrossBranchTransferModalState
 
               // To Branch Dropdown
               DropdownButtonFormField<String>(
-                initialValue: _toBranch,
+                key: ValueKey('to_${branches.length}_$_toBranch'),
+                initialValue: branches.isEmpty ? null : _toBranch,
                 decoration: InputDecoration(
                   labelText: 'Target Branch (To)',
                   prefixIcon: const Icon(Icons.call_received_rounded, size: 18),

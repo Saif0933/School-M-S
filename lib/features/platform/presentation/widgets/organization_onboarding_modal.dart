@@ -26,6 +26,7 @@ class _OrganizationOnboardingModalState
   final _superAdminEmailController = TextEditingController();
   final _phoneController = TextEditingController();
   final _addressController = TextEditingController();
+  final _passwordController = TextEditingController();
   final _maxBranchesController = TextEditingController(text: '1');
   final _maxStudentsController = TextEditingController(text: '500');
 
@@ -41,6 +42,7 @@ class _OrganizationOnboardingModalState
     _superAdminEmailController.dispose();
     _phoneController.dispose();
     _addressController.dispose();
+    _passwordController.dispose();
     _maxBranchesController.dispose();
     _maxStudentsController.dispose();
     super.dispose();
@@ -54,12 +56,12 @@ class _OrganizationOnboardingModalState
     });
   }
 
-  void _submitForm() {
+  void _submitForm() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isSubmitting = true);
 
-    ref.read(platformOrganizationsProvider.notifier).onboardOrganization(
+    final success = await ref.read(platformOrganizationsProvider.notifier).onboardOrganization(
           name: _nameController.text.trim(),
           code: _codeController.text.trim().isEmpty
               ? _nameController.text.trim().substring(0, 3).toUpperCase()
@@ -76,27 +78,34 @@ class _OrganizationOnboardingModalState
           address: _addressController.text.trim().isEmpty
               ? 'Main Headquarters'
               : _addressController.text.trim(),
+          password: _passwordController.text,
         );
 
-    Navigator.of(context).pop();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        backgroundColor: AppColors.secondary,
-        behavior: SnackBarBehavior.floating,
-        content: Row(
-          children: [
-            const Icon(Icons.check_circle_rounded, color: Colors.white),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                'Organization "${_nameController.text.trim()}" onboarded successfully on ${_selectedTier.label} Plan!',
-                style: const TextStyle(fontWeight: FontWeight.w600),
+    setState(() => _isSubmitting = false);
+
+    if (mounted) {
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: success ? AppColors.secondary : Colors.red,
+          behavior: SnackBarBehavior.floating,
+          content: Row(
+            children: [
+              Icon(success ? Icons.check_circle_rounded : Icons.error_outline_rounded, color: Colors.white),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  success
+                      ? 'Organization "${_nameController.text.trim()}" onboarded successfully on ${_selectedTier.label} Plan!'
+                      : 'Failed to onboard organization. Check email uniqueness or connection.',
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-      ),
-    );
+      );
+    }
   }
 
   Widget _buildResponsiveFieldsRow({
@@ -280,12 +289,27 @@ class _OrganizationOnboardingModalState
                               isDark: isDark,
                             ),
                             right: _buildTextField(
-                              controller: _addressController,
-                              label: 'HQ Address / City',
-                              hint: 'e.g. New Delhi, India',
-                              icon: Icons.location_on_outlined,
+                              controller: _passwordController,
+                              label: 'Super Admin Password *',
+                              hint: 'e.g. at least 6 characters',
+                              icon: Icons.lock_outline_rounded,
+                              obscureText: true,
+                              validator: (v) => v == null || v.isEmpty || v.length < 6
+                                  ? 'Password must be at least 6 characters'
+                                  : null,
                               isDark: isDark,
                             ),
+                          ),
+                          const SizedBox(height: 14),
+                          _buildTextField(
+                            controller: _addressController,
+                            label: 'HQ Address / City *',
+                            hint: 'e.g. New Delhi, India',
+                            icon: Icons.location_on_outlined,
+                            validator: (v) => v == null || v.isEmpty
+                                ? 'HQ address is required'
+                                : null,
+                            isDark: isDark,
                           ),
                           const SizedBox(height: 24),
 
@@ -685,6 +709,7 @@ class _OrganizationOnboardingModalState
     required IconData icon,
     String? Function(String?)? validator,
     TextInputType keyboardType = TextInputType.text,
+    bool obscureText = false,
     required bool isDark,
   }) {
     return Column(
@@ -705,6 +730,7 @@ class _OrganizationOnboardingModalState
           controller: controller,
           validator: validator,
           keyboardType: keyboardType,
+          obscureText: obscureText,
           style: TextStyle(
             fontSize: 13,
             color: isDark

@@ -1,45 +1,44 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../shared/widgets/cards/glass_card.dart';
-import '../../../organization/data/repositories/mock_organization_repository.dart';
 import '../../domain/entities/branch_entity.dart';
+import '../../../organization/providers.dart';
+import '../widgets/onboard_branch_modal.dart';
+import '../widgets/branch_detail_management_modal.dart';
 
 /// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 /// Branch Management Page (School Operational View)
 /// Manages school branches, module toggles, capacities
 /// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-class BranchManagementPage extends StatefulWidget {
+class BranchManagementPage extends ConsumerStatefulWidget {
   const BranchManagementPage({super.key});
 
   @override
-  State<BranchManagementPage> createState() => _BranchManagementPageState();
+  ConsumerState<BranchManagementPage> createState() => _BranchManagementPageState();
 }
 
-class _BranchManagementPageState extends State<BranchManagementPage> {
-  final _repo = MockOrganizationRepository();
-  List<BranchEntity> _branches = [];
+class _BranchManagementPageState extends ConsumerState<BranchManagementPage> {
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _loadBranches();
-  }
-
-  Future<void> _loadBranches() async {
-    final branches = await _repo.getBranches('ORG-001');
-    if (mounted) {
-      setState(() {
-        _branches = branches;
-        _isLoading = false;
-      });
-    }
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await ref.read(organizationBranchesProvider.notifier).fetchBranches();
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     final isDark = context.isDarkMode;
+    final branches = ref.watch(organizationBranchesProvider);
 
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
@@ -81,7 +80,12 @@ class _BranchManagementPageState extends State<BranchManagementPage> {
               );
 
               final addBtn = ElevatedButton.icon(
-                onPressed: () {},
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (context) => const OnboardBranchModal(),
+                  );
+                },
                 icon: const Icon(Icons.add_location_alt_rounded, size: 18),
                 label: const Text('Add Branch'),
               );
@@ -117,9 +121,9 @@ class _BranchManagementPageState extends State<BranchManagementPage> {
             ),
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            itemCount: _branches.length,
+            itemCount: branches.length,
             itemBuilder: (context, index) {
-              final branch = _branches[index];
+              final branch = branches[index];
               return _buildBranchCard(branch, isDark);
             },
           ),
@@ -246,13 +250,23 @@ class _BranchManagementPageState extends State<BranchManagementPage> {
             children: [
               Expanded(
                 child: OutlinedButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) => BranchDetailManagementModal(branch: branch),
+                    );
+                  },
                   child: const Text('Configure Modules'),
                 ),
               ),
               const SizedBox(width: 8),
               IconButton(
-                onPressed: () {},
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (context) => BranchDetailManagementModal(branch: branch),
+                  );
+                },
                 icon: const Icon(Icons.settings_outlined, size: 20),
               ),
             ],

@@ -75,12 +75,12 @@ class _CreateOrgAdminModalState extends ConsumerState<CreateOrgAdminModal> {
     });
   }
 
-  void _submit() {
+  void _submit() async {
     if (_formKey.currentState != null && !_formKey.currentState!.validate()) {
       return;
     }
 
-    ref.read(orgAdminsProvider.notifier).createAdmin(
+    final success = await ref.read(orgAdminsProvider.notifier).createAdmin(
           name: _nameController.text.trim(),
           email: _emailController.text.trim(),
           phone: _phoneController.text.trim(),
@@ -89,31 +89,36 @@ class _CreateOrgAdminModalState extends ConsumerState<CreateOrgAdminModal> {
           permissions: _activePermissions,
         );
 
-    ref.read(organizationProvider.notifier).addAuditLog(
-          'ORGANIZATION_ADMIN_CREATED',
-          'Created $_selectedRole for ${_nameController.text.trim()} (${_emailController.text.trim()}).',
-        );
+    if (success) {
+      ref.read(organizationProvider.notifier).addAuditLog(
+            'ORGANIZATION_ADMIN_CREATED',
+            'Created $_selectedRole for ${_nameController.text.trim()} (${_emailController.text.trim()}).',
+          );
+    }
 
-    Navigator.of(context).pop();
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        backgroundColor: AppColors.secondary,
-        behavior: SnackBarBehavior.floating,
-        content: Row(
-          children: [
-            const Icon(Icons.verified_user_rounded, color: Colors.white),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                'Organization $_selectedRole "${_nameController.text.trim()}" created successfully!',
-                style: const TextStyle(fontWeight: FontWeight.w600),
+    if (mounted) {
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: success ? AppColors.secondary : Colors.red,
+          behavior: SnackBarBehavior.floating,
+          content: Row(
+            children: [
+              Icon(success ? Icons.verified_user_rounded : Icons.error_outline_rounded, color: Colors.white),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  success
+                      ? 'Organization $_selectedRole "${_nameController.text.trim()}" created successfully!'
+                      : 'Failed to create organization admin. Email may already be in use.',
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-      ),
-    );
+      );
+    }
   }
 
   @override

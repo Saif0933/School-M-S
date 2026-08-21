@@ -149,6 +149,7 @@ class _OrganizationOnboardingWizardModalState
           stateName: 'State',
           maxStudents: int.tryParse(_maxStudentsController.text.trim()) ?? 2000,
           maxStaff: 150,
+          password: 'admin123',
         );
 
     // Update Profile
