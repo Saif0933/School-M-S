@@ -417,4 +417,166 @@ class OrganizationRepository {
       throw Exception(errorMessage);
     }
   }
+
+  /// Onboard a Teacher
+  Future<bool> onboardTeacher(Map<String, dynamic> teacherData) async {
+    try {
+      final response = await _apiClient.dio.post('/branch/onboard/teacher', data: teacherData);
+      return response.statusCode == 201 && response.data['success'] == true;
+    } on DioException catch (e) {
+      final errorMessage = e.response?.data?['message'] ?? e.message;
+      throw Exception(errorMessage);
+    }
+  }
+
+  /// Onboard an Accountant
+  Future<bool> onboardAccountant(Map<String, dynamic> accountantData) async {
+    try {
+      final response = await _apiClient.dio.post('/branch/onboard/accountant', data: accountantData);
+      return response.statusCode == 201 && response.data['success'] == true;
+    } on DioException catch (e) {
+      final errorMessage = e.response?.data?['message'] ?? e.message;
+      throw Exception(errorMessage);
+    }
+  }
+
+  /// Onboard a Student
+  Future<bool> onboardStudent(Map<String, dynamic> studentData) async {
+    try {
+      final response = await _apiClient.dio.post('/branch/onboard/student', data: studentData);
+      return response.statusCode == 201 && response.data['success'] == true;
+    } on DioException catch (e) {
+      final errorMessage = e.response?.data?['message'] ?? e.message;
+      throw Exception(errorMessage);
+    }
+  }
+
+  /// Onboard a Parent (Guardian)
+  Future<bool> onboardParent(Map<String, dynamic> parentData) async {
+    try {
+      final response = await _apiClient.dio.post('/branch/onboard/parent', data: parentData);
+      return response.statusCode == 201 && response.data['success'] == true;
+    } on DioException catch (e) {
+      final errorMessage = e.response?.data?['message'] ?? e.message;
+      throw Exception(errorMessage);
+    }
+  }
+
+  /// Fetch all students of a branch
+  Future<List<dynamic>> fetchStudents(String branchId) async {
+    try {
+      final response = await _apiClient.dio.get('/branch/students', queryParameters: {
+        'branchId': branchId,
+      });
+      if (response.data != null && response.data['success'] == true) {
+        return response.data['data'] as List<dynamic>;
+      }
+      return [];
+    } on DioException catch (e) {
+      final errorMessage = e.response?.data?['message'] ?? e.message;
+      throw Exception(errorMessage);
+    }
+  }
+
+  /// Update student details
+  Future<bool> updateStudent(String studentId, Map<String, dynamic> updateData) async {
+    try {
+      final response = await _apiClient.dio.put('/branch/students/$studentId', data: updateData);
+      return response.statusCode == 200 && response.data['success'] == true;
+    } on DioException catch (e) {
+      final errorMessage = e.response?.data?['message'] ?? e.message;
+      throw Exception(errorMessage);
+    }
+  }
+
+  /// Delete student
+  Future<bool> deleteStudent(String studentId) async {
+    try {
+      final response = await _apiClient.dio.delete('/branch/students/$studentId');
+      return response.statusCode == 200 && response.data['success'] == true;
+    } on DioException catch (e) {
+      final errorMessage = e.response?.data?['message'] ?? e.message;
+      throw Exception(errorMessage);
+    }
+  }
+
+  /// Bulk import students
+  Future<bool> bulkImportStudents(String branchId, List<Map<String, dynamic>> students) async {
+    try {
+      final response = await _apiClient.dio.post('/branch/students/bulk', data: {
+        'branchId': branchId,
+        'students': students,
+      });
+      return response.statusCode == 201 && response.data['success'] == true;
+    } on DioException catch (e) {
+      final errorMessage = e.response?.data?['message'] ?? e.message;
+      throw Exception(errorMessage);
+    }
+  }
+
+  /// Fetch all roles (system + custom)
+  Future<List<dynamic>> fetchRoles() async {
+    try {
+      final response = await _apiClient.dio.get('/organization/rbac/roles');
+      if (response.data != null && response.data['success'] == true) {
+        return response.data['data'] as List<dynamic>;
+      }
+      return [];
+    } on DioException catch (e) {
+      final errorMessage = e.response?.data?['message'] ?? e.message;
+      throw Exception(errorMessage);
+    }
+  }
+
+  /// Create a custom role
+  Future<bool> createRbacRole(String name, String scope) async {
+    try {
+      final response = await _apiClient.dio.post('/organization/rbac/roles', data: {
+        'name': name,
+        'scope': scope,
+      });
+      return response.statusCode == 201 && response.data['success'] == true;
+    } on DioException catch (e) {
+      final errorMessage = e.response?.data?['message'] ?? e.message;
+      throw Exception(errorMessage);
+    }
+  }
+
+  /// Fetch all system permissions
+  Future<List<dynamic>> fetchPermissions() async {
+    try {
+      final response = await _apiClient.dio.get('/organization/rbac/permissions');
+      if (response.data != null && response.data['success'] == true) {
+        return response.data['data'] as List<dynamic>;
+      }
+      return [];
+    } on DioException catch (e) {
+      final errorMessage = e.response?.data?['message'] ?? e.message;
+      throw Exception(errorMessage);
+    }
+  }
+
+  /// Assign permissions to a role
+  Future<bool> assignPermissions(String roleId, List<String> permissionIds) async {
+    try {
+      final response = await _apiClient.dio.post('/organization/rbac/roles/$roleId/permissions', data: {
+        'permissionIds': permissionIds,
+      });
+      return response.statusCode == 200 && response.data['success'] == true;
+    } on DioException catch (e) {
+      final errorMessage = e.response?.data?['message'] ?? e.message;
+      throw Exception(errorMessage);
+    }
+  }
+
+  /// Delete a custom role
+  Future<bool> deleteRbacRole(String roleId) async {
+    try {
+      final response = await _apiClient.dio.delete('/organization/rbac/roles/$roleId');
+      return response.statusCode == 200 && response.data['success'] == true;
+    } on DioException catch (e) {
+      final errorMessage = e.response?.data?['message'] ?? e.message;
+      throw Exception(errorMessage);
+    }
+  }
 }

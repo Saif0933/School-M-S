@@ -1,6 +1,9 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../staff/providers.dart' as staff_prov;
+import '../organization/providers.dart';
+import '../organization/data/repositories/organization_repository.dart';
 
 /// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 /// Models for Academic Structure (Branch-Scoped)
@@ -982,7 +985,57 @@ final List<StudentEntity> _defaultStudents = [
 ];
 
 class AcademicStudentsNotifier extends StateNotifier<List<StudentEntity>> {
-  AcademicStudentsNotifier() : super(_defaultStudents);
+  final OrganizationRepository _repository;
+
+  AcademicStudentsNotifier(this._repository) : super(_defaultStudents);
+
+  Future<void> fetchStudents(String branchId) async {
+    try {
+      final list = await _repository.fetchStudents(branchId);
+      state = list.map((item) {
+        final Map<String, dynamic> itemMap = Map<String, dynamic>.from(item as Map);
+        final String firstName = itemMap['firstName'] ?? 'Student';
+        final String lastName = itemMap['lastName'] ?? '';
+        final String name = lastName.isNotEmpty ? '$firstName $lastName' : firstName;
+        
+        final dobStr = itemMap['dob'];
+        final dobParsed = dobStr != null ? DateTime.tryParse(dobStr.toString()) : null;
+        final dobFormatted = dobParsed != null ? '${dobParsed.year}-${dobParsed.month.toString().padLeft(2, '0')}-${dobParsed.day.toString().padLeft(2, '0')}' : '2015-05-10';
+
+        final admissionDateStr = itemMap['admissionDate'];
+        final admissionDateParsed = admissionDateStr != null ? DateTime.tryParse(admissionDateStr.toString()) : null;
+        final admissionDateFormatted = admissionDateParsed != null ? '${admissionDateParsed.year}-${admissionDateParsed.month.toString().padLeft(2, '0')}-${admissionDateParsed.day.toString().padLeft(2, '0')}' : '2026-04-01';
+
+        String email = 'student@example.com';
+        if (itemMap['users'] != null && (itemMap['users'] as List).isNotEmpty) {
+          final usersList = itemMap['users'] as List;
+          final userMap = Map<String, dynamic>.from(usersList[0] as Map);
+          email = userMap['email'] ?? email;
+        }
+
+        return StudentEntity(
+          id: itemMap['id'] ?? '',
+          branchId: itemMap['branchId'] ?? branchId,
+          classId: itemMap['classId'] ?? 'CLS-001',
+          sectionId: itemMap['sectionId'] ?? 'SEC-A-001',
+          name: name,
+          admissionNumber: itemMap['admissionNumber'] ?? '',
+          rollNumber: itemMap['rollNumber'] ?? '',
+          gender: itemMap['gender']?.toString().toLowerCase() == 'female' ? 'Female' : 'Male',
+          dateOfBirth: dobFormatted,
+          bloodGroup: 'O+',
+          guardianName: 'Parent Guardian',
+          phone: itemMap['phone'] ?? '+91 99999 88888',
+          email: email,
+          address: itemMap['address'] ?? '123 School Lane',
+          admissionDate: admissionDateFormatted,
+          isActive: itemMap['status']?.toString().toUpperCase() == 'ACTIVE',
+        );
+      }).toList();
+    } catch (e) {
+      debugPrint('Error fetching students: $e');
+    }
+  }
 
   void addStudent({
     required String branchId,
@@ -1032,17 +1085,35 @@ class AcademicStudentsNotifier extends StateNotifier<List<StudentEntity>> {
     state = [...state, newStudent];
   }
 
-  void updateStudentProfile(String studentId, StudentEntity updated) {
-    state = state.map((s) => s.id == studentId ? updated : s).toList();
+  Future<void> updateStudentProfile(String studentId, StudentEntity updated) async {
+    try {
+      final Map<String, dynamic> updateData = {
+        'firstName': updated.name.split(' ').first,
+        'lastName': updated.name.split(' ').length > 1 ? updated.name.split(' ').sublist(1).join(' ') : 'Student',
+        'admissionNumber': updated.admissionNumber,
+        'rollNumber': updated.rollNumber,
+        'dob': DateTime.tryParse(updated.dateOfBirth)?.toIso8601String() ?? DateTime(2015, 5, 10).toIso8601String(),
+        'gender': updated.gender.toUpperCase() == 'FEMALE' ? 'FEMALE' : 'MALE',
+        'category': 'General',
+        'email': updated.email,
+        'phone': updated.phone,
+        'sectionId': updated.sectionId,
+      };
+
+      final success = await _repository.updateStudent(studentId, updateData);
+      if (success) {
+        state = state.map((s) => s.id == studentId ? updated : s).toList();
+      }
+    } catch (e) {
+      debugPrint('Error updating student: $e');
+    }
   }
 
   // Generate roll numbers alphabetically inside a specific section
   void autoGenerateRollNumbers(String classId, String sectionId) {
-    // Get students in this specific class & section
     final sectionStudents = state
         .where((s) => s.classId == classId && s.sectionId == sectionId)
         .toList();
-    // Sort them alphabetically by name
     sectionStudents.sort(
       (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
     );
@@ -1076,22 +1147,29 @@ class AcademicStudentsNotifier extends StateNotifier<List<StudentEntity>> {
         return s.copyWith(
           classId: toClassId,
           sectionId: defaultToSectionId,
-          rollNumber:
-              '', // Reset roll numbers for new class to allow fresh auto-generation
+          rollNumber: '',
         );
       }
       return s;
     }).toList();
   }
 
-  void removeStudent(String id) {
-    state = state.where((s) => s.id != id).toList();
+  Future<void> removeStudent(String id) async {
+    try {
+      final success = await _repository.deleteStudent(id);
+      if (success) {
+        state = state.where((s) => s.id != id).toList();
+      }
+    } catch (e) {
+      debugPrint('Error removing student: $e');
+    }
   }
 }
 
 final academicStudentsProvider =
     StateNotifierProvider<AcademicStudentsNotifier, List<StudentEntity>>((ref) {
-      return AcademicStudentsNotifier();
+      final repo = ref.read(organizationRepositoryProvider);
+      return AcademicStudentsNotifier(repo);
     });
 
 /// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

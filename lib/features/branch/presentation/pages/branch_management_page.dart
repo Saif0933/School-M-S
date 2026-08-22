@@ -7,6 +7,7 @@ import '../../domain/entities/branch_entity.dart';
 import '../../../organization/providers.dart';
 import '../widgets/onboard_branch_modal.dart';
 import '../widgets/branch_detail_management_modal.dart';
+import '../widgets/onboard_branch_member_modal.dart';
 
 /// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 /// Branch Management Page (School Operational View)
@@ -249,17 +250,37 @@ class _BranchManagementPageState extends ConsumerState<BranchManagementPage> {
           Row(
             children: [
               Expanded(
-                child: OutlinedButton(
+                child: ElevatedButton(
                   onPressed: () {
                     showDialog(
                       context: context,
-                      builder: (context) => BranchDetailManagementModal(branch: branch),
+                      builder: (context) => OnboardBranchMemberModal(branch: branch),
                     );
                   },
-                  child: const Text('Configure Modules'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                  ),
+                  child: const Text('Onboard User'),
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 6),
+              OutlinedButton(
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (context) => BranchDetailManagementModal(branch: branch),
+                  );
+                },
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                  textStyle: const TextStyle(fontSize: 12),
+                ),
+                child: const Text('Configure'),
+              ),
+              const SizedBox(width: 4),
               IconButton(
                 onPressed: () {
                   showDialog(
@@ -268,6 +289,8 @@ class _BranchManagementPageState extends ConsumerState<BranchManagementPage> {
                   );
                 },
                 icon: const Icon(Icons.settings_outlined, size: 20),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
               ),
             ],
           ),

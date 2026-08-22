@@ -40,6 +40,8 @@ class _StudentManagementPageState extends ConsumerState<StudentManagementPage> w
   final _guardianController = TextEditingController();
   final _phoneController = TextEditingController();
   final _emailController = TextEditingController();
+  final _studentEmailController = TextEditingController();
+  final _studentPasswordController = TextEditingController();
   final _addressController = TextEditingController();
   final _dobController = TextEditingController(text: '2015-05-10');
   final _rollNumberController = TextEditingController();
@@ -60,6 +62,7 @@ class _StudentManagementPageState extends ConsumerState<StudentManagementPage> w
   final _csvImportController = TextEditingController();
   List<Map<String, dynamic>> _csvValidationResults = [];
   bool _csvValidated = false;
+  String? _lastFetchedBranchId;
 
   @override
   void initState() {
@@ -75,6 +78,8 @@ class _StudentManagementPageState extends ConsumerState<StudentManagementPage> w
     _guardianController.dispose();
     _phoneController.dispose();
     _emailController.dispose();
+    _studentEmailController.dispose();
+    _studentPasswordController.dispose();
     _addressController.dispose();
     _dobController.dispose();
     _rollNumberController.dispose();
@@ -95,6 +100,13 @@ class _StudentManagementPageState extends ConsumerState<StudentManagementPage> w
 
     if (activeBranchId == null) {
       return const Center(child: Text('No active branch selected. Please select a branch first.'));
+    }
+
+    if (_lastFetchedBranchId != activeBranchId) {
+      _lastFetchedBranchId = activeBranchId;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ref.read(academicStudentsProvider.notifier).fetchStudents(activeBranchId);
+      });
     }
 
     return Column(
@@ -1837,7 +1849,11 @@ class _StudentManagementPageState extends ConsumerState<StudentManagementPage> w
   // TAB 2: ENROLL NEW STUDENT (FORM WIZARD)
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   Widget _buildEnrollmentTab(bool isDark, String branchId) {
-    final classes = ref.watch(academicClassesProvider).where((c) => c.branchId == branchId).toList();
+    final allClasses = ref.watch(academicClassesProvider);
+    final filteredClasses = allClasses.where((c) => c.branchId == branchId).toList();
+    final classes = filteredClasses.isNotEmpty
+        ? filteredClasses
+        : allClasses.map((c) => c.copyWith(branchId: branchId)).toList();
     final sections = ref.watch(academicSectionsProvider);
     final branch = ref.watch(organizationBranchesProvider).firstWhere((b) => b.id == branchId);
 
@@ -1942,6 +1958,21 @@ class _StudentManagementPageState extends ConsumerState<StudentManagementPage> w
                     decoration: const InputDecoration(labelText: 'Residential Address', isDense: true),
                   ),
                 ),
+                const SizedBox(height: 12),
+                _responsiveFormRow(
+                  isMobile: isMobileForm,
+                  left: TextField(
+                    controller: _studentEmailController,
+                    style: const TextStyle(fontSize: 11),
+                    decoration: const InputDecoration(labelText: 'Student Login Email (Required) *', isDense: true),
+                  ),
+                  right: TextField(
+                    controller: _studentPasswordController,
+                    obscureText: true,
+                    style: const TextStyle(fontSize: 11),
+                    decoration: const InputDecoration(labelText: 'Student Login Password (Required) *', isDense: true),
+                  ),
+                ),
                 const SizedBox(height: 20),
 
                 // Step 2: Academic Details
@@ -2027,13 +2058,15 @@ class _StudentManagementPageState extends ConsumerState<StudentManagementPage> w
                   height: 42,
                   child: ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
-                    onPressed: () {
+                    onPressed: () async {
                       if (_nameController.text.trim().isEmpty ||
                           _guardianController.text.trim().isEmpty ||
+                          _studentEmailController.text.trim().isEmpty ||
+                          _studentPasswordController.text.isEmpty ||
                           _enrollClassId == null ||
                           _enrollSectionId == null) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Please fill all mandatory (*) profile fields!')),
+                          const SnackBar(content: Text('Please fill all mandatory (*) profile fields, including Student Email and Password!')),
                         );
                         return;
                       }
@@ -2041,6 +2074,31 @@ class _StudentManagementPageState extends ConsumerState<StudentManagementPage> w
                       // Auto generate unique Student ID with Branch prefix
                       final branchPrefix = branch.code.toUpperCase();
                       final uniqueStudentId = '$branchPrefix-STU-${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}';
+
+                      // Onboard student in database first
+                      final Map<String, dynamic> studentData = {
+                        'branchId': branchId,
+                        'admissionNumber': uniqueStudentId,
+                        'rollNumber': _rollNumberController.text.trim().isEmpty ? null : _rollNumberController.text.trim(),
+                        'firstName': _nameController.text.trim().split(' ').first,
+                        'lastName': _nameController.text.trim().split(' ').length > 1 ? _nameController.text.trim().split(' ').sublist(1).join(' ') : 'Student',
+                        'dob': DateTime.tryParse(_dobController.text.trim())?.toIso8601String() ?? DateTime(2015, 5, 10).toIso8601String(),
+                        'gender': _gender.toUpperCase() == 'MALE' ? 'MALE' : (_gender.toUpperCase() == 'FEMALE' ? 'FEMALE' : 'OTHER'),
+                        'category': 'General',
+                        'email': _studentEmailController.text.trim(),
+                        'phone': _phoneController.text.trim().isEmpty ? null : _phoneController.text.trim(),
+                        'password': _studentPasswordController.text,
+                      };
+
+                      final scaffoldMessenger = ScaffoldMessenger.of(context);
+                      final bool dbSuccess = await ref.read(organizationBranchesProvider.notifier).onboardStudent(studentData);
+
+                      if (!dbSuccess) {
+                        scaffoldMessenger.showSnackBar(
+                          const SnackBar(content: Text('Failed to enroll student in database. Email may already be in use.')),
+                        );
+                        return;
+                      }
 
                       ref.read(academicStudentsProvider.notifier).addStudent(
                             branchId: branchId,
@@ -2054,7 +2112,7 @@ class _StudentManagementPageState extends ConsumerState<StudentManagementPage> w
                             bloodGroup: _bloodGroup,
                             guardianName: _guardianController.text.trim(),
                             phone: _phoneController.text.trim(),
-                            email: _emailController.text.trim(),
+                            email: _studentEmailController.text.trim(),
                             address: _addressController.text.trim(),
                             admissionDate: _admissionDateController.text.trim(),
                             behavioralRemarks: _remarksController.text.trim(),
@@ -2065,8 +2123,8 @@ class _StudentManagementPageState extends ConsumerState<StudentManagementPage> w
                                 : _phoneController.text.trim(),
                           );
 
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Student successfully enrolled! Unique ID Generated: $uniqueStudentId')),
+                      scaffoldMessenger.showSnackBar(
+                        SnackBar(content: Text('Student successfully enrolled & synced to database! Unique ID Generated: $uniqueStudentId')),
                       );
 
                       // Clear form
@@ -2074,6 +2132,8 @@ class _StudentManagementPageState extends ConsumerState<StudentManagementPage> w
                       _guardianController.clear();
                       _phoneController.clear();
                       _emailController.clear();
+                      _studentEmailController.clear();
+                      _studentPasswordController.clear();
                       _addressController.clear();
                       _rollNumberController.clear();
                       _emergencyContactController.clear();
@@ -2125,7 +2185,11 @@ class _StudentManagementPageState extends ConsumerState<StudentManagementPage> w
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   Widget _buildPhotoGalleryTab(bool isDark, String branchId) {
     final students = ref.watch(academicStudentsProvider).where((s) => s.branchId == branchId).toList();
-    final classes = ref.watch(academicClassesProvider).where((c) => c.branchId == branchId).toList();
+    final allClasses = ref.watch(academicClassesProvider);
+    final filteredClasses = allClasses.where((c) => c.branchId == branchId).toList();
+    final classes = filteredClasses.isNotEmpty
+        ? filteredClasses
+        : allClasses.map((c) => c.copyWith(branchId: branchId)).toList();
 
     final filteredStudents = students.where((s) {
       final matchesSearch = s.name.toLowerCase().contains(_searchQuery.toLowerCase());
@@ -2284,7 +2348,11 @@ class _StudentManagementPageState extends ConsumerState<StudentManagementPage> w
   // TAB 5: BULK STUDENT IMPORT VIA CSV
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   Widget _buildBulkImportTab(bool isDark, String branchId) {
-    final classes = ref.watch(academicClassesProvider).where((c) => c.branchId == branchId).toList();
+    final allClasses = ref.watch(academicClassesProvider);
+    final filteredClasses = allClasses.where((c) => c.branchId == branchId).toList();
+    final classes = filteredClasses.isNotEmpty
+        ? filteredClasses
+        : allClasses.map((c) => c.copyWith(branchId: branchId)).toList();
     final sections = ref.watch(academicSectionsProvider);
 
     return SingleChildScrollView(

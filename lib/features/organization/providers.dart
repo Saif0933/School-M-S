@@ -307,6 +307,72 @@ class OrganizationBranchesNotifier extends StateNotifier<List<BranchEntity>> {
     return false;
   }
 
+  Future<bool> onboardTeacher(Map<String, dynamic> teacherData) async {
+    try {
+      final success = await _repository.onboardTeacher(teacherData);
+      if (success) {
+        state = [
+          for (final b in state)
+            if (b.id == teacherData['branchId'])
+              b.copyWith(activeStaffCount: b.activeStaffCount + 1)
+            else
+              b,
+        ];
+        return true;
+      }
+    } catch (e) {
+      debugPrint('Error onboarding teacher: $e');
+    }
+    return false;
+  }
+
+  Future<bool> onboardAccountant(Map<String, dynamic> accountantData) async {
+    try {
+      final success = await _repository.onboardAccountant(accountantData);
+      if (success) {
+        state = [
+          for (final b in state)
+            if (b.id == accountantData['branchId'])
+              b.copyWith(activeStaffCount: b.activeStaffCount + 1)
+            else
+              b,
+        ];
+        return true;
+      }
+    } catch (e) {
+      debugPrint('Error onboarding accountant: $e');
+    }
+    return false;
+  }
+
+  Future<bool> onboardStudent(Map<String, dynamic> studentData) async {
+    try {
+      final success = await _repository.onboardStudent(studentData);
+      if (success) {
+        state = [
+          for (final b in state)
+            if (b.id == studentData['branchId'])
+              b.copyWith(activeStudentCount: b.activeStudentCount + 1)
+            else
+              b,
+        ];
+        return true;
+      }
+    } catch (e) {
+      debugPrint('Error onboarding student: $e');
+    }
+    return false;
+  }
+
+  Future<bool> onboardParent(Map<String, dynamic> parentData) async {
+    try {
+      return await _repository.onboardParent(parentData);
+    } catch (e) {
+      debugPrint('Error onboarding parent: $e');
+    }
+    return false;
+  }
+
   void updateBranchProfile(BranchEntity updatedBranch) {
     state = [
       for (final b in state)
@@ -796,5 +862,167 @@ class OrgWebhooksNotifier extends StateNotifier<List<OrgWebhook>> {
 final orgWebhooksProvider =
     StateNotifierProvider<OrgWebhooksNotifier, List<OrgWebhook>>((ref) {
   return OrgWebhooksNotifier();
+});
+
+class RbacRole {
+  final String id;
+  final String? organizationId;
+  final String name;
+  final String scope;
+  final bool isSystem;
+  final List<String> permissionCodes;
+
+  const RbacRole({
+    required this.id,
+    this.organizationId,
+    required this.name,
+    required this.scope,
+    required this.isSystem,
+    required this.permissionCodes,
+  });
+
+  RbacRole copyWith({
+    String? id,
+    String? organizationId,
+    String? name,
+    String? scope,
+    bool? isSystem,
+    List<String>? permissionCodes,
+  }) {
+    return RbacRole(
+      id: id ?? this.id,
+      organizationId: organizationId ?? this.organizationId,
+      name: name ?? this.name,
+      scope: scope ?? this.scope,
+      isSystem: isSystem ?? this.isSystem,
+      permissionCodes: permissionCodes ?? this.permissionCodes,
+    );
+  }
+}
+
+class RbacPermission {
+  final String id;
+  final String code;
+  final String? description;
+  final String? module;
+
+  const RbacPermission({
+    required this.id,
+    required this.code,
+    this.description,
+    this.module,
+  });
+}
+
+class RbacRolesNotifier extends StateNotifier<List<RbacRole>> {
+  final OrganizationRepository _repository;
+  RbacRolesNotifier(this._repository) : super(const []);
+
+  Future<void> fetchRoles() async {
+    try {
+      final list = await _repository.fetchRoles();
+      state = list.map((item) {
+        final Map<String, dynamic> itemMap = Map<String, dynamic>.from(item as Map);
+        final List<String> permissionCodes = [];
+        if (itemMap['permissions'] != null) {
+          for (final rp in itemMap['permissions'] as List) {
+            final rpMap = Map<String, dynamic>.from(rp as Map);
+            if (rpMap['permission'] != null) {
+              final pMap = Map<String, dynamic>.from(rpMap['permission'] as Map);
+              permissionCodes.add(pMap['code'] ?? '');
+            }
+          }
+        }
+
+        return RbacRole(
+          id: itemMap['id'] ?? '',
+          organizationId: itemMap['organizationId'],
+          name: itemMap['name'] ?? '',
+          scope: itemMap['scope'] ?? 'BRANCH',
+          isSystem: itemMap['isSystem'] ?? false,
+          permissionCodes: permissionCodes,
+        );
+      }).toList();
+    } catch (e) {
+      debugPrint('Error fetching RBAC roles: $e');
+    }
+  }
+
+  Future<bool> createRole(String name, String scope) async {
+    try {
+      final success = await _repository.createRbacRole(name, scope);
+      if (success) {
+        await fetchRoles();
+        return true;
+      }
+    } catch (e) {
+      debugPrint('Error creating RBAC role: $e');
+    }
+    return false;
+  }
+
+  Future<bool> assignPermissions(String roleId, List<String> permissionIds) async {
+    try {
+      final success = await _repository.assignPermissions(roleId, permissionIds);
+      if (success) {
+        await fetchRoles();
+        return true;
+      }
+    } catch (e) {
+      debugPrint('Error assigning permissions: $e');
+    }
+    return false;
+  }
+
+  Future<bool> deleteRole(String roleId) async {
+    try {
+      final success = await _repository.deleteRbacRole(roleId);
+      if (success) {
+        await fetchRoles();
+        return true;
+      }
+    } catch (e) {
+      debugPrint('Error deleting RBAC role: $e');
+    }
+    return false;
+  }
+}
+
+class RbacPermissionsNotifier extends StateNotifier<List<RbacPermission>> {
+  final OrganizationRepository _repository;
+  RbacPermissionsNotifier(this._repository) : super(const []);
+
+  Future<void> fetchPermissions() async {
+    try {
+      final list = await _repository.fetchPermissions();
+      state = list.map((item) {
+        final Map<String, dynamic> itemMap = Map<String, dynamic>.from(item as Map);
+        return RbacPermission(
+          id: itemMap['id'] ?? '',
+          code: itemMap['code'] ?? '',
+          description: itemMap['description'],
+          module: itemMap['module'],
+        );
+      }).toList();
+    } catch (e) {
+      debugPrint('Error fetching RBAC permissions: $e');
+    }
+  }
+}
+
+final rbacRolesProvider =
+    StateNotifierProvider<RbacRolesNotifier, List<RbacRole>>((ref) {
+  final repo = ref.read(organizationRepositoryProvider);
+  final notifier = RbacRolesNotifier(repo);
+  notifier.fetchRoles();
+  return notifier;
+});
+
+final rbacPermissionsProvider =
+    StateNotifierProvider<RbacPermissionsNotifier, List<RbacPermission>>((ref) {
+  final repo = ref.read(organizationRepositoryProvider);
+  final notifier = RbacPermissionsNotifier(repo);
+  notifier.fetchPermissions();
+  return notifier;
 });
 

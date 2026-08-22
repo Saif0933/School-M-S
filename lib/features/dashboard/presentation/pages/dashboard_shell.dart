@@ -41,6 +41,7 @@ import '../../../alumni/presentation/pages/alumni_page.dart';
 import '../../../health/presentation/pages/health_page.dart';
 import '../../../subscription/presentation/pages/subscription_page.dart';
 import '../../../settings/presentation/pages/settings_page.dart';
+import '../../../security/presentation/pages/roles_permissions_page.dart';
 import '../../../ai/presentation/pages/ai_page.dart';
 import '../../../whitelabel/presentation/pages/whitelabel_page.dart';
 import '../../../architecture/presentation/pages/architecture_page.dart';
@@ -121,6 +122,7 @@ class _DashboardShellState extends ConsumerState<DashboardShell> {
       'alumni': 'Alumni Management',
       'health': 'Health & Medical',
       'subscription': 'Subscription & Billing',
+      'roles_permissions': 'Roles & Permissions',
       'settings': 'Settings',
       'ai': 'AI Advanced Features',
       'whitelabel': 'White-Label Branding',
@@ -205,6 +207,8 @@ class _DashboardShellState extends ConsumerState<DashboardShell> {
         return const AlumniManagementPage(key: ValueKey('alumni'));
       case 'health':
         return const HealthMedicalPage(key: ValueKey('health'));
+      case 'roles_permissions':
+        return const RolesPermissionsPage(key: ValueKey('roles_permissions'));
       case 'settings':
         return const SecuritySettingsPage(key: ValueKey('settings'));
       case 'ai':
@@ -515,6 +519,12 @@ class _DashboardShellState extends ConsumerState<DashboardShell> {
         label: 'Technical Architecture',
         icon: Icons.lan_outlined,
         activeIcon: Icons.lan_rounded,
+      ),
+      const SidebarItem(
+        id: 'roles_permissions',
+        label: 'Roles & Permissions',
+        icon: Icons.admin_panel_settings_outlined,
+        activeIcon: Icons.admin_panel_settings_rounded,
       ),
       const SidebarItem(
         id: 'settings',
