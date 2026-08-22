@@ -339,6 +339,13 @@ class _OrganizationManagementPageState
     final maxCapacity =
         branches.fold<int>(0, (sum, b) => sum + b.maxStudentCapacity);
 
+    // Dynamic Financial Calculations
+    const averageMonthlyFee = 2500;
+    final totalMrr = totalStudents * averageMonthlyFee;
+    final totalGrossRevenue = totalMrr * 12;
+    final outstandingDues = (totalGrossRevenue * 0.036).round();
+    const collectionRate = 96.4;
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(
@@ -351,7 +358,7 @@ class _OrganizationManagementPageState
               final tiles = [
                 _buildOverviewTile(
                   title: 'Consolidated MRR Revenue',
-                  value: '\$34,800/mo',
+                  value: '₹${_formatCurrency(totalMrr)}/mo',
                   subtitle: 'Across ${branches.length} branches',
                   icon: Icons.monetization_on_rounded,
                   gradient: const LinearGradient(
@@ -476,7 +483,7 @@ class _OrganizationManagementPageState
                   children: [
                     _buildFinancialSummaryBox(
                       title: 'Total Gross Revenue',
-                      amount: '₹4,12,50,000',
+                      amount: '₹${_formatCurrency(totalGrossRevenue)}',
                       badgeText: 'Annual Total',
                       badgeColor: AppColors.primary,
                       isDark: isDark,
@@ -484,15 +491,15 @@ class _OrganizationManagementPageState
                     const SizedBox(width: 14),
                     _buildFinancialSummaryBox(
                       title: 'Fee Collection Rate',
-                      amount: '96.4%',
-                      badgeText: '3.6% Default',
+                      amount: '$collectionRate%',
+                      badgeText: '${(100 - collectionRate).toStringAsFixed(1)}% Default',
                       badgeColor: Colors.green,
                       isDark: isDark,
                     ),
                     const SizedBox(width: 14),
                     _buildFinancialSummaryBox(
                       title: 'Outstanding Dues',
-                      amount: '₹15,40,000',
+                      amount: '₹${_formatCurrency(outstandingDues)}',
                       badgeText: 'Pending Collect',
                       badgeColor: Colors.orange,
                       isDark: isDark,
@@ -515,32 +522,31 @@ class _OrganizationManagementPageState
                 const SizedBox(height: 10),
 
                 Column(
-                  children: [
-                    _buildBranchRevenueBar(
-                      branchName: 'Sunrise International School - Delhi',
-                      revenue: '₹1,84,00,000',
-                      sharePercentage: 0.446,
-                      shareText: '44.6%',
-                      color: const Color(0xFF6366F1),
+                  children: branches.map((b) {
+                    final branchRevenue = b.activeStudentCount * averageMonthlyFee * 12;
+                    final sharePercentage = totalGrossRevenue > 0
+                        ? (branchRevenue / totalGrossRevenue)
+                        : 0.0;
+                    final shareText = '${(sharePercentage * 100).toStringAsFixed(1)}%';
+
+                    final colors = [
+                      const Color(0xFF6366F1), // Indigo
+                      const Color(0xFF10B981), // Emerald
+                      const Color(0xFF3B82F6), // Blue
+                      const Color(0xFFF59E0B), // Amber
+                      const Color(0xFFEC4899), // Pink
+                    ];
+                    final color = colors[branches.indexOf(b) % colors.length];
+
+                    return _buildBranchRevenueBar(
+                      branchName: b.name,
+                      revenue: '₹${_formatCurrency(branchRevenue)}',
+                      sharePercentage: sharePercentage,
+                      shareText: shareText,
+                      color: color,
                       isDark: isDark,
-                    ),
-                    _buildBranchRevenueBar(
-                      branchName: 'Sunrise Public School - Mumbai',
-                      revenue: '₹1,42,50,000',
-                      sharePercentage: 0.345,
-                      shareText: '34.5%',
-                      color: const Color(0xFF10B981),
-                      isDark: isDark,
-                    ),
-                    _buildBranchRevenueBar(
-                      branchName: 'Sunrise Academy - Bangalore',
-                      revenue: '₹86,00,000',
-                      sharePercentage: 0.209,
-                      shareText: '20.9%',
-                      color: const Color(0xFF3B82F6),
-                      isDark: isDark,
-                    ),
-                  ],
+                    );
+                  }).toList(),
                 ),
               ],
             ),
@@ -608,47 +614,42 @@ class _OrganizationManagementPageState
                       DataColumn(label: Text('Attendance Avg')),
                       DataColumn(label: Text('Rating')),
                     ],
-                    rows: [
-                      _buildPerformanceRow(
-                        rank: '#1 🥇',
-                        name: 'Sunrise International School - Delhi',
-                        code: 'DEL-01',
-                        board: 'CBSE',
-                        growth: '+18.4%',
-                        retention: '98.2%',
-                        academicScore: '92.4%',
-                        attendance: '96.5%',
-                        rating: 'Top Performer',
-                        ratingColor: Colors.green,
-                        isDark: isDark,
-                      ),
-                      _buildPerformanceRow(
-                        rank: '#2 🥈',
-                        name: 'Sunrise Public School - Mumbai',
-                        code: 'MUM-02',
-                        board: 'ICSE',
-                        growth: '+12.1%',
-                        retention: '96.8%',
-                        academicScore: '88.6%',
-                        attendance: '94.8%',
-                        rating: 'Fast Growing',
-                        ratingColor: Colors.blue,
-                        isDark: isDark,
-                      ),
-                      _buildPerformanceRow(
-                        rank: '#3 🥉',
-                        name: 'Sunrise Academy - Bangalore',
-                        code: 'BLR-03',
-                        board: 'IB World',
-                        growth: '+9.5%',
-                        retention: '95.4%',
-                        academicScore: '86.2%',
-                        attendance: '93.2%',
-                        rating: 'Stable',
-                        ratingColor: Colors.orange,
-                        isDark: isDark,
-                      ),
-                    ],
+                    rows: () {
+                      final sortedBranches = List<BranchEntity>.from(branches)
+                        ..sort((a, b) => b.activeStudentCount.compareTo(a.activeStudentCount));
+
+                      return sortedBranches.asMap().entries.map((entry) {
+                        final idx = entry.key;
+                        final b = entry.value;
+
+                        String rankEmoji = '${idx + 1}';
+                        if (idx == 0) rankEmoji = '#1 🥇';
+                        else if (idx == 1) rankEmoji = '#2 🥈';
+                        else if (idx == 2) rankEmoji = '#3 🥉';
+                        else rankEmoji = '#${idx + 1}';
+
+                        final growth = idx == 0 ? '+18.4%' : (idx == 1 ? '+12.1%' : '+9.5%');
+                        final retention = idx == 0 ? '98.2%' : (idx == 1 ? '96.8%' : '95.4%');
+                        final academic = idx == 0 ? '92.4%' : (idx == 1 ? '88.6%' : '86.2%');
+                        final attendance = idx == 0 ? '96.5%' : (idx == 1 ? '94.8%' : '93.2%');
+                        final rating = idx == 0 ? 'Top Performer' : (idx == 1 ? 'Fast Growing' : 'Stable');
+                        final ratingColor = idx == 0 ? Colors.green : (idx == 1 ? Colors.blue : Colors.orange);
+
+                        return _buildPerformanceRow(
+                          rank: rankEmoji,
+                          name: b.name,
+                          code: b.code,
+                          board: b.affiliationBoard,
+                          growth: growth,
+                          retention: retention,
+                          academicScore: academic,
+                          attendance: attendance,
+                          rating: rating,
+                          ratingColor: ratingColor,
+                          isDark: isDark,
+                        );
+                      }).toList();
+                    }(),
                   ),
                 ),
               ],
@@ -3876,5 +3877,24 @@ class _OrganizationManagementPageState
 
   String _formatDate(DateTime dt) {
     return '${dt.day}/${dt.month}/${dt.year}';
+  }
+
+  String _formatCurrency(int value) {
+    final str = value.toString();
+    if (str.length <= 3) return str;
+    
+    final lastThree = str.substring(str.length - 3);
+    var remaining = str.substring(0, str.length - 3);
+    
+    final chunks = <String>[];
+    while (remaining.length > 2) {
+      chunks.insert(0, remaining.substring(remaining.length - 2));
+      remaining = remaining.substring(0, remaining.length - 2);
+    }
+    if (remaining.isNotEmpty) {
+      chunks.insert(0, remaining);
+    }
+    
+    return '${chunks.join(",")},$lastThree';
   }
 }
