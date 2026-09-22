@@ -30,6 +30,7 @@ class _StaffManagementPageState extends ConsumerState<StaffManagementPage>
   // Registration Form Controllers
   final _nameCtrl = TextEditingController();
   final _designationCtrl = TextEditingController();
+  final _deptCtrl = TextEditingController();
   final _phoneCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
   final _addressCtrl = TextEditingController();
@@ -44,11 +45,19 @@ class _StaffManagementPageState extends ConsumerState<StaffManagementPage>
   final String _bloodGroup = 'O+';
   String _role = 'Teacher';
   String? _selectedDeptId;
+  bool _isRegistering = false;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 9, vsync: this);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final user = ref.read(currentUserProvider);
+      final activeBranchId = user?.activeBranch?.branchId;
+      if (activeBranchId != null) {
+        ref.read(staffProvider.notifier).fetchStaff(branchId: activeBranchId);
+      }
+    });
   }
 
   @override
@@ -56,6 +65,7 @@ class _StaffManagementPageState extends ConsumerState<StaffManagementPage>
     _tabController.dispose();
     _nameCtrl.dispose();
     _designationCtrl.dispose();
+    _deptCtrl.dispose();
     _phoneCtrl.dispose();
     _emailCtrl.dispose();
     _addressCtrl.dispose();
@@ -1036,7 +1046,7 @@ class _StaffManagementPageState extends ConsumerState<StaffManagementPage>
   // TAB 2: REGISTER STAFF
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   Widget _buildRegistrationTab(bool isDark, String branchId) {
-    final depts = ref
+    final branchDepts = ref
         .watch(academicDepartmentsProvider)
         .where((d) => d.branchId == branchId)
         .toList();
@@ -1044,6 +1054,37 @@ class _StaffManagementPageState extends ConsumerState<StaffManagementPage>
         .watch(recruitmentProvider)
         .where((c) => c.branchId == branchId)
         .toList();
+
+    // Standard list of departments for school & campus staff
+    const standardDepts = [
+      {'id': 'DEPT-MATH', 'name': 'Mathematics Department'},
+      {'id': 'DEPT-SCI', 'name': 'Science & Technology'},
+      {'id': 'DEPT-ENG', 'name': 'English & Literature'},
+      {'id': 'DEPT-SOC', 'name': 'Social Studies & Humanities'},
+      {'id': 'DEPT-CS', 'name': 'Computer Science & IT'},
+      {'id': 'DEPT-LANG', 'name': 'Languages & Linguistics'},
+      {'id': 'DEPT-COMM', 'name': 'Commerce & Economics'},
+      {'id': 'DEPT-ARTS', 'name': 'Arts, Music & Performing Arts'},
+      {'id': 'DEPT-PE', 'name': 'Physical Education & Sports'},
+      {'id': 'DEPT-PRIM', 'name': 'Primary Wing / Foundation'},
+      {'id': 'DEPT-SEC', 'name': 'Secondary Wing'},
+      {'id': 'DEPT-SSEC', 'name': 'Senior Secondary Wing'},
+      {'id': 'DEPT-ADMIN', 'name': 'Administration & Front Office'},
+      {'id': 'DEPT-ACC', 'name': 'Accounts & Finance'},
+      {'id': 'DEPT-LIB', 'name': 'Library & Resource Center'},
+    ];
+
+    // Combine branch departments and standard options
+    final Map<String, String> deptOptions = {};
+    for (final d in branchDepts) {
+      deptOptions[d.id] = d.name;
+    }
+    for (final d in standardDepts) {
+      if (!deptOptions.containsKey(d['id']) && !deptOptions.containsValue(d['name']!)) {
+        deptOptions[d['id']!] = d['name']!;
+      }
+    }
+    deptOptions['OTHER'] = '➕ Other (Type Custom Department)';
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -1090,6 +1131,7 @@ class _StaffManagementPageState extends ConsumerState<StaffManagementPage>
               ),
               const SizedBox(height: 12),
               Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
                     child: DropdownButtonFormField<String>(
@@ -1097,6 +1139,7 @@ class _StaffManagementPageState extends ConsumerState<StaffManagementPage>
                       decoration: const InputDecoration(
                         labelText: 'Department *',
                         isDense: true,
+                        prefixIcon: Icon(Icons.apartment_rounded, size: 18),
                       ),
                       style: TextStyle(
                         fontSize: 11,
@@ -1104,20 +1147,50 @@ class _StaffManagementPageState extends ConsumerState<StaffManagementPage>
                             ? AppColors.darkTextPrimary
                             : AppColors.lightTextPrimary,
                       ),
-                      items: depts
-                          .map(
-                            (d) => DropdownMenuItem(
-                              value: d.id,
-                              child: Text(
-                                d.name,
-                                style: const TextStyle(fontSize: 10),
-                              ),
+                      items: deptOptions.entries.map((entry) {
+                        return DropdownMenuItem<String>(
+                          value: entry.key,
+                          child: Text(
+                            entry.value,
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: entry.key == 'OTHER'
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
+                              color: entry.key == 'OTHER'
+                                  ? AppColors.primary
+                                  : null,
                             ),
-                          )
-                          .toList(),
-                      onChanged: (v) => setState(() => _selectedDeptId = v),
+                          ),
+                        );
+                      }).toList(),
+                      onChanged: (v) {
+                        setState(() {
+                          _selectedDeptId = v;
+                          if (v != null && v != 'OTHER') {
+                            _deptCtrl.text = deptOptions[v] ?? v;
+                          } else if (v == 'OTHER') {
+                            _deptCtrl.clear();
+                          }
+                        });
+                      },
                     ),
                   ),
+                  if (_selectedDeptId == 'OTHER') ...[
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: TextField(
+                        controller: _deptCtrl,
+                        style: const TextStyle(fontSize: 11),
+                        decoration: const InputDecoration(
+                          labelText: 'Custom Department Name *',
+                          hintText: 'e.g. Robotics, Special Ed',
+                          isDense: true,
+                          prefixIcon: Icon(Icons.edit_note_rounded, size: 18),
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
               ),
               const SizedBox(height: 12),
@@ -1339,79 +1412,124 @@ class _StaffManagementPageState extends ConsumerState<StaffManagementPage>
               const SizedBox(height: 24),
               SizedBox(
                 width: double.infinity,
-                child: ElevatedButton.icon(
+                child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                   ),
-                  onPressed: () {
-                    if (_nameCtrl.text.trim().isEmpty ||
-                        _designationCtrl.text.trim().isEmpty ||
-                        _phoneCtrl.text.trim().isEmpty ||
-                        _emailCtrl.text.trim().isEmpty ||
-                        _qualCtrl.text.trim().isEmpty ||
-                        _instCtrl.text.trim().isEmpty ||
-                        _selectedDeptId == null) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                            'Please fill all mandatory fields.',
+                  onPressed: _isRegistering
+                      ? null
+                      : () async {
+                          final effectiveDept = _selectedDeptId == 'OTHER'
+                              ? _deptCtrl.text.trim()
+                              : (_deptCtrl.text.trim().isNotEmpty
+                                  ? _deptCtrl.text.trim()
+                                  : (deptOptions[_selectedDeptId] ?? _selectedDeptId ?? ''));
+
+                          if (_nameCtrl.text.trim().isEmpty ||
+                              _designationCtrl.text.trim().isEmpty ||
+                              _phoneCtrl.text.trim().isEmpty ||
+                              _emailCtrl.text.trim().isEmpty ||
+                              _qualCtrl.text.trim().isEmpty ||
+                              _instCtrl.text.trim().isEmpty ||
+                              effectiveDept.isEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'Please fill all mandatory fields including Department.',
+                                ),
+                              ),
+                            );
+                            return;
+                          }
+
+                          setState(() => _isRegistering = true);
+                          try {
+                            await ref
+                                .read(staffProvider.notifier)
+                                .registerStaff(
+                                  branchId: branchId,
+                                  name: _nameCtrl.text.trim(),
+                                  designation: _designationCtrl.text.trim(),
+                                  role: _role,
+                                  dateOfJoining: _dojCtrl.text.trim(),
+                                  gender: _gender,
+                                  dateOfBirth: _dobCtrl.text.trim(),
+                                  bloodGroup: _bloodGroup,
+                                  phone: _phoneCtrl.text.trim(),
+                                  email: _emailCtrl.text.trim(),
+                                  address: _addressCtrl.text.trim(),
+                                  qualification: _qualCtrl.text.trim(),
+                                  specialization: _specCtrl.text.trim(),
+                                  institution: _instCtrl.text.trim(),
+                                  yearsOfExperience:
+                                      int.tryParse(_expCtrl.text.trim()) ?? 0,
+                                  previousEmployer: _prevEmpCtrl.text.trim(),
+                                  departmentId: effectiveDept,
+                                );
+
+                            if (!mounted) return;
+                            ScaffoldMessenger.of(this.context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  'Staff "${_nameCtrl.text.trim()}" registered & onboarded successfully!',
+                                ),
+                                backgroundColor: Colors.green,
+                              ),
+                            );
+                            _nameCtrl.clear();
+                            _designationCtrl.clear();
+                            _deptCtrl.clear();
+                            _phoneCtrl.clear();
+                            _emailCtrl.clear();
+                            _addressCtrl.clear();
+                            _qualCtrl.clear();
+                            _specCtrl.clear();
+                            _instCtrl.clear();
+                            _prevEmpCtrl.clear();
+                            setState(() {
+                              _selectedDeptId = null;
+                            });
+                            _tabController.animateTo(0);
+                          } catch (e) {
+                            if (!mounted) return;
+                            ScaffoldMessenger.of(this.context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  'Registration error: ${e.toString().replaceAll('Exception: ', '')}',
+                                ),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          } finally {
+                            if (mounted) {
+                              setState(() => _isRegistering = false);
+                            }
+                          }
+                        },
+                  child: _isRegistering
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
                           ),
+                        )
+                      : const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.check_circle_rounded, size: 18),
+                            SizedBox(width: 8),
+                            Text(
+                              'Complete Enrollment & Generate Employee ID',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 11,
+                              ),
+                            ),
+                          ],
                         ),
-                      );
-                      return;
-                    }
-                    ref
-                        .read(staffProvider.notifier)
-                        .registerStaff(
-                          branchId: branchId,
-                          name: _nameCtrl.text.trim(),
-                          designation: _designationCtrl.text.trim(),
-                          role: _role,
-                          dateOfJoining: _dojCtrl.text.trim(),
-                          gender: _gender,
-                          dateOfBirth: _dobCtrl.text.trim(),
-                          bloodGroup: _bloodGroup,
-                          phone: _phoneCtrl.text.trim(),
-                          email: _emailCtrl.text.trim(),
-                          address: _addressCtrl.text.trim(),
-                          qualification: _qualCtrl.text.trim(),
-                          specialization: _specCtrl.text.trim(),
-                          institution: _instCtrl.text.trim(),
-                          yearsOfExperience:
-                              int.tryParse(_expCtrl.text.trim()) ?? 0,
-                          previousEmployer: _prevEmpCtrl.text.trim(),
-                          departmentId: _selectedDeptId!,
-                        );
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          'Staff registered & onboarded successfully!',
-                        ),
-                      ),
-                    );
-                    _nameCtrl.clear();
-                    _designationCtrl.clear();
-                    _phoneCtrl.clear();
-                    _emailCtrl.clear();
-                    _addressCtrl.clear();
-                    _qualCtrl.clear();
-                    _specCtrl.clear();
-                    _instCtrl.clear();
-                    _prevEmpCtrl.clear();
-                    setState(() {
-                      _selectedDeptId = null;
-                    });
-                    _tabController.animateTo(0);
-                  },
-                  icon: const Icon(Icons.check_circle_rounded, size: 18),
-                  label: const Text(
-                    'Complete Enrollment & Generate Employee ID',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 11,
-                    ),
-                  ),
                 ),
               ),
             ],

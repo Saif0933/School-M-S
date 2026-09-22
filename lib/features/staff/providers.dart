@@ -1,4 +1,13 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/network/api_client.dart';
+import 'data/repositories/staff_repository.dart';
+
+export 'data/repositories/staff_repository.dart';
+
+final staffRepositoryProvider = Provider<StaffRepository>((ref) {
+  return StaffRepository(ref.read(apiClientProvider));
+});
 
 /// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 /// Staff Entity Model
@@ -129,9 +138,22 @@ class StaffEntity {
 /// Staff State Notifier
 /// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 class StaffNotifier extends StateNotifier<List<StaffEntity>> {
-  StaffNotifier() : super(_defaultStaff);
+  final StaffRepository? _repository;
 
-  void registerStaff({
+  StaffNotifier([this._repository]) : super(_defaultStaff);
+
+  Future<void> fetchStaff({String? branchId}) async {
+    final repo = _repository;
+    if (repo == null) return;
+    try {
+      final list = await repo.fetchStaffList(branchId: branchId);
+      if (list.isNotEmpty) {
+        state = list;
+      }
+    } catch (_) {}
+  }
+
+  Future<StaffEntity?> registerStaff({
     required String branchId,
     required String name,
     required String designation,
@@ -149,10 +171,15 @@ class StaffNotifier extends StateNotifier<List<StaffEntity>> {
     required int yearsOfExperience,
     required String previousEmployer,
     String departmentId = '',
-  }) {
+    String password = 'Password@123',
+  }) async {
+    final names = name.trim().split(' ');
+    final firstName = names.isNotEmpty ? names.first : name;
+    final lastName = names.length > 1 ? names.sublist(1).join(' ') : firstName;
     final employeeId =
-        'EMP-${branchId.toUpperCase().substring(0, 3)}-${1000 + state.length + 1}';
-    final newStaff = StaffEntity(
+        'EMP-${branchId.toUpperCase().substring(0, branchId.length > 3 ? 3 : branchId.length)}-${1000 + state.length + 1}';
+
+    final tempStaff = StaffEntity(
       id: 'STF-${DateTime.now().millisecondsSinceEpoch}',
       branchId: branchId,
       employeeId: employeeId,
@@ -173,11 +200,75 @@ class StaffNotifier extends StateNotifier<List<StaffEntity>> {
       previousEmployer: previousEmployer,
       departmentId: departmentId,
     );
-    state = [...state, newStaff];
+
+    final repo = _repository;
+    if (repo != null) {
+      try {
+        final serverStaff = await repo.registerStaff(
+          branchId: branchId,
+          firstName: firstName,
+          lastName: lastName,
+          email: email,
+          phone: phone,
+          designation: designation,
+          department: departmentId,
+          qualification: qualification,
+          experienceYears: yearsOfExperience,
+          role: role,
+          password: password,
+          dateOfJoining: dateOfJoining,
+          gender: gender,
+          dateOfBirth: dateOfBirth,
+          bloodGroup: bloodGroup,
+          address: address,
+          specialization: specialization,
+          institution: institution,
+          previousEmployer: previousEmployer,
+        );
+        if (serverStaff != null) {
+          state = [
+            ...state.where((s) => s.id != serverStaff.id),
+            serverStaff,
+          ];
+          return serverStaff;
+        }
+      } catch (e) {
+        debugPrint('registerStaff API call error: $e');
+        rethrow;
+      }
+    }
+
+    state = [...state, tempStaff];
+    return tempStaff;
   }
 
   void updateStaffProfile(String id, StaffEntity updated) {
     state = state.map((s) => s.id == id ? updated : s).toList();
+    final repo = _repository;
+    if (repo != null) {
+      final names = updated.name.trim().split(' ');
+      final firstName = names.isNotEmpty ? names.first : updated.name;
+      final lastName = names.length > 1 ? names.sublist(1).join(' ') : '';
+      repo.updateStaff(
+        id,
+        firstName: firstName,
+        lastName: lastName,
+        phone: updated.phone,
+        designation: updated.designation,
+        department: updated.departmentId,
+        qualification: updated.qualification,
+        experienceYears: updated.yearsOfExperience,
+        status: updated.status,
+      ).catchError((_) => null);
+    }
+  }
+
+  void deleteStaff(String id) {
+    state = state.where((s) => s.id != id).toList();
+    final repo = _repository;
+    if (repo != null) {
+      repo.deleteStaff(id).catchError((_) => false);
+    }
   }
 
   void addSharedBranch(String id, String targetBranchId) {
@@ -191,6 +282,11 @@ class StaffNotifier extends StateNotifier<List<StaffEntity>> {
       }
       return s;
     }).toList();
+
+    final repo = _repository;
+    if (repo != null) {
+      repo.addSharedBranch(id, targetBranchId).catchError((_) => false);
+    }
   }
 
   void removeSharedBranch(String id, String targetBranchId) {
@@ -204,6 +300,11 @@ class StaffNotifier extends StateNotifier<List<StaffEntity>> {
       }
       return s;
     }).toList();
+
+    final repo = _repository;
+    if (repo != null) {
+      repo.removeSharedBranch(id, targetBranchId).catchError((_) => false);
+    }
   }
 
   void uploadDocument(String id, String docName) {
@@ -217,13 +318,17 @@ class StaffNotifier extends StateNotifier<List<StaffEntity>> {
 
   void setStaffStatus(String id, String status, bool isActive) {
     state = state.map((s) => s.id == id ? s.copyWith(status: status, isActive: isActive) : s).toList();
+    final repo = _repository;
+    if (repo != null) {
+      repo.updateStaff(id, status: status).catchError((_) => null);
+    }
   }
 }
 
 final staffProvider = StateNotifierProvider<StaffNotifier, List<StaffEntity>>((
   ref,
 ) {
-  return StaffNotifier();
+  return StaffNotifier(ref.read(staffRepositoryProvider));
 });
 
 /// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -319,20 +424,51 @@ class StaffLeaveEntity {
 }
 
 class StaffLeaveNotifier extends StateNotifier<List<StaffLeaveEntity>> {
-  StaffLeaveNotifier() : super([
+  final StaffRepository? _repository;
+
+  StaffLeaveNotifier([this._repository]) : super([
     const StaffLeaveEntity(id: 'LV-001', staffId: 'STF-002', branchId: 'BR-001', leaveType: 'Medical', fromDate: '2026-08-15', toDate: '2026-08-16', days: 2, reason: 'Fever and Cold', status: 'Approved'),
     const StaffLeaveEntity(id: 'LV-002', staffId: 'STF-001', branchId: 'BR-001', leaveType: 'CL', fromDate: '2026-08-20', toDate: '2026-08-20', days: 1, reason: 'Personal Work', status: 'Pending'),
   ]);
 
-  void applyLeave({required String staffId, required String branchId, required String leaveType, required String fromDate, required String toDate, required int days, required String reason}) {
-    state = [...state, StaffLeaveEntity(id: 'LV-${DateTime.now().millisecondsSinceEpoch}', staffId: staffId, branchId: branchId, leaveType: leaveType, fromDate: fromDate, toDate: toDate, days: days, reason: reason)];
+  Future<void> fetchLeaves(String branchId) async {
+    final repo = _repository;
+    if (repo == null) return;
+    try {
+      final list = await repo.fetchLeaves(branchId: branchId);
+      if (list.isNotEmpty) state = list;
+    } catch (_) {}
   }
 
-  void approveLeave(String id) => state = state.map((l) => l.id == id ? l.copyWith(status: 'Approved') : l).toList();
-  void rejectLeave(String id) => state = state.map((l) => l.id == id ? l.copyWith(status: 'Rejected') : l).toList();
+  void applyLeave({required String staffId, required String branchId, required String leaveType, required String fromDate, required String toDate, required int days, required String reason}) {
+    final local = StaffLeaveEntity(id: 'LV-${DateTime.now().millisecondsSinceEpoch}', staffId: staffId, branchId: branchId, leaveType: leaveType, fromDate: fromDate, toDate: toDate, days: days, reason: reason);
+    state = [...state, local];
+    final repo = _repository;
+    if (repo != null) {
+      repo.applyLeave(staffId: staffId, branchId: branchId, leaveType: leaveType, startDate: fromDate, endDate: toDate, reason: reason).catchError((_) => false);
+    }
+  }
+
+  void approveLeave(String id) {
+    state = state.map((l) => l.id == id ? l.copyWith(status: 'Approved') : l).toList();
+    final repo = _repository;
+    if (repo != null) {
+      repo.updateLeaveStatus(id, 'APPROVED').catchError((_) => false);
+    }
+  }
+
+  void rejectLeave(String id) {
+    state = state.map((l) => l.id == id ? l.copyWith(status: 'Rejected') : l).toList();
+    final repo = _repository;
+    if (repo != null) {
+      repo.updateLeaveStatus(id, 'REJECTED').catchError((_) => false);
+    }
+  }
 }
 
-final staffLeaveProvider = StateNotifierProvider<StaffLeaveNotifier, List<StaffLeaveEntity>>((ref) => StaffLeaveNotifier());
+final staffLeaveProvider = StateNotifierProvider<StaffLeaveNotifier, List<StaffLeaveEntity>>((ref) {
+  return StaffLeaveNotifier(ref.read(staffRepositoryProvider));
+});
 
 /// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 /// Staff Attendance Entity
@@ -354,18 +490,35 @@ class StaffAttendanceEntity {
 }
 
 class StaffAttendanceNotifier extends StateNotifier<List<StaffAttendanceEntity>> {
-  StaffAttendanceNotifier() : super([
+  final StaffRepository? _repository;
+
+  StaffAttendanceNotifier([this._repository]) : super([
     const StaffAttendanceEntity(id: 'SA-001', staffId: 'STF-001', branchId: 'BR-001', date: '2026-08-13', status: 'Present', checkInTime: '07:55 AM', checkOutTime: '02:35 PM'),
     const StaffAttendanceEntity(id: 'SA-002', staffId: 'STF-002', branchId: 'BR-001', date: '2026-08-13', status: 'OnLeave'),
     const StaffAttendanceEntity(id: 'SA-003', staffId: 'STF-003', branchId: 'BR-002', date: '2026-08-13', status: 'Present', checkInTime: '08:10 AM', checkOutTime: '02:30 PM'),
   ]);
 
+  Future<void> fetchAttendance(String branchId, {String? date}) async {
+    final repo = _repository;
+    if (repo == null) return;
+    try {
+      final list = await repo.fetchAttendance(branchId: branchId, startDate: date, endDate: date);
+      if (list.isNotEmpty) state = list;
+    } catch (_) {}
+  }
+
   void markAttendance({required String staffId, required String branchId, required String date, required String status, String checkIn = '', String checkOut = ''}) {
     state = [...state, StaffAttendanceEntity(id: 'SA-${DateTime.now().millisecondsSinceEpoch}', staffId: staffId, branchId: branchId, date: date, status: status, checkInTime: checkIn, checkOutTime: checkOut)];
+    final repo = _repository;
+    if (repo != null) {
+      repo.markAttendance(staffId: staffId, branchId: branchId, date: date, status: status).catchError((_) => false);
+    }
   }
 }
 
-final staffAttendanceProvider = StateNotifierProvider<StaffAttendanceNotifier, List<StaffAttendanceEntity>>((ref) => StaffAttendanceNotifier());
+final staffAttendanceProvider = StateNotifierProvider<StaffAttendanceNotifier, List<StaffAttendanceEntity>>((ref) {
+  return StaffAttendanceNotifier(ref.read(staffRepositoryProvider));
+});
 
 /// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 /// Staff Payroll Entity
@@ -516,30 +669,56 @@ class StaffTransferEntity {
 
 class StaffTransferNotifier extends StateNotifier<List<StaffTransferEntity>> {
   final Ref ref;
-  StaffTransferNotifier(this.ref) : super([]);
+  final StaffRepository? _repository;
+
+  StaffTransferNotifier(this.ref, [this._repository]) : super([]);
+
+  Future<void> fetchTransfers(String branchId) async {
+    final repo = _repository;
+    if (repo == null) return;
+    try {
+      final list = await repo.fetchTransferRequests(branchId: branchId);
+      if (list.isNotEmpty) state = list;
+    } catch (_) {}
+  }
 
   void requestTransfer({required String staffId, required String fromBranchId, required String toBranchId, required String reason}) {
     state = [...state, StaffTransferEntity(id: 'TRF-${DateTime.now().millisecondsSinceEpoch}', staffId: staffId, fromBranchId: fromBranchId, toBranchId: toBranchId, requestDate: DateTime.now().toString().substring(0, 10), reason: reason)];
+    final repo = _repository;
+    if (repo != null) {
+      repo.requestTransfer(staffId, toBranchId, remarks: reason).catchError((_) => false);
+    }
   }
 
   void approveTransfer(String id) {
     state = state.map((t) {
       if (t.id == id) {
         final allStaff = ref.read(staffProvider);
-        final staff = allStaff.firstWhere((s) => s.id == t.staffId);
-        final newEmpId = 'EMP-${t.toBranchId.toUpperCase().substring(0, 3)}-${1000 + allStaff.length}';
+        final staff = allStaff.firstWhere((s) => s.id == t.staffId, orElse: () => allStaff.first);
+        final newEmpId = 'EMP-${t.toBranchId.toUpperCase().substring(0, t.toBranchId.length > 3 ? 3 : t.toBranchId.length)}-${1000 + allStaff.length}';
         ref.read(staffProvider.notifier).updateStaffProfile(t.staffId, staff.copyWith(branchId: t.toBranchId, employeeId: newEmpId));
         return t.copyWith(status: 'Approved');
       }
       return t;
     }).toList();
+
+    final repo = _repository;
+    if (repo != null) {
+      repo.respondTransferRequest(id, 'APPROVED').catchError((_) => false);
+    }
   }
 
-  void rejectTransfer(String id) => state = state.map((t) => t.id == id ? t.copyWith(status: 'Rejected') : t).toList();
+  void rejectTransfer(String id) {
+    state = state.map((t) => t.id == id ? t.copyWith(status: 'Rejected') : t).toList();
+    final repo = _repository;
+    if (repo != null) {
+      repo.respondTransferRequest(id, 'REJECTED').catchError((_) => false);
+    }
+  }
 }
 
 final staffTransferProvider = StateNotifierProvider<StaffTransferNotifier, List<StaffTransferEntity>>((ref) {
-  return StaffTransferNotifier(ref);
+  return StaffTransferNotifier(ref, ref.read(staffRepositoryProvider));
 });
 
 /// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -701,9 +880,9 @@ class RecruitmentNotifier extends StateNotifier<List<RecruitmentCandidateEntity>
     state = state.map((c) => c.id == id ? c.copyWith(interviewNotes: notes) : c).toList();
   }
 
-  void hireCandidate(String id) {
+  Future<void> hireCandidate(String id) async {
     final candidate = state.firstWhere((c) => c.id == id);
-    ref.read(staffProvider.notifier).registerStaff(
+    await ref.read(staffProvider.notifier).registerStaff(
       branchId: candidate.branchId,
       name: candidate.name,
       designation: candidate.designation,

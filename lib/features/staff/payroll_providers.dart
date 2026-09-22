@@ -1,4 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/network/api_client.dart';
+import 'data/repositories/hr_payroll_repository.dart';
+
+export 'data/repositories/hr_payroll_repository.dart';
+
+final hrPayrollRepositoryProvider = Provider<HRPayrollRepository>((ref) {
+  return HRPayrollRepository(ref.read(apiClientProvider));
+});
 
 /// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 /// Staff Salary Structure Entity
@@ -63,7 +71,9 @@ class SalaryStructureEntity {
 }
 
 class SalaryStructuresNotifier extends StateNotifier<List<SalaryStructureEntity>> {
-  SalaryStructuresNotifier() : super([
+  final HRPayrollRepository? _repository;
+
+  SalaryStructuresNotifier([this._repository]) : super([
     // Vikram Malhotra STF-001 (Delhi)
     const SalaryStructureEntity(
       staffId: 'STF-001',
@@ -96,13 +106,33 @@ class SalaryStructuresNotifier extends StateNotifier<List<SalaryStructureEntity>
     ),
   ]);
 
+  Future<void> fetchStructures(String branchId) async {
+    final repo = _repository;
+    if (repo == null) return;
+    try {
+      final list = await repo.fetchSalaryStructures(branchId);
+      if (list.isNotEmpty) state = list;
+    } catch (_) {}
+  }
+
   void updateStructure(String staffId, SalaryStructureEntity updated) {
     state = state.map((s) => s.staffId == staffId ? updated : s).toList();
+    final repo = _repository;
+    if (repo != null) {
+      repo.upsertSalaryStructure(
+        staffId: staffId,
+        branchId: updated.branchId,
+        basic: updated.basicPay,
+        hra: updated.hra,
+        da: updated.da,
+        allowances: updated.specialAllowance,
+      ).catchError((_) => null);
+    }
   }
 }
 
 final salaryStructuresProvider = StateNotifierProvider<SalaryStructuresNotifier, List<SalaryStructureEntity>>((ref) {
-  return SalaryStructuresNotifier();
+  return SalaryStructuresNotifier(ref.read(hrPayrollRepositoryProvider));
 });
 
 /// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -331,7 +361,9 @@ class SalarySlipEntity {
 }
 
 class SalarySlipsNotifier extends StateNotifier<List<SalarySlipEntity>> {
-  SalarySlipsNotifier() : super([
+  final HRPayrollRepository? _repository;
+
+  SalarySlipsNotifier([this._repository]) : super([
     // Delhi Central SLP July 2026
     const SalarySlipEntity(
       id: 'SLP-DEL-202607-01',
@@ -372,6 +404,15 @@ class SalarySlipsNotifier extends StateNotifier<List<SalarySlipEntity>> {
     ),
   ]);
 
+  Future<void> fetchSlips(String branchId, {int? month, int? year}) async {
+    final repo = _repository;
+    if (repo == null) return;
+    try {
+      final list = await repo.fetchPayrollRecords(branchId: branchId, month: month, year: year);
+      if (list.isNotEmpty) state = list;
+    } catch (_) {}
+  }
+
   void addSalarySlip(SalarySlipEntity slip) {
     state = [...state, slip];
   }
@@ -383,6 +424,14 @@ class SalarySlipsNotifier extends StateNotifier<List<SalarySlipEntity>> {
       }
       return s;
     }).toList();
+
+    final repo = _repository;
+    if (repo != null) {
+      final parts = monthYear.split(' ');
+      final month = _monthNumber(parts.isNotEmpty ? parts[0] : '');
+      final year = parts.length > 1 ? int.tryParse(parts[1]) ?? 2026 : 2026;
+      repo.bulkUpdatePayrollStatus(branchId: branchId, month: month, year: year, status: 'APPROVED').catchError((_) => false);
+    }
   }
 
   void disburseSlips(String monthYear, String branchId) {
@@ -392,9 +441,26 @@ class SalarySlipsNotifier extends StateNotifier<List<SalarySlipEntity>> {
       }
       return s;
     }).toList();
+
+    final repo = _repository;
+    if (repo != null) {
+      final parts = monthYear.split(' ');
+      final month = _monthNumber(parts.isNotEmpty ? parts[0] : '');
+      final year = parts.length > 1 ? int.tryParse(parts[1]) ?? 2026 : 2026;
+      repo.bulkUpdatePayrollStatus(branchId: branchId, month: month, year: year, status: 'PAID').catchError((_) => false);
+    }
+  }
+
+  int _monthNumber(String name) {
+    const months = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+    final idx = months.indexOf(name);
+    return idx != -1 ? idx + 1 : 1;
   }
 }
 
 final salarySlipsProvider = StateNotifierProvider<SalarySlipsNotifier, List<SalarySlipEntity>>((ref) {
-  return SalarySlipsNotifier();
+  return SalarySlipsNotifier(ref.read(hrPayrollRepositoryProvider));
 });
