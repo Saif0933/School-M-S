@@ -33,6 +33,7 @@ class _StaffManagementPageState extends ConsumerState<StaffManagementPage>
   final _deptCtrl = TextEditingController();
   final _phoneCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
+  final _passwordCtrl = TextEditingController();
   final _addressCtrl = TextEditingController();
   final _dobCtrl = TextEditingController(text: '1990-01-01');
   final _dojCtrl = TextEditingController(text: '2026-06-01');
@@ -46,6 +47,7 @@ class _StaffManagementPageState extends ConsumerState<StaffManagementPage>
   String _role = 'Teacher';
   String? _selectedDeptId;
   bool _isRegistering = false;
+  bool _obscurePassword = true;
 
   @override
   void initState() {
@@ -68,6 +70,7 @@ class _StaffManagementPageState extends ConsumerState<StaffManagementPage>
     _deptCtrl.dispose();
     _phoneCtrl.dispose();
     _emailCtrl.dispose();
+    _passwordCtrl.dispose();
     _addressCtrl.dispose();
     _dobCtrl.dispose();
     _dojCtrl.dispose();
@@ -1288,8 +1291,10 @@ class _StaffManagementPageState extends ConsumerState<StaffManagementPage>
                     child: TextField(
                       controller: _phoneCtrl,
                       style: const TextStyle(fontSize: 11),
+                      keyboardType: TextInputType.phone,
                       decoration: const InputDecoration(
                         labelText: 'Phone *',
+                        prefixIcon: Icon(Icons.phone_outlined, size: 16),
                         isDense: true,
                       ),
                     ),
@@ -1299,13 +1304,63 @@ class _StaffManagementPageState extends ConsumerState<StaffManagementPage>
                     child: TextField(
                       controller: _emailCtrl,
                       style: const TextStyle(fontSize: 11),
+                      keyboardType: TextInputType.emailAddress,
                       decoration: const InputDecoration(
-                        labelText: 'Email *',
+                        labelText: 'Teacher / Staff Login Email *',
+                        hintText: 'e.g. teacher@school.com',
+                        prefixIcon: Icon(Icons.email_outlined, size: 16),
                         isDense: true,
                       ),
                     ),
                   ),
                 ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _passwordCtrl,
+                      obscureText: _obscurePassword,
+                      style: const TextStyle(fontSize: 11),
+                      decoration: InputDecoration(
+                        labelText: 'Account Login Password *',
+                        hintText: 'Min 6 chars (used by teacher to log in)',
+                        prefixIcon: const Icon(Icons.lock_outline_rounded, size: 16),
+                        isDense: true,
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                            size: 16,
+                          ),
+                          onPressed: () {
+                            setState(() => _obscurePassword = !_obscurePassword);
+                          },
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Padding(
+                padding: const EdgeInsets.only(left: 4, bottom: 4),
+                child: Row(
+                  children: [
+                    const Icon(Icons.info_outline_rounded, size: 13, color: AppColors.primary),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: Text(
+                        'Teacher / Staff will log into their portal with this exact Email & Password.',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w500,
+                          color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(height: 12),
               Row(
@@ -1430,13 +1485,25 @@ class _StaffManagementPageState extends ConsumerState<StaffManagementPage>
                               _designationCtrl.text.trim().isEmpty ||
                               _phoneCtrl.text.trim().isEmpty ||
                               _emailCtrl.text.trim().isEmpty ||
+                              _passwordCtrl.text.trim().isEmpty ||
                               _qualCtrl.text.trim().isEmpty ||
                               _instCtrl.text.trim().isEmpty ||
                               effectiveDept.isEmpty) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
                                 content: Text(
-                                  'Please fill all mandatory fields including Department.',
+                                  'Please fill all mandatory fields including Login Email, Password, and Department.',
+                                ),
+                              ),
+                            );
+                            return;
+                          }
+
+                          if (_passwordCtrl.text.trim().length < 6) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'Password must be at least 6 characters long.',
                                 ),
                               ),
                             );
@@ -1458,6 +1525,7 @@ class _StaffManagementPageState extends ConsumerState<StaffManagementPage>
                                   bloodGroup: _bloodGroup,
                                   phone: _phoneCtrl.text.trim(),
                                   email: _emailCtrl.text.trim(),
+                                  password: _passwordCtrl.text.trim(),
                                   address: _addressCtrl.text.trim(),
                                   qualification: _qualCtrl.text.trim(),
                                   specialization: _specCtrl.text.trim(),
@@ -1472,7 +1540,7 @@ class _StaffManagementPageState extends ConsumerState<StaffManagementPage>
                             ScaffoldMessenger.of(this.context).showSnackBar(
                               SnackBar(
                                 content: Text(
-                                  'Staff "${_nameCtrl.text.trim()}" registered & onboarded successfully!',
+                                  'Staff "${_nameCtrl.text.trim()}" onboarded successfully! They can log in using "${_emailCtrl.text.trim()}".',
                                 ),
                                 backgroundColor: Colors.green,
                               ),
@@ -1482,6 +1550,7 @@ class _StaffManagementPageState extends ConsumerState<StaffManagementPage>
                             _deptCtrl.clear();
                             _phoneCtrl.clear();
                             _emailCtrl.clear();
+                            _passwordCtrl.clear();
                             _addressCtrl.clear();
                             _qualCtrl.clear();
                             _specCtrl.clear();

@@ -46,6 +46,8 @@ class _LoginPageState extends ConsumerState<LoginPage>
     super.dispose();
   }
 
+  String? _selectedDemoRole;
+
   Future<void> _handleLogin() async {
     if (_formKey.currentState != null && !_formKey.currentState!.validate()) {
       return;
@@ -69,26 +71,13 @@ class _LoginPageState extends ConsumerState<LoginPage>
     }
   }
 
-  Future<void> _quickLogin(String email, String password) async {
-    _emailController.text = email;
-    _passwordController.text = password;
-
+  void _selectDemoAccount(String role, String email, String password) {
     setState(() {
-      _isLoading = true;
+      _emailController.text = email;
+      _passwordController.text = password;
+      _selectedDemoRole = role;
       _errorMessage = null;
     });
-
-    final success = await ref.read(authStateProvider.notifier).login(
-          email.trim(),
-          password.trim(),
-        );
-
-    if (mounted) {
-      setState(() => _isLoading = false);
-      if (!success) {
-        setState(() => _errorMessage = 'Invalid email or password');
-      }
-    }
   }
 
   @override
@@ -570,6 +559,36 @@ class _LoginPageState extends ConsumerState<LoginPage>
             ),
             const SizedBox(height: 20),
 
+            // Selected Demo Role notification banner
+            if (_selectedDemoRole != null)
+              Container(
+                margin: const EdgeInsets.only(bottom: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: AppColors.primary.withValues(alpha: 0.3),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.check_circle_outline, size: 16, color: AppColors.primary),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Loaded $_selectedDemoRole credentials. Click Sign In to proceed.',
+                        style: const TextStyle(
+                          color: AppColors.primaryLight,
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
             // Login button
             SizedBox(
               width: double.infinity,
@@ -607,12 +626,22 @@ class _LoginPageState extends ConsumerState<LoginPage>
             // Demo accounts
             Center(
               child: Text(
-                'QUICK LOGIN (DEMO)',
+                'DEMO ROLES (TAP TO FILL CREDENTIALS)',
                 style: TextStyle(
                   color: AppColors.darkTextTertiary,
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
                   letterSpacing: 1.2,
+                ),
+              ),
+            ),
+            const SizedBox(height: 4),
+            Center(
+              child: Text(
+                'Tap a role to load email & password, then click Sign In',
+                style: TextStyle(
+                  color: AppColors.darkTextTertiary.withValues(alpha: 0.7),
+                  fontSize: 11,
                 ),
               ),
             ),
@@ -691,6 +720,8 @@ class _LoginPageState extends ConsumerState<LoginPage>
       'Accountant': AppColors.accent,
     };
 
+    final isPlatformSelected = _selectedDemoRole == platformAccount['role'];
+
     return Column(
       children: [
         // Dedicated Platform Admin Control Panel Login Button
@@ -698,32 +729,41 @@ class _LoginPageState extends ConsumerState<LoginPage>
           cursor: SystemMouseCursors.click,
           child: GestureDetector(
             behavior: HitTestBehavior.opaque,
-            onTap: () => _quickLogin(
-                platformAccount['email']!, platformAccount['password']!),
+            onTap: () => _selectDemoAccount(
+                platformAccount['role']!,
+                platformAccount['email']!,
+                platformAccount['password']!),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF8B5CF6), Color(0xFF6D28D9)],
+                gradient: LinearGradient(
+                  colors: isPlatformSelected
+                      ? const [Color(0xFFA855F7), Color(0xFF7C3AED)]
+                      : const [Color(0xFF8B5CF6), Color(0xFF6D28D9)],
                 ),
                 borderRadius: BorderRadius.circular(12),
+                border: isPlatformSelected
+                    ? Border.all(color: Colors.white, width: 1.5)
+                    : null,
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF8B5CF6).withValues(alpha: 0.4),
-                    blurRadius: 10,
+                    color: const Color(0xFF8B5CF6).withValues(alpha: isPlatformSelected ? 0.6 : 0.4),
+                    blurRadius: isPlatformSelected ? 14 : 10,
                     offset: const Offset(0, 4),
                   ),
                 ],
               ),
-              child: const Row(
+              child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.hub_rounded, color: Colors.white, size: 18),
-                  SizedBox(width: 8),
+                  const Icon(Icons.hub_rounded, color: Colors.white, size: 18),
+                  const SizedBox(width: 8),
                   Flexible(
                     child: Text(
-                      '👑 1-Tap SaaS Platform Panel Login (platformadmin@symbosys.com)',
-                      style: TextStyle(
+                      isPlatformSelected
+                          ? '✓ Selected SaaS Platform Panel (platformadmin@symbosys.com)'
+                          : '👑 Fill SaaS Platform Admin (platformadmin@symbosys.com)',
+                      style: const TextStyle(
                         color: Colors.white,
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
@@ -746,12 +786,18 @@ class _LoginPageState extends ConsumerState<LoginPage>
           children: accounts.map((account) {
             final color = roleColors[account['role']] ?? AppColors.primary;
             final icon = roleIcons[account['role']] ?? Icons.person;
+            final isSelected = _selectedDemoRole == account['role'];
 
             return _DemoAccountChip(
               label: account['role']!,
               icon: icon,
               color: color,
-              onTap: () => _quickLogin(account['email']!, account['password']!),
+              isSelected: isSelected,
+              onTap: () => _selectDemoAccount(
+                account['role']!,
+                account['email']!,
+                account['password']!,
+              ),
             );
           }).toList(),
         ),
@@ -764,12 +810,14 @@ class _DemoAccountChip extends StatefulWidget {
   final String label;
   final IconData icon;
   final Color color;
+  final bool isSelected;
   final VoidCallback onTap;
 
   const _DemoAccountChip({
     required this.label,
     required this.icon,
     required this.color,
+    this.isSelected = false,
     required this.onTap,
   });
 
@@ -782,6 +830,8 @@ class _DemoAccountChipState extends State<_DemoAccountChip> {
 
   @override
   Widget build(BuildContext context) {
+    final active = widget.isSelected || _isHovered;
+
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
@@ -791,27 +841,36 @@ class _DemoAccountChipState extends State<_DemoAccountChip> {
           duration: AppSpacing.animFast,
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
-            color: _isHovered
-                ? widget.color.withValues(alpha: 0.15)
-                : AppColors.darkCard,
+            color: widget.isSelected
+                ? widget.color.withValues(alpha: 0.25)
+                : (_isHovered
+                    ? widget.color.withValues(alpha: 0.15)
+                    : AppColors.darkCard),
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
-              color: _isHovered
-                  ? widget.color.withValues(alpha: 0.4)
-                  : AppColors.darkBorder,
+              color: widget.isSelected
+                  ? widget.color
+                  : (_isHovered
+                      ? widget.color.withValues(alpha: 0.6)
+                      : AppColors.darkBorder),
+              width: widget.isSelected ? 1.5 : 1.0,
             ),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
+              if (widget.isSelected) ...[
+                Icon(Icons.check_circle_rounded, size: 13, color: widget.color),
+                const SizedBox(width: 4),
+              ],
               Icon(widget.icon, size: 14, color: widget.color),
               const SizedBox(width: 6),
               Text(
                 widget.label,
                 style: TextStyle(
-                  color: _isHovered ? widget.color : AppColors.darkTextSecondary,
+                  color: active ? widget.color : AppColors.darkTextSecondary,
                   fontSize: 12,
-                  fontWeight: FontWeight.w500,
+                  fontWeight: widget.isSelected ? FontWeight.w700 : FontWeight.w500,
                 ),
               ),
             ],

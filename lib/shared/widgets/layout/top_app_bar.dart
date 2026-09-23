@@ -52,10 +52,11 @@ class TopAppBarWidget extends StatelessWidget implements PreferredSizeWidget {
       ),
       child: Row(
         children: [
-          // Menu button (mobile only)
-          if (isMobile)
+          // Sidebar menu / toggle button
+          if (onMenuTap != null) ...[
             IconButton(
               onPressed: onMenuTap,
+              tooltip: isMobile ? 'Open navigation menu' : 'Toggle sidebar',
               icon: Icon(
                 Icons.menu_rounded,
                 color: isDark
@@ -63,22 +64,28 @@ class TopAppBarWidget extends StatelessWidget implements PreferredSizeWidget {
                     : AppColors.lightTextPrimary,
               ),
             ),
+            const SizedBox(width: 4),
+          ],
 
           // Title & Breadcrumbs
           if (!isMobile) ...[
-            if (breadcrumbs.isNotEmpty)
-              _buildBreadcrumbs(isDark)
-            else
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: isDark
-                      ? AppColors.darkTextPrimary
-                      : AppColors.lightTextPrimary,
-                ),
-              ),
+            Flexible(
+              child: breadcrumbs.isNotEmpty
+                  ? _buildBreadcrumbs(isDark)
+                  : Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: isDark
+                            ? AppColors.darkTextPrimary
+                            : AppColors.lightTextPrimary,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+            ),
+            const SizedBox(width: 12),
           ],
 
           const Spacer(),
@@ -86,7 +93,7 @@ class TopAppBarWidget extends StatelessWidget implements PreferredSizeWidget {
           // ─── Search Bar ────────────────────────
           if (!isMobile)
             Container(
-              width: 260,
+              width: context.isWide ? 260 : 180,
               height: 40,
               decoration: BoxDecoration(
                 color: isDark ? AppColors.darkCard : AppColors.lightBg,
@@ -220,37 +227,42 @@ class TopAppBarWidget extends StatelessWidget implements PreferredSizeWidget {
   }
 
   Widget _buildBreadcrumbs(bool isDark) {
-    return Row(
-      children: [
-        for (int i = 0; i < breadcrumbs.length; i++) ...[
-          if (i > 0)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 6),
-              child: Icon(
-                Icons.chevron_right_rounded,
-                size: 16,
-                color: isDark
-                    ? AppColors.darkTextTertiary
-                    : AppColors.lightTextTertiary,
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      physics: const BouncingScrollPhysics(),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (int i = 0; i < breadcrumbs.length; i++) ...[
+            if (i > 0)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 6),
+                child: Icon(
+                  Icons.chevron_right_rounded,
+                  size: 16,
+                  color: isDark
+                      ? AppColors.darkTextTertiary
+                      : AppColors.lightTextTertiary,
+                ),
+              ),
+            Text(
+              breadcrumbs[i],
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight:
+                    i == breadcrumbs.length - 1 ? FontWeight.w600 : FontWeight.w400,
+                color: i == breadcrumbs.length - 1
+                    ? (isDark
+                        ? AppColors.darkTextPrimary
+                        : AppColors.lightTextPrimary)
+                    : (isDark
+                        ? AppColors.darkTextTertiary
+                        : AppColors.lightTextTertiary),
               ),
             ),
-          Text(
-            breadcrumbs[i],
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight:
-                  i == breadcrumbs.length - 1 ? FontWeight.w600 : FontWeight.w400,
-              color: i == breadcrumbs.length - 1
-                  ? (isDark
-                      ? AppColors.darkTextPrimary
-                      : AppColors.lightTextPrimary)
-                  : (isDark
-                      ? AppColors.darkTextTertiary
-                      : AppColors.lightTextTertiary),
-            ),
-          ),
+          ],
         ],
-      ],
+      ),
     );
   }
 

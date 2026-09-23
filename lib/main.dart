@@ -45,11 +45,7 @@ class SymbosysApp extends ConsumerWidget {
             child: CircularProgressIndicator(),
           ),
         ),
-        error: (err, stack) => Scaffold(
-          body: Center(
-            child: Text('Error: $err'),
-          ),
-        ),
+        error: (err, stack) => const LoginPage(),
       ),
     );
   }

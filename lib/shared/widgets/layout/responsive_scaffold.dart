@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/extensions/context_extensions.dart';
 import '../../../core/enums/enums.dart';
@@ -47,7 +48,7 @@ class ResponsiveScaffold extends StatefulWidget {
 }
 
 class _ResponsiveScaffoldState extends State<ResponsiveScaffold> {
-  bool _sidebarCollapsed = false;
+  bool? _isCollapsedManual;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
@@ -59,10 +60,24 @@ class _ResponsiveScaffoldState extends State<ResponsiveScaffold> {
       return _buildMobileLayout();
     }
 
-    return _buildDesktopLayout(isTablet);
+    final isCollapsed = _isCollapsedManual ?? isTablet;
+    return CallbackShortcuts(
+      bindings: {
+        const SingleActivator(LogicalKeyboardKey.keyB, control: true): () {
+          setState(() => _isCollapsedManual = !isCollapsed);
+        },
+        const SingleActivator(LogicalKeyboardKey.keyB, meta: true): () {
+          setState(() => _isCollapsedManual = !isCollapsed);
+        },
+      },
+      child: Focus(
+        autofocus: true,
+        child: _buildDesktopLayout(isCollapsed),
+      ),
+    );
   }
 
-  Widget _buildDesktopLayout(bool isTablet) {
+  Widget _buildDesktopLayout(bool isCollapsed) {
     return Scaffold(
       key: _scaffoldKey,
       body: Row(
@@ -72,9 +87,11 @@ class _ResponsiveScaffoldState extends State<ResponsiveScaffold> {
             items: widget.sidebarItems,
             selectedId: widget.selectedItemId,
             onItemSelected: widget.onItemSelected,
-            isCollapsed: _sidebarCollapsed || isTablet,
+            isCollapsed: isCollapsed,
             onToggleCollapse: () {
-              setState(() => _sidebarCollapsed = !_sidebarCollapsed);
+              setState(() {
+                _isCollapsedManual = !isCollapsed;
+              });
             },
             organizationName:
                 widget.user?.organizationName ?? 'Organization',
@@ -93,6 +110,11 @@ class _ResponsiveScaffoldState extends State<ResponsiveScaffold> {
                   title: widget.title,
                   breadcrumbs: widget.breadcrumbs,
                   user: widget.user,
+                  onMenuTap: () {
+                    setState(() {
+                      _isCollapsedManual = !isCollapsed;
+                    });
+                  },
                   onThemeToggle: widget.onThemeToggle,
                   onBranchChanged: widget.onBranchChanged,
                   isDarkMode: widget.isDarkMode,

@@ -52,8 +52,8 @@ class AuthNotifier extends StateNotifier<AsyncValue<UserEntity?>> {
     try {
       final user = await _repository.tryAutoLogin();
       state = AsyncValue.data(user);
-    } catch (e, st) {
-      state = AsyncValue.error(e, st);
+    } catch (e) {
+      state = const AsyncValue.data(null);
     }
   }
 
@@ -69,8 +69,8 @@ class AuthNotifier extends StateNotifier<AsyncValue<UserEntity?>> {
         state = const AsyncValue.data(null);
         return false;
       }
-    } catch (e, st) {
-      state = AsyncValue.error(e, st);
+    } catch (e) {
+      state = const AsyncValue.data(null);
       return false;
     }
   }

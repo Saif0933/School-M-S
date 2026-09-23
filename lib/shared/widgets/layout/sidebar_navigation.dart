@@ -136,6 +136,11 @@ class _SidebarNavigationState extends State<SidebarNavigation>
 
           const Divider(height: 1),
 
+          // ─── Collapse / Expand Toggle Action ──
+          _buildCollapseToggleFooter(isDark),
+
+          const Divider(height: 1),
+
           // ─── User Profile ────────────────────
           _buildUserSection(isDark),
         ],
@@ -144,11 +149,73 @@ class _SidebarNavigationState extends State<SidebarNavigation>
   }
 
   Widget _buildHeader(bool isDark) {
+    if (widget.isCollapsed) {
+      return Container(
+        height: AppSpacing.topBarHeight,
+        alignment: Alignment.center,
+        child: Tooltip(
+          message: 'Expand sidebar',
+          child: InkWell(
+            onTap: widget.onToggleCollapse,
+            borderRadius: BorderRadius.circular(10),
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    gradient: AppColors.primaryGradient,
+                    borderRadius: BorderRadius.circular(10),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.primary.withValues(alpha: 0.25),
+                        blurRadius: 6,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: const Center(
+                    child: Text(
+                      'S',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  right: -4,
+                  bottom: -4,
+                  child: Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: BoxDecoration(
+                      color: isDark ? AppColors.darkCard : Colors.white,
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                        width: 1,
+                      ),
+                    ),
+                    child: Icon(
+                      Icons.chevron_right_rounded,
+                      size: 12,
+                      color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     return Container(
       height: AppSpacing.topBarHeight,
-      padding: EdgeInsets.symmetric(
-        horizontal: widget.isCollapsed ? 12 : 16,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
         children: [
           Container(
@@ -169,39 +236,39 @@ class _SidebarNavigationState extends State<SidebarNavigation>
               ),
             ),
           ),
-          if (!widget.isCollapsed) ...[
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Symbosys SMS',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: isDark
-                          ? AppColors.darkTextPrimary
-                          : AppColors.lightTextPrimary,
-                    ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Symbosys SMS',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: isDark
+                        ? AppColors.darkTextPrimary
+                        : AppColors.lightTextPrimary,
                   ),
-                  Text(
-                    widget.branchName,
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: isDark
-                          ? AppColors.darkTextTertiary
-                          : AppColors.lightTextTertiary,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                Text(
+                  widget.branchName,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: isDark
+                        ? AppColors.darkTextTertiary
+                        : AppColors.lightTextTertiary,
                   ),
-                ],
-              ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
             ),
-          ],
-          const Spacer(),
+          ),
+          const SizedBox(width: 4),
           _buildCollapseButton(isDark),
         ],
       ),
@@ -222,14 +289,198 @@ class _SidebarNavigationState extends State<SidebarNavigation>
       ),
       tooltip: widget.isCollapsed ? 'Expand sidebar' : 'Collapse sidebar',
       splashRadius: 18,
-      style: IconButton.styleFrom(
-        fixedSize: const Size(32, 32),
+      padding: EdgeInsets.zero,
+      constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+    );
+  }
+
+  Widget _buildCollapseToggleFooter(bool isDark) {
+    if (widget.isCollapsed) {
+      return Container(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        alignment: Alignment.center,
+        child: Tooltip(
+          message: 'Expand sidebar',
+          preferBelow: false,
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: widget.onToggleCollapse,
+              borderRadius: BorderRadius.circular(10),
+              child: Container(
+                width: 44,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? AppColors.darkCard.withValues(alpha: 0.6)
+                      : AppColors.lightBg,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                  ),
+                ),
+                child: const Icon(
+                  Icons.keyboard_double_arrow_right_rounded,
+                  size: 20,
+                  color: AppColors.primary,
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: widget.onToggleCollapse,
+        hoverColor: isDark ? AppColors.darkCardHover : AppColors.lightCardHover,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: isDark ? AppColors.darkCard : AppColors.lightBg,
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(
+                    color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                  ),
+                ),
+                child: Icon(
+                  Icons.keyboard_double_arrow_left_rounded,
+                  size: 16,
+                  color: isDark
+                      ? AppColors.darkTextSecondary
+                      : AppColors.lightTextSecondary,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  'Collapse Sidebar',
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w500,
+                    color: isDark
+                        ? AppColors.darkTextSecondary
+                        : AppColors.lightTextSecondary,
+                  ),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? AppColors.darkCard
+                      : AppColors.lightBg,
+                  borderRadius: BorderRadius.circular(4),
+                  border: Border.all(
+                    color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                  ),
+                ),
+                child: Text(
+                  'Ctrl+B',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w500,
+                    color: isDark
+                        ? AppColors.darkTextTertiary
+                        : AppColors.lightTextTertiary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
 
   Widget _buildNavItem(SidebarItem item, bool isDark) {
     final isSelected = widget.selectedId == item.id;
+
+    Widget navItemContent = AnimatedContainer(
+      duration: AppSpacing.animFast,
+      height: AppSpacing.sidebarItemHeight,
+      padding: EdgeInsets.symmetric(
+        horizontal: widget.isCollapsed ? 0 : 12,
+      ),
+      decoration: BoxDecoration(
+        color: isSelected
+            ? AppColors.primarySurface
+            : Colors.transparent,
+        borderRadius: BorderRadius.circular(10),
+        border: isSelected
+            ? Border.all(color: AppColors.primary.withValues(alpha: 0.3))
+            : null,
+      ),
+      child: Row(
+        mainAxisAlignment: widget.isCollapsed
+            ? MainAxisAlignment.center
+            : MainAxisAlignment.start,
+        children: [
+          Icon(
+            isSelected ? (item.activeIcon ?? item.icon) : item.icon,
+            size: 20,
+            color: isSelected
+                ? AppColors.primary
+                : isDark
+                    ? AppColors.darkTextTertiary
+                    : AppColors.lightTextTertiary,
+          ),
+          if (!widget.isCollapsed) ...[
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                item.label,
+                style: TextStyle(
+                  fontSize: 13.5,
+                  fontWeight:
+                      isSelected ? FontWeight.w600 : FontWeight.w500,
+                  color: isSelected
+                      ? AppColors.primary
+                      : isDark
+                          ? AppColors.darkTextSecondary
+                          : AppColors.lightTextSecondary,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            if (item.badge != null)
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 2,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.accent,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  item.badge!,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+          ],
+        ],
+      ),
+    );
+
+    if (widget.isCollapsed) {
+      navItemContent = Tooltip(
+        message: item.label,
+        waitDuration: const Duration(milliseconds: 200),
+        child: navItemContent,
+      );
+    }
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
@@ -238,77 +489,7 @@ class _SidebarNavigationState extends State<SidebarNavigation>
         child: InkWell(
           onTap: () => widget.onItemSelected(item.id),
           borderRadius: BorderRadius.circular(10),
-          child: AnimatedContainer(
-            duration: AppSpacing.animFast,
-            height: AppSpacing.sidebarItemHeight,
-            padding: EdgeInsets.symmetric(
-              horizontal: widget.isCollapsed ? 0 : 12,
-            ),
-            decoration: BoxDecoration(
-              color: isSelected
-                  ? AppColors.primarySurface
-                  : Colors.transparent,
-              borderRadius: BorderRadius.circular(10),
-              border: isSelected
-                  ? Border.all(color: AppColors.primary.withValues(alpha: 0.3))
-                  : null,
-            ),
-            child: Row(
-              mainAxisAlignment: widget.isCollapsed
-                  ? MainAxisAlignment.center
-                  : MainAxisAlignment.start,
-              children: [
-                Icon(
-                  isSelected ? (item.activeIcon ?? item.icon) : item.icon,
-                  size: 20,
-                  color: isSelected
-                      ? AppColors.primary
-                      : isDark
-                          ? AppColors.darkTextTertiary
-                          : AppColors.lightTextTertiary,
-                ),
-                if (!widget.isCollapsed) ...[
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      item.label,
-                      style: TextStyle(
-                        fontSize: 13.5,
-                        fontWeight:
-                            isSelected ? FontWeight.w600 : FontWeight.w500,
-                        color: isSelected
-                            ? AppColors.primary
-                            : isDark
-                                ? AppColors.darkTextSecondary
-                                : AppColors.lightTextSecondary,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  if (item.badge != null)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.accent,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Text(
-                        item.badge!,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                ],
-              ],
-            ),
-          ),
+          child: navItemContent,
         ),
       ),
     );
@@ -416,19 +597,22 @@ class _SidebarNavigationState extends State<SidebarNavigation>
       padding: EdgeInsets.all(widget.isCollapsed ? 10 : 14),
       child: widget.isCollapsed
           ? Center(
-              child: GestureDetector(
-                onTap: widget.onProfileTap,
-                child: CircleAvatar(
-                  radius: 18,
-                  backgroundColor: AppColors.primarySurface,
-                  child: Text(
-                    widget.userName.isNotEmpty
-                        ? widget.userName[0].toUpperCase()
-                        : '?',
-                    style: const TextStyle(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 14,
+              child: Tooltip(
+                message: '${widget.userName} (${widget.userRole.label})',
+                child: GestureDetector(
+                  onTap: widget.onProfileTap,
+                  child: CircleAvatar(
+                    radius: 18,
+                    backgroundColor: AppColors.primarySurface,
+                    child: Text(
+                      widget.userName.isNotEmpty
+                          ? widget.userName[0].toUpperCase()
+                          : '?',
+                      style: const TextStyle(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
                     ),
                   ),
                 ),
